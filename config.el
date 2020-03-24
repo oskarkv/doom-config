@@ -744,10 +744,10 @@ unless <tab> was already bound."
    )
 
   (general-define-key
-   :keymaps 'evil-normal-state-map
+   :keymaps '(evil-normal-state-map evil-visual-state-map)
+   "gs" 'ok-evil-three-backticks-yank
    "gy" 'ok-evil-reddit-yank
    "go" '+evil:yank-unindented
-   "gs" 'ok-evil-three-backticks-yank
    )
 
   (general-define-key
