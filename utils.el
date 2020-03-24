@@ -18,6 +18,18 @@
 (defun neg? (n)
   (< n 0))
 
+(defun ok-get-string-from-file (file)
+  "Return FILE's content."
+  (with-temp-buffer
+    (insert-file-contents filePath)
+    (buffer-string)))
+
+(defun ok-read-lines (file)
+  "Return a list of lines of FILE."
+  (with-temp-buffer
+    (insert-file-contents filePath)
+    (split-string (buffer-string) "\n" t)))
+
 (defmacro cmd (&rest body)
   "Wraps BODY in an interactive lambda."
   `(lambda () (interactive) ,@body))
