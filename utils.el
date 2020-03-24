@@ -1,0 +1,139 @@
+;;; ~/.doom.d/utils.el -*- lexical-binding: t; -*-
+(require 'dash)
+(require 'seq)
+
+(defmacro section (&rest code)
+  "Macro just for code folding purposes; ignores the first argument."
+  (declare (indent 1))
+  `(progn ,@(cdr code)))
+
+(defmacro section-comment (&rest _)
+  "Macro for code folding and commenting; does nothing."
+  (declare (indent 1))
+  nil)
+
+(defun pos? (n)
+  (> n 0))
+
+(defun neg? (n)
+  (< n 0))
+
+(defmacro cmd (&rest body)
+  "Wraps BODY in an interactive lambda."
+  `(lambda () (interactive) ,@body))
+
+(defmacro fn (&rest body)
+  "Wraps BODY in a lambda."
+  `(lambda (&rest args) ,@body))
+
+(defmacro with-gensyms (syms &rest body)
+  (declare (indent 1))
+  `(let (,@(seq-map (lambda (sym) (list sym '(cl-gensym))) syms))
+     ,@body))
+
+(defmacro update-place (place fn &rest args)
+  `(setf ,place (funcall ,fn ,place ,@args)))
+
+(defun sort-by (key-fn comp seq)
+  (sort seq (lambda (a b)
+              (funcall comp (funcall key-fn a) (funcall key-fn b)))))
+
+(defun str (&rest args)
+  (with-output-to-string
+    (mapc 'princ args)))
+
+(defmacro for (bindings body)
+  "E.g. (for ((a some-list) (b some-list)) (list a b))"
+  (declare (indent 1))
+  (letrec ((make-dolists (lambda (body &optional var-list &rest more)
+                           (if var-list
+                               `(dolist ,var-list
+                                  ,(apply make-dolists body more))
+                             body))))
+    (with-gensyms [acc]
+      `(let ((,acc nil))
+         ,(apply make-dolists `(setq ,acc (cons ,body ,acc))
+                 bindings)
+         (reverse ,acc)))))
+
+(defmacro do-while (test &rest body)
+  "Evaluates BODY then tests TEST, if non-nil do another iteration."
+  (declare (indent 1))
+  `(while
+       (progn
+         ,@body
+         ,test)))
+
+(defmacro condp (pred expr &rest clauses)
+  "Takes a binary predicate, an expression, and a set of clauses.
+Each clause takes the form:
+
+ (test-expr result-expr)
+
+For each clause, (pred test-expr expr) is evaluated. If it returns
+non-nil, the clause is a match, and the result-expr is returned."
+  (declare (indent 2))
+  (with-gensyms [p e]
+    `(let ((,p (function ,pred))
+           (,e ,expr))
+       (cond ,@(seq-map
+                 (-lambda ((test result))
+                   (list (list 'funcall p test e) result))
+                clauses)))))
+
+(defun ok-hours-and-mins (mins)
+  (let* ((mins (if (neg? mins) (+ (* 60 24) mins) mins))
+         (hours (str (/ mins 60)))
+         (mins (str (mod mins 60))))
+    (concat hours ":" (if (< (length mins) 2) "0" "") mins)))
+
+;; (HAVE NOT TESTED YET (the intern-soft part))
+(defmacro ok-emacs-mode-in-mode (mode-var)
+  "Given a mode name, make Emacs start that mode in Emacs mode instead of Evil
+mode."
+  `(add-hook (intern-soft (concat (symbol-name ,mode-var) "-hook"))
+             (cmd (if ,mode-var
+                      (evil-emacs-state)
+                    (evil-exit-emacs-state)))))
+
+(defun ok-parse-time (time-string)
+  "Given an HH:MM string, returns the total minutes that TIME-STRING
+represents."
+  (let* ((split (split-string time-string ":"))
+         (nums (mapcar #'string-to-number split)))
+    (+ (* 60 (first nums)) (second nums))))
+
+(defun ok-time-sub (t1 t2)
+  "Returns the difference in minutes between two HH:MM strings."
+  (apply #'- (mapcar #'ok-parse-time (list t1 t2))))
+
+(defun ok-read-first-line ()
+  "Returns the first line of current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((b (point))
+          (e (progn (end-of-line) (point))))
+      (buffer-substring-no-properties b e))))
+
+(defun ok-string-drop-at-end (s n)
+  "Drops the last N characters from the string S."
+  (substring s 0 (- (length s) n)))
+
+(defun ok-contains-whitespace? (char-or-string &optional including-newlines)
+  "Returns non-nil if CHAR-OR-STRING contains whitespace. Only
+space and \t are considered withespace, unless INCLUDING-NEWLINES
+is non-nil, then also \r and \n are considered whitespace."
+  (let ((s (if (characterp char-or-string)
+               (char-to-string char-or-string)
+             char-or-string)))
+    (string-match (if including-newlines "[ \t\r\n]" "[ \t]") s)))
+
+(defun ok-skip-whitespace-forward (&optional including-newlines)
+  (while (-some-> (char-after) (ok-contains-whitespace? including-newlines))
+    (forward-char)))
+
+(defun ok-skip-whitespace-backward (&optional including-newlines)
+  (while (-some-> (char-before) (ok-contains-whitespace? including-newlines))
+    (backward-char)))
+
+(provide 'utils)
