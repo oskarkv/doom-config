@@ -43,8 +43,6 @@
 ;; (some-call)
 ;;       (some-other-call))
 
-
-
 (defun ok-bind-tab-to-TAB (keymap unbind)
   "Bind <tab> (regular tab) to what TAB (C-i) was bound to in KEYMAP,
 unless <tab> was already bound."
@@ -148,6 +146,11 @@ unless <tab> was already bound."
       (kill-buffer nil))))
 
 ;;; Utils
+
+(evil-define-operator ok-evil-webpaste (beg end)
+  :repeat nil
+  :move-point nil
+  (webpaste-paste-region beg end))
 
 (evil-define-operator ok-evil-reddit-yank (beg end type register yank-handler)
   "Yanks text and adds 4 spaces in front of every line. Works with evil."
@@ -622,10 +625,6 @@ unless <tab> was already bound."
         :nv "TAB" nil
         )
 
-  (map! :leader
-        :v "w" #'webpaste-paste-region
-        :n "w" #'webpaste-paste-buffer)
-
   (after! ivy
     (general-define-key
      :keymaps 'ivy-minibuffer-map
@@ -743,12 +742,20 @@ unless <tab> was already bound."
    "C-," 'evil-emacs-state
    )
 
-  (general-define-key
-   :keymaps '(evil-normal-state-map evil-visual-state-map)
-   "gs" 'ok-evil-three-backticks-yank
-   "gy" 'ok-evil-reddit-yank
-   "go" '+evil:yank-unindented
-   )
+  (section "webpaste"
+    (map! :map doom-leader-map
+          "h" nil)
+
+    (map! :map evil-normal-state-map
+          ",h" #'webpaste-paste-buffer)
+
+    (general-define-key
+     :keymaps '(evil-normal-state-map evil-visual-state-map)
+     "gh" 'ok-evil-webpaste
+     "gs" 'ok-evil-three-backticks-yank
+     "gy" 'ok-evil-reddit-yank
+     "go" '+evil:yank-unindented
+     ))
 
   (general-define-key
    :keymaps 'evil-visual-state-map
