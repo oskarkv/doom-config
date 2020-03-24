@@ -21,13 +21,13 @@
 (defun ok-get-string-from-file (file)
   "Return FILE's content."
   (with-temp-buffer
-    (insert-file-contents filePath)
+    (insert-file-contents file)
     (buffer-string)))
 
 (defun ok-read-lines (file)
   "Return a list of lines of FILE."
   (with-temp-buffer
-    (insert-file-contents filePath)
+    (insert-file-contents file)
     (split-string (buffer-string) "\n" t)))
 
 (defmacro cmd (&rest body)
