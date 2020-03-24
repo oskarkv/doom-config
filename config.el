@@ -8,8 +8,19 @@
   (require 'cl-indent)
   (require 'dash))
 
+(setq rcirc-server-alist
+      '(("irc.freenode.net"
+         :channels ("#rcirc" "#emacs" "#evil-mode")))
+      rcirc-default-nick "tufflax"
+      rcirc-authinfo
+      (list (seq-concatenate
+             'list
+             '("freenode" nickserv "tufflax")
+             (list (ok-get-string-from-file ".freenode-pass")))))
+
 (setq webpaste-provider-priority
-      '("dpaste.org" "ix.io" "gist.github.com" "dpaste.com" "paste.mozilla.org" "paste.pound-python.org"))
+      '("gist.github.com" "dpaste.com" "paste.mozilla.org" "dpaste.org"
+        "ix.io" "paste.pound-python.org"))
 
 ;; ;; Bind <tab> to what TAB was bound to, in all keymaps that had
 ;; ;; TAB but not <tab>. This might miss prefix maps? And "S-<tab>"?
