@@ -52,3 +52,8 @@
 
 (package! command-log-mode
   :recipe (:host github :repo "lewang/command-log-mode"))
+
+(package! webpaste
+  :recipe (:host github :repo "etu/webpaste.el"))
+
+(add-load-path! ".")
