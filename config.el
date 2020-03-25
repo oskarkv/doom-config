@@ -898,17 +898,7 @@ unless <tab> was already bound."
    :n "C-i C-i" 'esexp-forward-slurp-sexp
    :n "C-i C-n" 'esexp-forward-barf-sexp
    :n "C-n C-i" 'esexp-backward-barf-sexp
-   :n "C-n c-n" 'esexp-backward-slurp-sexp)
-
-  (map!
-   :after (:or utils racket clojure hy)
-   :map (lisp-mode-shared-map
-         clojure-mode-map
-         hy-mode-map
-         inferior-hy-mode-map
-         cider-repl-mode-map
-         racket-mode-map
-         racket-repl-mode-map)
+   :n "C-n C-n" 'esexp-backward-slurp-sexp
    :prefix "SPC"
    :n "q" 'esexp-wrap-word-in-backticks
    :n "f" 'ok-clojure-fill-paragraph
