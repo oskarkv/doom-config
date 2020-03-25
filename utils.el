@@ -2,6 +2,11 @@
 (require 'dash)
 (require 'seq)
 
+(defmacro with-gensyms (syms &rest body)
+  (declare (indent 1))
+  `(let (,@(seq-map (lambda (sym) (list sym '(cl-gensym))) syms))
+     ,@body))
+
 (defmacro section (&rest code)
   "Macro just for code folding purposes; ignores the first argument."
   (declare (indent 1))
@@ -17,6 +22,42 @@
 
 (defun neg? (n)
   (< n 0))
+
+(defalias 'as-> '-as->)
+(defalias 'some-> '-some->)
+(defalias 'some->> '-some->>)
+
+(defmacro cond-> (expr &rest clauses)
+  (assert (evenp (length clauses))
+          t "cond-> requires an odd number of args")
+  (let* ((g (gensym))
+         (steps (seq-map (-lambda ((test step))
+                           `(if ,test (-> ,g ,step) ,g))
+                         (seq-partition clauses 2))))
+    `(let* ((,g ,expr)
+            ,@(seq-partition (-interleave (-repeat (length clauses) g)
+                                         steps)
+                            2))
+       ,g)))
+
+(defmacro cond->> (expr &rest clauses)
+  (assert (evenp (length clauses))
+          t "cond->> requires an odd number of args")
+  (let* ((g (gensym))
+         (steps (seq-map (-lambda ((test step))
+                           `(if ,test (->> ,g ,step) ,g))
+                         (seq-partition clauses 2))))
+    `(let* ((,g ,expr)
+            ,@(seq-partition (-interleave (-repeat (length clauses) g)
+                                         steps)
+                            2))
+       ,g)))
+
+(defun ok-blank-line? (&optional point)
+  (save-excursion
+    (when point (goto-char point))
+    (beginning-of-line)
+    (looking-at "[ \t]*$")))
 
 (defun ok-get-string-from-file (file)
   "Return FILE's content."
@@ -37,11 +78,6 @@
 (defmacro fn (&rest body)
   "Wraps BODY in a lambda."
   `(lambda (&rest args) ,@body))
-
-(defmacro with-gensyms (syms &rest body)
-  (declare (indent 1))
-  `(let (,@(seq-map (lambda (sym) (list sym '(cl-gensym))) syms))
-     ,@body))
 
 (defmacro update-place (place fn &rest args)
   `(setf ,place (funcall ,fn ,place ,@args)))
