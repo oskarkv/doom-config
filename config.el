@@ -302,6 +302,8 @@ unless <tab> was already bound."
     #'doom-init-smartparens-in-minibuffer-maybe-h)
   (smartparens-global-mode -1))
 
+(setq +evil-want-o/O-to-continue-comments nil)
+
 (after! evil-org
   ;; Cycle between 3 states on a heading (folded, subheadings, all)
   (setq org-tab-first-hook (delete '+org-cycle-only-current-subtree-h org-tab-first-hook)))
