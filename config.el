@@ -173,7 +173,7 @@ unless <tab> was already bound."
   should be used for code from the mode."
   (let ((mode-alist '((emacs-lisp-mode . "lisp"))))
     (or (cdr (assoc m mode-alist))
-        (string-drop-at-end (str m) 5))))
+        (ok-string-drop-at-end (str m) 5))))
 
 (evil-define-operator ok-evil-three-backticks-yank (beg end type register yank-handler)
   "Yanks text and adds three backticks around it, as well as a
