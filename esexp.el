@@ -68,64 +68,6 @@ include whitespace (before or after) if INCLUDE-WHITESPACE is non-nil."
     (let* ((pos2 (if shrink (esexp-shrink-bounds pos) pos)))
       (if include-whitespace (esexp-expand-around pos2 include-newlines) pos2))))
 
-(defun esexp--stuff-before-comment ()
-  "Returns t if the current line does not start with a comment (after any
-leading whitespace)."
-    (save-excursion
-      (beginning-of-line)
-      (not (looking-at (concat "[ \t]*" comment-start)))))
-
-(defun esexp--in-comment ()
-  (save-excursion
-    (goto-char (point-at-eol))
-    (evil-in-comment-p)))
-
-(defun esexp--normal-comment-positions (around)
-  "Returns the positions of a normal comment (not a comment after code)."
-  ;; We have already determined that there is nothing but whitespace before the
-  ;; comment
-  (when (esexp--in-comment)
-    (save-excursion
-      (-let (((beg end) (-cons-to-list (evilnc-get-comment-bounds))))
-        (goto-char beg)
-        (when (not around)
-          (setq beg (re-search-forward (concat "\\s-*" comment-start "+"))))
-        (list beg end)))))
-
-(defun esexp--eol-comment-positions (around)
-  "Return comment positions when comment is after a line of code."
-  (save-excursion
-    (let* ((eol (point-at-eol)))
-      (beginning-of-line)
-      (if around
-          (progn
-            (re-search-forward (concat "\\s-*" comment-start "+"))
-            (goto-char (match-beginning 0)))
-        (re-search-forward (concat comment-start "+\\s-*")))
-      (when (< (point) eol)
-        (list (point) eol)))))
-
-(defun esexp-comment-positions (around)
-  (or (if (esexp--stuff-before-comment)
-          (esexp--eol-comment-positions around)
-        (esexp--normal-comment-positions around))
-      '(nil nil)))
-
-(defun esexp-beginning-of-comment ()
-  (goto-char (car (esexp-comment-positions))))
-
-(defun esexp-end-of-comment ()
-  (goto-char (cadr (esexp-comment-positions))))
-
-(put 'esexp-comment 'end-op 'esexp-end-of-comment)
-(put 'esexp-comment 'beginning-op 'esexp-beginning-of-comment)
-
-(evil-define-text-object esexp-around-comment (count &optional beg end type)
-  (evil-select-an-object 'esexp-comment beg end type count t))
-
-(evil-define-text-object esexp-inner-comment (count &optional beg end type)
-  (evil-select-inner-object 'esexp-comment beg end type count t))
-
 (defun esexp-true-string-positions ()
   (let ((pos (ignore-errors (bounds-of-evil-string-at-point))))
     (when pos
@@ -195,6 +137,57 @@ leading whitespace)."
 (defun esexp-element-positions (around)
   (esexp-correct-bounds nil around nil (esexp-true-element-positions)))
 
+(defun esexp--stuff-before-comment ()
+  "Returns t if the current line does not start with a comment (after any
+leading whitespace)."
+    (save-excursion
+      (beginning-of-line)
+      (not (looking-at (concat "[ \t]*" comment-start)))))
+
+(defun esexp--in-comment ()
+  (save-excursion
+    (goto-char (point-at-eol))
+    (evil-in-comment-p)))
+
+(defun esexp--normal-comment-positions (around)
+  "Returns the positions of a normal comment (not a comment after code)."
+  ;; We have already determined that there is nothing but whitespace before the
+  ;; comment
+  (when (esexp--in-comment)
+    (save-excursion
+      (-let (((beg end) (-cons-to-list (evilnc-get-comment-bounds))))
+        (if around
+            (list beg end)
+          (progn
+            (goto-char beg)
+            (setq beg (re-search-forward (concat "\\s-*" comment-start "+[ \t]+")))
+            (update-place end #'1-)
+            (list beg end)))))))
+
+(defun esexp--eol-comment-positions (around)
+  "Return comment positions when comment is after a line of code."
+  (save-excursion
+    (let* ((eol (point-at-eol)))
+      (beginning-of-line)
+      (if around
+          (progn
+            (re-search-forward (concat "\\s-*" comment-start "+"))
+            (goto-char (match-beginning 0)))
+        (re-search-forward (concat comment-start "+\\s-*")))
+      (when (< (point) eol)
+        (list (point) eol)))))
+
+(defun esexp-comment-positions (around)
+  (or (if (esexp--stuff-before-comment)
+          (esexp--eol-comment-positions around)
+        (-let (((beg end) (esexp--normal-comment-positions around)))
+          (when (> (count-lines beg end) 1)
+            (update-place end #'1+))
+          (list beg end)))
+      '(nil nil)))
+
+;; ar
+
 (defun esexp-wrap-positions (open close pos-fn insert-where)
   (ignore-errors
     (-let* (((beg end) (funcall pos-fn)))
@@ -237,35 +230,35 @@ leading whitespace)."
 ;; all combinations found in esexp-define-wrappers macro.
 (esexp-define-wrappers)
 
-(defun esexp-define-text-object-form (modifier name val)
+(defun esexp-define-text-object-form (modifier name val type)
   `(evil-define-text-object
      ,(intern (concat "esexp-" modifier "-" name))
      (count &optional beg end type)
      :extend-selection t
+     ,@(when type (list :type type))
      ,(list (intern (concat "esexp-" name "-positions")) val)))
 
-(defmacro esexp-define-text-objects (&rest key-name-pairs)
+(defmacro esexp-define-text-objects (&rest key-name-type-lists)
   `(progn
      ,@(seq-mapcat
-        (-lambda ((key name))
+        (-lambda ((key name around-type inner-type))
           (list
-           (esexp-define-text-object-form "around" name t)
-           (esexp-define-text-object-form "inner" name nil)
+           (esexp-define-text-object-form "around" name t around-type)
+           (esexp-define-text-object-form "inner" name nil inner-type)
            `(define-key evil-outer-text-objects-map
               (kbd ,key) ',(intern (concat "esexp-around-" name)))
            `(define-key evil-inner-text-objects-map
               (kbd ,key) ',(intern (concat "esexp-inner-" name)))))
-        (seq-partition key-name-pairs 2))))
+        key-name-type-lists)))
 
-;; arstarstart arstart arstar
-;; arst rstrst rstrs
+;; arstr
 
 (esexp-define-text-objects
- "f" "form"
- "s" "string"
- ;; "c" "comment"
- "t" "toplevel"
- "e" "element")
+ ("f" "form")
+ ("s" "string")
+ ("c" "comment" line nil)
+ ("t" "toplevel" line line)
+ ("e" "element"))
 
 (define-key evil-inner-text-objects-map
   (kbd "d") #'+evil:defun-txtobj)
