@@ -5,11 +5,6 @@
 (require 'seq)
 (require 'dash)
 
-;; (general-evil-define-key
-;;     'normal
-;;     :keymaps global-map
-;;     "ö" (cmd (princ (apply #'count-lines (-cons-to-list (evilnc-get-comment-bounds))))))
-
 (defvar esexp-element-separator-re "[][[:space:]\n\r(){}]")
 
 (defvar esexp-paren-re "[][(){}]")
@@ -31,6 +26,8 @@
 delimiters that encloses POINT."
   (evil-select-paren open close point (or end-point point) 'inclusive 1 t))
 
+;; This function seems buggy if expand-past-newlines is t,
+;; but it's not used for now. Use
 (defun esexp-expand-around (pos &optional expand-past-newlines)
   "Expand into the whitespace around pos. If whitespace after pos, use
 that. Else use whitespace before pos."
@@ -45,6 +42,40 @@ that. Else use whitespace before pos."
             (setf (car pos) (point)))
         (setf (cadr pos) (point)))
       pos)))
+
+(defun esexp-expand-lines-up (pos)
+  (save-excursion
+    (-let (((beg end) pos))
+      (goto-char beg)
+      (do-while (ok-blank-line?)
+        (evil-previous-line))
+      (evil-next-line)
+      (beginning-of-line)
+      (list (point) end))))
+
+(defun esexp-expand-lines-down (pos)
+  (save-excursion
+    (-let (((beg end) pos))
+      (goto-char end)
+      (while (ok-blank-line?)
+        (evil-next-line))
+      (beginning-of-line)
+      (list beg (point)))))
+
+(defun esexp-expand-around-lines (pos &optional only-if-surrounded-by-space)
+  (save-excursion
+    (-let (((beg end) pos)
+           blank-above blank-below)
+      (goto-char beg)
+      (evil-previous-line)
+      (setq blank-above (ok-blank-line?))
+      (goto-char end)
+      (setq blank-below (ok-blank-line?))
+      (if (or (and blank-below blank-above) (not only-if-surrounded-by-space))
+          (if blank-below
+              (esexp-expand-lines-down pos)
+            (esexp-expand-lines-up pos))
+        pos))))
 
 (defun esexp-include-macro-char (pos-beg)
   "If the current selection POS-BEG starts with a macro character (#) then
@@ -110,7 +141,11 @@ include whitespace (before or after) if INCLUDE-WHITESPACE is non-nil."
       pos)))
 
 (defun esexp-toplevel-positions (around)
-  (esexp-correct-bounds (not around) nil nil (esexp-true-toplevel-positions)))
+  (-let (((beg end) (esexp-correct-bounds
+                     (not around) nil nil (esexp-true-toplevel-positions))))
+    (when around (update-place end #'1+))
+    (cond-> (list beg end)
+            around (esexp-expand-around-lines nil))))
 
 (defun esexp-beginning-of-element ()
   (re-search-backward esexp-element-separator-re)
@@ -183,13 +218,12 @@ leading whitespace)."
 (defun esexp-comment-positions (around)
   (or (if (esexp--stuff-before-comment)
           (esexp--eol-comment-positions around)
-        (-let (((beg end) (esexp--normal-comment-positions around)))
-          (when (> (count-lines beg end) 1)
-            (update-place end #'1+))
-          (list beg end)))
+        (cond-> (-let (((beg end) (esexp--normal-comment-positions around)))
+                  (when (> (count-lines beg end) 1)
+                    (update-place end #'1+))
+                  (list beg end))
+                around (esexp-expand-around-lines t)))
       '(nil nil)))
-
-;; ar
 
 (defun esexp-wrap-positions (open close pos-fn insert-where)
   (ignore-errors
@@ -254,13 +288,11 @@ leading whitespace)."
               (kbd ,key) ',(intern (concat "esexp-inner-" name)))))
         key-name-type-lists)))
 
-;; arstr
-
 (esexp-define-text-objects
  ("f" "form")
  ("s" "string")
  ("c" "comment" line nil)
- ("t" "toplevel" line line)
+ ("t" "toplevel" line nil)
  ("e" "element"))
 
 (define-key evil-inner-text-objects-map
@@ -397,9 +429,6 @@ leading whitespace)."
   (print type)
   (print (list beg end))
   (funcall delete beg end type register yank-handler))
-
-;;(advice-add 'evil-delete :around 'advice-fn)
-;;(advice-remove 'evil-delete 'advice-fn)
 
 (defun esexp--slurp-or-barf-fn (f stay-at-end)
   "Make a slurp or barf function using the paredit function F, but that does not
