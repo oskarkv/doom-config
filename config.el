@@ -16,7 +16,7 @@
       (list (seq-concatenate
              'list
              '("freenode" nickserv "tufflax")
-             (list (ok-get-string-from-file ".freenode-pass")))))
+             (list (ok-get-string-from-file "~/.doom.d/.freenode-pass")))))
 
 (setq webpaste-provider-priority
       '("gist.github.com" "dpaste.com" "paste.mozilla.org" "dpaste.org"
