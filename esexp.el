@@ -156,6 +156,9 @@ leading whitespace)."
   (when (esexp--in-comment)
     (save-excursion
       (-let (((beg end) (-cons-to-list (evilnc-get-comment-bounds))))
+        (goto-char beg)
+        (beginning-of-line)
+        (setq beg (point))
         (if around
             (list beg end)
           (progn
