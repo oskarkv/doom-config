@@ -1150,7 +1150,7 @@ unless <tab> was already bound."
     "et" 'cider-eval-defun-at-point
     "gn" 'cider-find-ns
     "gr" 'cider-find-resource
-    "m" 'ok-cider-macroexpand
+    "m" 'esexp-cider-macroexpand
     "rt" 'clojure-thread
     "ru" 'clojure-unwind
     "ra" 'clojure-unwind-all

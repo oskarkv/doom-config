@@ -1,6 +1,7 @@
 ;;; -*- lexical-binding: t -*-
 (require 'utils)
 (require 'evil)
+(require 'evil-nerd-commenter)
 (require 'paredit)
 (require 'seq)
 (require 'dash)
