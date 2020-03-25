@@ -189,7 +189,7 @@ unless <tab> was already bound."
   ;; For racket
   (defun macro-stepper ()
     (interactive)
-    (-let* (((beg end) (ok-true-toplevel-positions))
+    (-let* (((beg end) (esexp-true-toplevel-positions))
             (text (buffer-substring-no-properties beg end)))
       (comint-send-string (get-buffer-process "*racket repl*")
                           (concat "(expand/step #'" text ")\n"))))
@@ -492,7 +492,7 @@ unless <tab> was already bound."
   (defmacro ok-eval-form-builder (sender)
     `(lambda ()
        (interactive)
-       (-let* (((b e) (ok-true-form-positions)))
+       (-let* (((b e) (esexp-true-form-positions)))
          (,sender b e))))
 
   (defalias 'ok-eval-form (ok-eval-form-builder eval-region))
@@ -518,7 +518,7 @@ unless <tab> was already bound."
   (defun ok-hy-eval-toplevel ()
     (interactive)
     (save-excursion
-      (-let* (((b e) (ok-true-toplevel-positions)))
+      (-let* (((b e) (esexp-true-toplevel-positions)))
         (goto-char (1- e))
         (hy-shell-eval-current-form))))
 
@@ -552,6 +552,13 @@ unless <tab> was already bound."
         (insert "`")))))
 
 (section "Keybindings"
+  (evil-define-command ok-run-q-macro (count)
+    (interactive "<c>")
+    :repeat nil
+    (evil-execute-macro count (evil-get-register ?q)))
+
+  (map! :map evil-normal-state-map
+        "M-t" #'ok-run-q-macro)
 
   (after! org
     (general-evil-define-key
@@ -813,7 +820,7 @@ unless <tab> was already bound."
      "nn" (cmd (cljr--clean-ns nil :no-prune)))
 
     (defun clean-ns-more (&rest args)
-      (-let* (((beg end) (ok-true-toplevel-positions)))
+      (-let* (((beg end) (esexp-true-toplevel-positions)))
         (while (re-search-forward "(:\\(require\\|use\\|import\\)" end t)
           (re-search-forward " ")
           (when (not (= (char-before (1- (point))) ?\n))
@@ -822,7 +829,7 @@ unless <tab> was already bound."
         (goto-char beg)
         ;; wrap naked words in libs in []
         (when (re-search-forward ":require" end t)
-          (-let* (((beg end) (ok-true-form-positions)))
+          (-let* (((beg end) (esexp-true-form-positions)))
             (while (re-search-forward "^\\s-*[a-z]" end t)
               (backward-char)
               (insert "[")
@@ -833,7 +840,7 @@ unless <tab> was already bound."
               (setq end (+ 2 end)))))
         (goto-char beg)
         (when (re-search-forward ":import" end t)
-          (-let* (((beg end) (ok-true-toplevel-positions)))
+          (-let* (((beg end) (esexp-true-toplevel-positions)))
             (while (re-search-forward "^\\s-*[a-z]" end t)
               (backward-char)
               (insert "(")
@@ -844,7 +851,7 @@ unless <tab> was already bound."
               (setq end (+ 2 end)))))
         (goto-char beg)
         (when (re-search-forward ":import" end t)
-          (-let* (((beg end) (ok-true-toplevel-positions)))
+          (-let* (((beg end) (esexp-true-toplevel-positions)))
             (while (re-search-forward "\\[" end t)
               (replace-match "(")
               (re-search-forward "\\]")
@@ -879,13 +886,15 @@ unless <tab> was already bound."
 
   (map!
    :after (:or utils racket clojure hy)
-   :map (lisp-mode-shared-map
-         clojure-mode-map
-         hy-mode-map
-         inferior-hy-mode-map
-         cider-repl-mode-map
-         racket-mode-map
-         racket-repl-mode-map)
+   :map (prog-mode-map
+         ;; lisp-mode-shared-map
+         ;; clojure-mode-map
+         ;; hy-mode-map
+         ;; inferior-hy-mode-map
+         ;; cider-repl-mode-map
+         ;; racket-mode-map
+         ;; racket-repl-mode-map
+         )
    :n "(" 'esexp-backward-paren
    :n ")" 'esexp-forward-paren
    :n "M-i" 'esexp-transpose-sexps
@@ -895,10 +904,10 @@ unless <tab> was already bound."
    :n "M-e" 'paredit-splice-sexp
    :n "M-u" 'paredit-raise-sexp
    :n "C-M-u" 'esexp-raise-form
-   :n "C-i C-i" 'esexp-forward-slurp-sexp
-   :n "C-i C-n" 'esexp-forward-barf-sexp
-   :n "C-n C-i" 'esexp-backward-barf-sexp
-   :n "C-n C-n" 'esexp-backward-slurp-sexp
+   :n "C-i" 'esexp-forward-slurp-sexp
+   :n "C-n" 'esexp-backward-slurp-sexp
+   :n "C-m" 'esexp-backward-barf-sexp
+   :n "C-ä" 'esexp-forward-barf-sexp
    :prefix "SPC"
    :n "q" 'esexp-wrap-word-in-backticks
    :n "f" 'ok-clojure-fill-paragraph
@@ -918,6 +927,27 @@ unless <tab> was already bound."
    :n "}" 'esexp-wrap-form-braces-end
    )
 
+  (general-define-key
+   :keymaps 'evil-normal-state-map
+   :prefix "SPC"
+    "dk" 'describe-key
+    "db" 'describe-bindings)
+
+  (general-evil-define-key
+      'normal '(emacs-lisp-mode-map
+                lisp-interaction-mode-map)
+    :prefix "SPC"
+    "dd" 'describe-symbol
+    "dv" 'describe-variable
+    "df" 'describe-function
+    "et" 'eval-defun
+    "sw" 'evil-goto-definition
+    "ed" (cmd (eval-defun t))
+    "eb" 'eval-buffer
+    "ef" 'ok-eval-form
+    "es" 'eval-last-sexp
+    "m" 'macrostep-expand
+    )
   ;; (general-evil-define-key
   ;;     'normal '(lisp-mode-shared-map
   ;;               clojure-mode-map
@@ -1073,20 +1103,6 @@ unless <tab> was already bound."
    "w" 'webpaste-paste-region
    )
 
-  (general-evil-define-key
-      'normal '(emacs-lisp-mode-map
-                lisp-interaction-mode-map)
-    :prefix "SPC"
-    "dd" 'describe-function
-    "dv" 'describe-variable
-    "et" 'eval-defun
-    "sw" 'evil-goto-definition
-    "ed" (cmd (eval-defun t))
-    "eb" 'eval-buffer
-    "ef" 'ok-eval-form
-    "es" 'eval-last-sexp
-    "m" 'macrostep-expand
-    )
 
   ;; (general-evil-define-key
   ;;     'visual lisp-mode-shared-map
