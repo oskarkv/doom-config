@@ -3,45 +3,6 @@
 (require 'esexp)
 (require 'utils)
 
-;; ;; Bind <tab> to what TAB was bound to, in all keymaps that had
-;; ;; TAB but not <tab>. This might miss prefix maps? And "S-<tab>"?
-;; (mapatoms (lambda (sym) (if (and (boundp sym)
-;;                                  (keymapp (symbol-value sym))
-;;                                  (s-ends-with-p "-map" (symbol-name sym)))
-;;                             (let* ((km (symbol-value sym))
-;;                                    (ci-val (lookup-key km (kbd "TAB")))
-;;                                    (tab-val (lookup-key km (kbd "<tab>"))))
-;;                               (if (and ci-val (not tab-val))
-;;                                   (define-key km (kbd "<tab>") ci-val)))))
-;;           obarray)
-
-(defun ok-bind-tab-to-TAB (keymap)
-  "Bind <tab> (regular tab) to what TAB (C-i) was bound to in KEYMAP,
-unless <tab> was already bound, then unbinds TAB."
-  (unless (lookup-key keymap (kbd "<tab>"))
-    (define-key keymap (kbd "<tab>") (lookup-key keymap (kbd "TAB"))))
-  (define-key keymap (kbd "TAB") nil))
-
-(defun ok-fix-tab-fn (mode)
-  "MODE can be a mode or a list of (mode keymap)."
-  (-let (((mode map) (if (listp mode) mode (list mode))))
-    `(after! ,mode
-       (ok-bind-tab-to-TAB
-        (or ,map
-            (symbol-value (intern-soft (concat (symbol-name ',mode) "-mode-map"))))))))
-
-(defmacro ok-fix-tab (&rest modes)
-  "Binds whatever TAB was bound to to <tab> in the mode's keymap. A mode in
-MODES can be a symbol or a list consisting of a symbol and a boolean. If the
-boolean is non-nil, also unbinds TAB in that mode."
-  (declare (indent 0))
-  `(progn ,@(seq-map #'ok-fix-tab-fn modes)))
-
-(ok-fix-tab
-  org
-  (ivy ivy-minibuffer-map)
-  evil-org)
-
 ;; Name and email address
 (setq user-full-name "Oskar Kvist"
       user-mail-address "oskar.kvist@gmail.com")
@@ -98,7 +59,36 @@ boolean is non-nil, also unbinds TAB in that mode."
 (dolist (fn '(switch-to-next-buffer switch-to-prev-buffer))
   (advice-remove fn #'doom-run-switch-to-next-prev-buffer-hooks-a))
 
-;;; Utils
+;;; Fix TAB shadowing C-i
+
+(defun ok-bind-tab-to-TAB (keymap)
+  "Bind <tab> (regular tab) to what TAB (C-i) was bound to in KEYMAP,
+unless <tab> was already bound, then unbinds TAB."
+  (unless (lookup-key keymap (kbd "<tab>"))
+    (define-key keymap (kbd "<tab>") (lookup-key keymap (kbd "TAB"))))
+  (define-key keymap (kbd "TAB") nil))
+
+(defun ok-fix-tab-fn (mode)
+  "MODE can be a mode or a list of (mode keymap)."
+  (-let (((mode map) (if (listp mode) mode (list mode))))
+    `(after! ,mode
+       (ok-bind-tab-to-TAB
+        (or ,map
+            (symbol-value (intern-soft (concat (symbol-name ',mode) "-mode-map"))))))))
+
+(defmacro ok-fix-tab (&rest modes)
+  "Binds whatever TAB was bound to to <tab> in the mode's keymap. A mode in
+MODES can be a symbol or a list consisting of a symbol and a boolean. If the
+boolean is non-nil, also unbinds TAB in that mode."
+  (declare (indent 0))
+  `(progn ,@(seq-map #'ok-fix-tab-fn modes)))
+
+(ok-fix-tab
+  org
+  (ivy ivy-minibuffer-map)
+  evil-org)
+
+;;; Some operators
 
 (evil-define-operator ok-evil-webpaste (beg end)
   :repeat nil
@@ -127,92 +117,9 @@ boolean is non-nil, also unbinds TAB in that mode."
                     "```")
             t))
 
-(section-comment "Crap from old config"
-  ;; For racket
-  (defun macro-stepper ()
-    (interactive)
-    (-let* (((beg end) (esexp-true-toplevel-positions))
-            (text (buffer-substring-no-properties beg end)))
-      (comint-send-string (get-buffer-process "*racket repl*")
-                          (concat "(expand/step #'" text ")\n"))))
-
-  (advice-add 'cider-popup-buffer
-              :before (lambda (buffer &rest args)
-                        (when (get-buffer buffer)
-                          (evil-delete-buffer buffer))))
-
-  (advice-add 'cider-doc
-              :before (lambda (&rest args)
-                        (let ((b "*cider-doc*"))
-                          (when (get-buffer b)
-                            (evil-delete-buffer b)))))
-
-  (defun display-buffer-min (buffer alist)
-    (if (= (length (window-list)) 1)
-        (display-buffer-pop-up-window buffer nil)
-      (display-buffer-use-some-window buffer nil)))
-
-  (setq display-buffer-alist
-        '(("\\*Backtrace\\*" . ((display-buffer-min)))))
-
-  (use-package rainbow-delimiters
-    :ensure t
-    :config
-    (defmacro rainbow-delimiters--define-depth-faces ()
-      (let ((faces '())
-            (light-colors ["#707183" "#7388d6" "#909183" "#709870" "#907373"
-                           "#6276ba" "#858580" "#80a880" "#887070"])
-            (dark-colors ["grey55" "#93a8c6" "#b0b1a3" "#97b098" "#aebed8"
-                          "#b0b0b3" "#90a890" "#a2b6da" "#9cb6ad"]))
-        (dotimes (i 2)
-          (push `(defface ,(intern (format "rainbow-delimiters-depth-%d-face" (+ 10 i)))
-                   '((((class color) (background light)) :foreground ,(aref light-colors i))
-                     (((class color) (background dark)) :foreground ,(aref dark-colors i)))
-                   ,(format "nested delimiter face, depth %d." (+ 10 i))
-                   :group 'rainbow-delimiters-faces)
-                faces))
-        `(progn ,@faces)))
-    (rainbow-delimiters--define-depth-faces)
-    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
-    (add-hook 'org-mode-hook #'rainbow-delimiters-mode-disable)
-    (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode)
-    (add-hook 'text-mode-hook #'rainbow-delimiters-mode))
-
-  (use-package orgtbl-aggregate
-    :ensure t)
-
-  (use-package magit
-    :ensure t
-    :config
-    (add-hook 'git-commit-mode-hook
-              (lambda ()
-                (setq fill-column 72)
-                (turn-on-auto-fill))))
-
-  (use-package cider
-    :load-path "~/code/cider"
-    :ensure t
-    :config
-                                        ;(setq cider-latest-middleware-version "0.21.2-snapshot")
-    (emacs-mode-in-mode cider--debug-mode-hook cider--debug-mode)
-    (setq-default
-     cider-font-lock-reader-conditionals nil
-     cider-pprint-fn 'fipp
-     cider-repl-use-pretty-printing t
-     cider-font-lock-dynamically t
-     cider-prompt-for-symbol nil))
-
-  (use-package fill-column-indicator
-    :config
-    (setq fci-rule-color "#502727")
-    (setq fci-rule-width 4)
-    (setq fci-always-use-textual-rule nil)
-    (add-hook 'clojure-mode-hook 'fci-mode)
-    (add-hook 'hy-mode-hook 'fci-mode)))
-
 ;;; Settings
 
-(setq which-key-show-operator-state-maps t)
+(setq which-key-show-operator-state-maps nil)
 
 (section "requires"
   (require 'seq)
@@ -1257,3 +1164,86 @@ boolean is non-nil, also unbinds TAB in that mode."
       ((bug-reference-bug-regexp . "#\\(?2:[[:digit:]]+\\)")
        (checkdoc-package-keywords-flag)))))
   )
+
+(section-comment "Crap from old config"
+  ;; For racket
+  (defun macro-stepper ()
+    (interactive)
+    (-let* (((beg end) (esexp-true-toplevel-positions))
+            (text (buffer-substring-no-properties beg end)))
+      (comint-send-string (get-buffer-process "*racket repl*")
+                          (concat "(expand/step #'" text ")\n"))))
+
+  (advice-add 'cider-popup-buffer
+              :before (lambda (buffer &rest args)
+                        (when (get-buffer buffer)
+                          (evil-delete-buffer buffer))))
+
+  (advice-add 'cider-doc
+              :before (lambda (&rest args)
+                        (let ((b "*cider-doc*"))
+                          (when (get-buffer b)
+                            (evil-delete-buffer b)))))
+
+  (defun display-buffer-min (buffer alist)
+    (if (= (length (window-list)) 1)
+        (display-buffer-pop-up-window buffer nil)
+      (display-buffer-use-some-window buffer nil)))
+
+  (setq display-buffer-alist
+        '(("\\*Backtrace\\*" . ((display-buffer-min)))))
+
+  (use-package rainbow-delimiters
+    :ensure t
+    :config
+    (defmacro rainbow-delimiters--define-depth-faces ()
+      (let ((faces '())
+            (light-colors ["#707183" "#7388d6" "#909183" "#709870" "#907373"
+                           "#6276ba" "#858580" "#80a880" "#887070"])
+            (dark-colors ["grey55" "#93a8c6" "#b0b1a3" "#97b098" "#aebed8"
+                          "#b0b0b3" "#90a890" "#a2b6da" "#9cb6ad"]))
+        (dotimes (i 2)
+          (push `(defface ,(intern (format "rainbow-delimiters-depth-%d-face" (+ 10 i)))
+                   '((((class color) (background light)) :foreground ,(aref light-colors i))
+                     (((class color) (background dark)) :foreground ,(aref dark-colors i)))
+                   ,(format "nested delimiter face, depth %d." (+ 10 i))
+                   :group 'rainbow-delimiters-faces)
+                faces))
+        `(progn ,@faces)))
+    (rainbow-delimiters--define-depth-faces)
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+    (add-hook 'org-mode-hook #'rainbow-delimiters-mode-disable)
+    (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode)
+    (add-hook 'text-mode-hook #'rainbow-delimiters-mode))
+
+  (use-package orgtbl-aggregate
+    :ensure t)
+
+  (use-package magit
+    :ensure t
+    :config
+    (add-hook 'git-commit-mode-hook
+              (lambda ()
+                (setq fill-column 72)
+                (turn-on-auto-fill))))
+
+  (use-package cider
+    :load-path "~/code/cider"
+    :ensure t
+    :config
+                                        ;(setq cider-latest-middleware-version "0.21.2-snapshot")
+    (emacs-mode-in-mode cider--debug-mode-hook cider--debug-mode)
+    (setq-default
+     cider-font-lock-reader-conditionals nil
+     cider-pprint-fn 'fipp
+     cider-repl-use-pretty-printing t
+     cider-font-lock-dynamically t
+     cider-prompt-for-symbol nil))
+
+  (use-package fill-column-indicator
+    :config
+    (setq fci-rule-color "#502727")
+    (setq fci-rule-width 4)
+    (setq fci-always-use-textual-rule nil)
+    (add-hook 'clojure-mode-hook 'fci-mode)
+    (add-hook 'hy-mode-hook 'fci-mode)))
