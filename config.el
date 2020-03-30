@@ -249,52 +249,10 @@ boolean is non-nil, also unbinds TAB in that mode."
   (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
   (setq org-clock-clocked-in-display nil
         org-M-RET-may-split-line nil)
-
-  ;; Original paragraph-separate and -start in org mode,
-  ;; works weirdl. Saved here if I wanna try to edit it
-  ;; sometimes.
-  (defvar ok-org-paragraph-separate
-    (concat "^\\(?:"
-            ;; Headlines, inlinetasks.
-            org-outline-regexp "\\|"
-            ;; Footnote definitions.
-            "\\[fn:[-_[:word:]]+\\]" "\\|"
-            ;; Diary sexps.
-            "%%(" "\\|"
-            "[ \t]*\\(?:"
-            ;; Empty lines.
-            "$" "\\|"
-            ;; Tables (any type).
-            "|" "\\|"
-            "\\+\\(?:-+\\+\\)+[ \t]*$" "\\|"
-            ;; Comments, keyword-like or block-like constructs.
-            ;; Blocks and keywords with dual values need to be
-            ;; double-checked.
-            "#\\(?: \\|$\\|\\+\\(?:"
-            "BEGIN_\\S-+" "\\|"
-            "\\S-+\\(?:\\[.*\\]\\)?:[ \t]*\\)\\)"
-            "\\|"
-            ;; Drawers (any type) and fixed-width areas.  Drawers
-            ;; need to be double-checked.
-            ":\\(?: \\|$\\|[-_[:word:]]+:[ \t]*$\\)" "\\|"
-            ;; Horizontal rules.
-            "-\\{5,\\}[ \t]*$" "\\|"
-            ;; LaTeX environments.
-            "\\\\begin{\\([A-Za-z0-9*]+\\)}" "\\|"
-            ;; Clock lines.
-            (regexp-quote org-clock-string) "\\|"
-            ;; Lists.
-            (let ((term (pcase org-plain-list-ordered-item-terminator
-                          (?\) ")") (?. "\\.") (_ "[.)]")))
-                  (alpha (and org-list-allow-alphabetical "\\|[A-Za-z]")))
-              (concat "\\(?:[-+*]\\|\\(?:[0-9]+" alpha "\\)" term "\\)"
-                      "\\(?:[ \t]\\|$\\)"))
-            "\\)\\)"))
   (add-hook 'org-mode-hook
             (lambda ()
-              (setq paragraph-separate "[ 	\f]*$" ;;ok-org-paragraph-separate
-                    paragraph-start "\f\\|[ 	]*$")))
-  )
+              (setq paragraph-separate "[ 	\f]*$"
+                    paragraph-start "\f\\|[ 	]*$"))))
 
 ;;; States
 
@@ -788,33 +746,6 @@ boolean is non-nil, also unbinds TAB in that mode."
   "es" 'eval-last-sexp
   "m" 'macrostep-expand
   )
-;; (general-evil-define-key
-;;     'normal '(lisp-mode-shared-map
-;;               clojure-mode-map
-;;               hy-mode-map
-;;               inferior-hy-mode-map
-;;               cider-repl-mode-map
-;;               racket-mode-map
-;;               racket-repl-mode-map)
-;;   :prefix "SPC"
-;;   "q" 'esexp-wrap-word-in-backticks
-;;   "f" 'ok-clojure-fill-paragraph
-;;   "i" 'esexp-insert-at-end
-;;   "n" 'esexp-insert-at-head
-;;   "l" 'esexp-wrap-form-parens-beg
-;;   "L" 'esexp-wrap-form-parens-end
-;;   "w" 'esexp-wrap-element-parens-beg
-;;   "W" 'esexp-wrap-element-parens-end
-;;   "e[" 'esexp-wrap-element-brackets-beg
-;;   "e]" 'esexp-wrap-element-brackets-end
-;;   "e{" 'esexp-wrap-element-braces-beg
-;;   "e}" 'esexp-wrap-element-braces-end
-;;   "[" 'esexp-wrap-form-brackets-beg
-;;   "]" 'esexp-wrap-form-brackets-end
-;;   "{" 'esexp-wrap-form-braces-beg
-;;   "}" 'esexp-wrap-form-braces-end
-;;   )
-
 
 (section-comment "Old keybindings I haven't look at yet"
 
