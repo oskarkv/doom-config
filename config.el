@@ -212,6 +212,23 @@ boolean is non-nil, also unbinds TAB in that mode."
 (after! git
   (setq git-commit-summary-max-length 50))
 
+(after! clj-refactor
+  (apply #'general-define-key
+         :keymaps 'ok-clj-refactor-map
+         (-reduce-from (-lambda (list (key fn))
+                         (cons key (cons fn list)))
+                       nil
+                       cljr--all-helpers))
+
+  (general-define-key
+   :keymaps 'ok-clj-refactor-map
+   "nn" (cmd (cljr--clean-ns nil :no-prune)))
+
+  (advice-add 'cljr--clean-ns :after #'clean-ns-more))
+
+(after! magit
+  (setq magit-display-buffer-function #'magit-display-buffer-traditional))
+
 (setq-default
  ;;; Scrolling
  scroll-margin 5
@@ -451,7 +468,7 @@ boolean is non-nil, also unbinds TAB in that mode."
             evil-visual-state-map
             evil-motion-state-map
             evil-insert-state-map)
- "TAB" nil)
+      "TAB" nil)
 
 (map! :after evil-org
       :map evil-org-mode-map
@@ -483,17 +500,17 @@ boolean is non-nil, also unbinds TAB in that mode."
       "C-," 'evil-exit-emacs-state)
 
 (map! :map global-map
- "C-å" 'ace-window
- "C-ä" 'other-window
- "C-s" 'save-buffer
- "M-f" 'switch-to-prev-buffer
- "M-p" 'switch-to-next-buffer
- "C-u" 'previous-line
- "C-e" 'next-line
- "C-i" 'end-of-line
- "C-n" 'beginning-of-line
- "M-w" 'er/expand-region
- "<tab>" 'complete-symbol)
+      "C-å" 'ace-window
+      "C-ä" 'other-window
+      "C-s" 'save-buffer
+      "M-f" 'switch-to-prev-buffer
+      "M-p" 'switch-to-next-buffer
+      "C-u" 'previous-line
+      "C-e" 'next-line
+      "C-i" 'end-of-line
+      "C-n" 'beginning-of-line
+      "M-w" 'er/expand-region
+      "<tab>" 'complete-symbol)
 
 (map! :map evil-insert-state-map
       "§" 'evil-normal-state
@@ -583,23 +600,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       "e" 'evil-next-line
       "u" 'evil-previous-line)
 
-(after! clj-refactor
-  (apply #'general-define-key
-         :keymaps 'ok-clj-refactor-map
-         (-reduce-from (-lambda (list (key fn))
-                         (cons key (cons fn list)))
-                       nil
-                       cljr--all-helpers))
-
-  (general-define-key
-   :keymaps 'ok-clj-refactor-map
-   "nn" (cmd (cljr--clean-ns nil :no-prune)))
-
-  (advice-add 'cljr--clean-ns :after #'clean-ns-more))
-
 (after! magit
-  (setq magit-display-buffer-function #'magit-display-buffer-traditional)
-
   (ok-rebind-in-all-maps
    "magit" "-map"
    '(magit-popup-mode-map
@@ -611,64 +612,54 @@ boolean is non-nil, also unbinds TAB in that mode."
    "u" nil
    "U" nil
    "M-f" nil
-   "M-p" nil)
+   "M-p" nil))
 
-  (general-define-key
-   :keymaps 'magit-log-mode-map
-   "u" 'previous-line
-   "C-u" (cmd (previous-line 10))
-   "C-e" (cmd (next-line 10)))
-
-  (general-define-key
-   :keymaps 'git-rebase-mode-map
-   "a" 'git-rebase-edit
-   "c" 'git-rebase-kill-line
-   "p" 'git-rebase-pick
-   "q" 'with-editor-cancel
-   "k" 'git-rebase-undo)
-
-  (general-define-key
-   :keymaps '(magit-mode-map
-              git-rebase-mode-map
-              magit-log-select-mode-map
-              magit-log-mode-map)
-   "å" 'ace-window
-   "ä" 'other-window
-   "Ä" (cmd (other-window -1))
-   "u" 'previous-line
-   "e" 'next-line)
-
-  (general-define-key
-   :keymaps '(magit-mode-map
-              magit-status-mode-map)
-   "§" 'keyboard-quit
-   "<f2>" 'magit-refresh-all
-   "gg" 'evil-goto-first-line
-   "G" 'evil-goto-line
-   ":" 'evil-ex
-   "/" 'evil-ex-search-forward
-   "?" 'evil-ex-search-backward
-   "M-h" 'magit-dispatch-popup
-   "h" 'evil-ex-search-next
-   "H" 'evil-ex-search-previous
-   "e" 'next-line
-   "u" 'previous-line
-   "C-e" 'magit-section-forward
-   "C-u" 'magit-section-backward
-   "C-i" 'magit-section-forward-sibling
-   "C-n" 'magit-section-backward-sibling
-   "M-u" 'magit-previous-line
-   "M-e" 'magit-next-line
-   "M-C-e" 'move-down-15-lines
-   "M-C-u" 'move-up-15-lines
-   "C-q" 'set-mark-command
-   "C-r" 'magit-reset
-   "x" 'magit-unstage
-   "X" 'magit-unstage-all
-   )
-
-  (map! :map magit-mode-map
-        :nv "C-d" 'magit-delete-thing))
+(map! :after magit
+      :map magit-log-mode-map
+      "u" 'previous-line
+      "C-u" (cmd (previous-line 10))
+      "C-e" (cmd (next-line 10))
+      :map git-rebase-mode-map
+      "a" 'git-rebase-edit
+      "c" 'git-rebase-kill-line
+      "p" 'git-rebase-pick
+      "q" 'with-editor-cancel
+      "k" 'git-rebase-undo
+      :map (magit-mode-map
+            git-rebase-mode-map
+            magit-log-select-mode-map
+            magit-log-mode-map)
+      "å" 'ace-window
+      "ä" 'other-window
+      "Ä" (cmd (other-window -1))
+      "u" 'previous-line
+      "e" 'next-line
+      :map magit-status-mode-map
+      "§" 'keyboard-quit
+      "<f2>" 'magit-refresh-all
+      "gg" 'evil-goto-first-line
+      "G" 'evil-goto-line
+      ":" 'evil-ex
+      "/" 'evil-ex-search-forward
+      "?" 'evil-ex-search-backward
+      "M-h" 'magit-dispatch-popup
+      "h" 'evil-ex-search-next
+      "H" 'evil-ex-search-previous
+      "e" 'next-line
+      "u" 'previous-line
+      "C-e" 'magit-section-forward
+      "C-u" 'magit-section-backward
+      "C-i" 'magit-section-forward-sibling
+      "C-n" 'magit-section-backward-sibling
+      "M-u" 'magit-previous-line
+      "M-e" 'magit-next-line
+      "M-C-e" 'move-down-15-lines
+      "M-C-u" 'move-up-15-lines
+      "C-q" 'set-mark-command
+      "C-r" 'magit-reset
+      "x" 'magit-unstage
+      "X" 'magit-unstage-all
+      :nv "C-d" 'magit-delete-thing)
 
 (map! :map prog-mode-map
       :after (:or utils racket clojure hy)
