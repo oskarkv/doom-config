@@ -169,6 +169,11 @@ boolean is non-nil, also unbinds TAB in that mode."
           (replace-match ")"))))
     (indent-region beg end)))
 
+(evil-define-command ok-run-q-macro (count)
+  (interactive "<c>")
+  :repeat nil
+  (evil-execute-macro count (evil-get-register ?q)))
+
 ;;; Settings
 
 ;; Make which-key show help for Vim operators
@@ -335,7 +340,6 @@ boolean is non-nil, also unbinds TAB in that mode."
     (while-let 1)
     (with-gensyms 1)))
 
-
 (defvar ok-clj-refactor-map (make-sparse-keymap))
 (defvar -visual-inside-keymap (lookup-key evil-visual-state-map "i"))
 (defvar -operator-inside-keymap (lookup-key evil-operator-state-map "i"))
@@ -401,14 +405,6 @@ boolean is non-nil, also unbinds TAB in that mode."
       (re-search-forward sep)
       (backward-char)
       (insert "`"))))
-
-(evil-define-command ok-run-q-macro (count)
-  (interactive "<c>")
-  :repeat nil
-  (evil-execute-macro count (evil-get-register ?q)))
-
-(map! :map evil-normal-state-map
-      "M-t" #'ok-run-q-macro)
 
 (map! :after org
       :map org-mode-map
@@ -530,7 +526,11 @@ boolean is non-nil, also unbinds TAB in that mode."
       "M-y" 'goto-last-change
       "M-o" 'goto-last-change-reverse
       "C-x" 'evil-numbers/inc-at-pt
-      "C-z" 'evil-numbers/dec-at-pt)
+      "C-z" 'evil-numbers/dec-at-pt
+      "M-t" #'ok-run-q-macro
+      :prefix "SPC"
+      "dk" 'describe-key
+      "db" 'describe-bindings)
 
 (map! :map evil-motion-state-map
       "SPC" nil
@@ -556,15 +556,6 @@ boolean is non-nil, also unbinds TAB in that mode."
       "C-o" 'evil-jump-forward
       "C-," 'evil-emacs-state)
 
-(map! :map doom-leader-map
-      "h" nil)
-
-(map! :map (evil-normal-state-map evil-visual-state-map)
-      "gh" 'ok-evil-webpaste
-      "gs" 'ok-evil-three-backticks-yank
-      "gy" 'ok-evil-reddit-yank
-      "go" '+evil:yank-unindented)
-
 (map! :map evil-visual-state-map
       "§" 'evil-exit-visual-state
       "u" nil
@@ -573,21 +564,24 @@ boolean is non-nil, also unbinds TAB in that mode."
       "L" 'evil-insert
       "A" 'evil-append)
 
+(map! :map doom-leader-map
+      "h" nil)
+
+(map! :map (evil-normal-state-map evil-visual-state-map)
+      "gh" 'ok-evil-webpaste
+      "gs" 'ok-evil-three-backticks-yank
+      "gy" 'ok-evil-reddit-yank
+      "go" '+evil:yank-unindented
+      :prefix "SPC"
+      "f" 'fill-paragraph
+      :prefix ","
+      "v" (cmd (find-file "~/.doom.d/config.el")))
+
 (map! :map evil-operator-state-map
       "l" -operator-inside-keymap
       "i" nil
       "e" 'evil-next-line
       "u" 'evil-previous-line)
-
-(map! :map (evil-normal-state-map
-            evil-visual-state-map)
-      :prefix "SPC"
-      "f" 'fill-paragraph)
-
-(map! :map (evil-normal-state-map
-            evil-visual-state-map)
-      :prefix ","
-      "v" (cmd (find-file "~/.doom.d/config.el")))
 
 (after! clj-refactor
   (apply #'general-define-key
@@ -674,78 +668,53 @@ boolean is non-nil, also unbinds TAB in that mode."
    )
 
   (map! :map magit-mode-map
-        :nv "C-d" 'magit-delete-thing)
+        :nv "C-d" 'magit-delete-thing))
 
-  (general-define-key
-   :keymaps 'magit-popup-mode-map
-   "x" 'magit-unstage
-   "X" 'magit-unstage-all
-   ))
+(map! :map prog-mode-map
+      :after (:or utils racket clojure hy)
+      :n "(" 'esexp-backward-paren
+      :n ")" 'esexp-forward-paren
+      :n "M-i" 'esexp-transpose-sexps
+      :n "M-n" (cmd (esexp-transpose-sexps -1))
+      :n "C-M-i" (cmd (esexp-transpose-forms 1))
+      :n "C-M-n" (cmd (esexp-transpose-forms -1))
+      :n "M-e" 'paredit-splice-sexp
+      :n "M-u" 'paredit-raise-sexp
+      :n "C-M-u" 'esexp-raise-form
+      :n "C-i" 'esexp-forward-slurp-sexp
+      :n "C-n" 'esexp-backward-slurp-sexp
+      :n "C-m" 'esexp-backward-barf-sexp
+      :n "C-ä" 'esexp-forward-barf-sexp
+      :prefix "SPC"
+      :n "q" 'esexp-wrap-word-in-backticks
+      :n "f" 'ok-clojure-fill-paragraph
+      :n "i" 'esexp-insert-at-end
+      :n "n" 'esexp-insert-at-head
+      :n "l" 'esexp-wrap-form-parens-beg
+      :n "L" 'esexp-wrap-form-parens-end
+      :n "w" 'esexp-wrap-element-parens-beg
+      :n "W" 'esexp-wrap-element-parens-end
+      :n "e[" 'esexp-wrap-element-brackets-beg
+      :n "e]" 'esexp-wrap-element-brackets-end
+      :n "e{" 'esexp-wrap-element-braces-beg
+      :n "e}" 'esexp-wrap-element-braces-end
+      :n "[" 'esexp-wrap-form-brackets-beg
+      :n "]" 'esexp-wrap-form-brackets-end
+      :n "{" 'esexp-wrap-form-braces-beg
+      :n "}" 'esexp-wrap-form-braces-end)
 
-(map!
- :after (:or utils racket clojure hy)
- :map (prog-mode-map
-       ;; lisp-mode-shared-map
-       ;; clojure-mode-map
-       ;; hy-mode-map
-       ;; inferior-hy-mode-map
-       ;; cider-repl-mode-map
-       ;; racket-mode-map
-       ;; racket-repl-mode-map
-       )
- :n "(" 'esexp-backward-paren
- :n ")" 'esexp-forward-paren
- :n "M-i" 'esexp-transpose-sexps
- :n "M-n" (cmd (esexp-transpose-sexps -1))
- :n "C-M-i" (cmd (esexp-transpose-forms 1))
- :n "C-M-n" (cmd (esexp-transpose-forms -1))
- :n "M-e" 'paredit-splice-sexp
- :n "M-u" 'paredit-raise-sexp
- :n "C-M-u" 'esexp-raise-form
- :n "C-i" 'esexp-forward-slurp-sexp
- :n "C-n" 'esexp-backward-slurp-sexp
- :n "C-m" 'esexp-backward-barf-sexp
- :n "C-ä" 'esexp-forward-barf-sexp
- :prefix "SPC"
- :n "q" 'esexp-wrap-word-in-backticks
- :n "f" 'ok-clojure-fill-paragraph
- :n "i" 'esexp-insert-at-end
- :n "n" 'esexp-insert-at-head
- :n "l" 'esexp-wrap-form-parens-beg
- :n "L" 'esexp-wrap-form-parens-end
- :n "w" 'esexp-wrap-element-parens-beg
- :n "W" 'esexp-wrap-element-parens-end
- :n "e[" 'esexp-wrap-element-brackets-beg
- :n "e]" 'esexp-wrap-element-brackets-end
- :n "e{" 'esexp-wrap-element-braces-beg
- :n "e}" 'esexp-wrap-element-braces-end
- :n "[" 'esexp-wrap-form-brackets-beg
- :n "]" 'esexp-wrap-form-brackets-end
- :n "{" 'esexp-wrap-form-braces-beg
- :n "}" 'esexp-wrap-form-braces-end
- )
-
-(general-define-key
- :keymaps 'evil-normal-state-map
- :prefix "SPC"
- "dk" 'describe-key
- "db" 'describe-bindings)
-
-(general-evil-define-key
-    'normal '(emacs-lisp-mode-map
-              lisp-interaction-mode-map)
-  :prefix "SPC"
-  "dd" 'describe-symbol
-  "dv" 'describe-variable
-  "df" 'describe-function
-  "et" 'eval-defun
-  "sw" 'evil-goto-definition
-  "ed" (cmd (eval-defun t))
-  "eb" 'eval-buffer
-  "ef" 'ok-eval-form
-  "es" 'eval-last-sexp
-  "m" 'macrostep-expand
-  )
+(map! :map (emacs-lisp-mode-map lisp-interaction-mode-map)
+      :prefix "SPC"
+      :n "dd" 'describe-symbol
+      :n "dv" 'describe-variable
+      :n "df" 'describe-function
+      :n "et" 'eval-defun
+      :n "sw" 'evil-goto-definition
+      :n "ed" (cmd (eval-defun t))
+      :n "eb" 'eval-buffer
+      :n "ef" 'ok-eval-form
+      :n "es" 'eval-last-sexp
+      :n "m" 'macrostep-expand)
 
 (section-comment "Old keybindings I haven't look at yet"
 
