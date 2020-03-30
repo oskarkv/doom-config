@@ -15,27 +15,31 @@
 ;;                                   (define-key km (kbd "<tab>") ci-val)))))
 ;;           obarray)
 
-(defun ok-bind-tab-to-TAB (keymap unbind)
+(defun ok-bind-tab-to-TAB (keymap)
   "Bind <tab> (regular tab) to what TAB (C-i) was bound to in KEYMAP,
-unless <tab> was already bound."
+unless <tab> was already bound, then unbinds TAB."
   (unless (lookup-key keymap (kbd "<tab>"))
     (define-key keymap (kbd "<tab>") (lookup-key keymap (kbd "TAB"))))
-  (if unbind
-      (define-key keymap (kbd "TAB") nil)))
+  (define-key keymap (kbd "TAB") nil))
 
 (defun ok-fix-tab-fn (mode)
-  (-let (((mode unbind-tab) (if (listp mode) mode (list mode))))
+  "MODE can be a mode or a list of (mode keymap)."
+  (-let (((mode map) (if (listp mode) mode (list mode))))
     `(after! ,mode
        (ok-bind-tab-to-TAB
-        (symbol-value (intern-soft (concat (symbol-name ',mode) "-mode-map")))
-        ,unbind-tab))))
+        (or ,map
+            (symbol-value (intern-soft (concat (symbol-name ',mode) "-mode-map"))))))))
 
 (defmacro ok-fix-tab (&rest modes)
+  "Binds whatever TAB was bound to to <tab> in the mode's keymap. A mode in
+MODES can be a symbol or a list consisting of a symbol and a boolean. If the
+boolean is non-nil, also unbinds TAB in that mode."
   (declare (indent 0))
   `(progn ,@(seq-map #'ok-fix-tab-fn modes)))
 
 (ok-fix-tab
-  (org t)
+  org
+  (ivy ivy-minibuffer-map)
   evil-org)
 
 ;; Name and email address
