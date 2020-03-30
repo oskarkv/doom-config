@@ -250,7 +250,7 @@ boolean is non-nil, also unbinds TAB in that mode."
   (setq org-tab-first-hook (delete '+org-cycle-only-current-subtree-h org-tab-first-hook)))
 
 (after! git
- (setq git-commit-summary-max-length 50))
+  (setq git-commit-summary-max-length 50))
 
 (setq-default
  ;;; Scrolling
@@ -799,7 +799,75 @@ boolean is non-nil, also unbinds TAB in that mode."
               (replace-match ")"))))
         (indent-region beg end)))
 
-    (advice-add 'cljr--clean-ns :after #'clean-ns-more)))
+    (advice-add 'cljr--clean-ns :after #'clean-ns-more))
+
+  (after! magit
+    (setq magit-display-buffer-function #'magit-display-buffer-traditional)
+
+    (ok-rebind-in-all-maps
+     "magit" "-map"
+     '(magit-popup-mode-map
+       magit-popup-help-mode-map)
+     "x" "u"
+     "X" "U"
+     "g" nil
+     "G" nil
+     "u" nil
+     "U" nil
+     "M-f" nil
+     "M-p" nil)
+
+    (general-define-key
+     :keymaps 'magit-log-mode-map
+     "u" 'previous-line
+     "C-u" (cmd (previous-line 10))
+     "C-e" (cmd (next-line 10)))
+
+    (general-define-key
+     :keymaps 'git-rebase-mode-map
+     "a" 'git-rebase-edit
+     "c" 'git-rebase-kill-line
+     "p" 'git-rebase-pick
+     "q" 'with-editor-cancel
+     "k" 'git-rebase-undo)
+
+    (general-define-key
+     :keymaps '(magit-mode-map
+                git-rebase-mode-map
+                magit-log-select-mode-map
+                magit-log-mode-map)
+     "å" 'ace-window
+     "ä" 'other-window
+     "Ä" (cmd (other-window -1))
+     "u" 'previous-line
+     "e" 'next-line)
+
+    (general-define-key
+     :keymaps '(magit-mode-map
+                magit-status-mode-map)
+     "§" 'keyboard-quit
+     "<f2>" 'magit-refresh-all
+     "gg" 'evil-goto-first-line
+     "G" 'evil-goto-line
+     ":" 'evil-ex
+     "/" 'evil-ex-search-forward
+     "?" 'evil-ex-search-backward
+     "M-h" 'magit-dispatch-popup
+     "h" 'evil-ex-search-next
+     "H" 'evil-ex-search-previous
+     "e" 'next-line
+     "u" 'previous-line
+     "C-e" 'magit-section-forward
+     "C-u" 'magit-section-backward
+     "C-i" 'magit-section-forward-sibling
+     "C-n" 'magit-section-backward-sibling
+     "M-u" 'magit-previous-line
+     "M-e" 'magit-next-line
+     "M-C-e" 'move-down-15-lines
+     "M-C-u" 'move-up-15-lines
+     "C-q" 'set-mark-command
+     "C-r" 'magit-reset
+     )))
 
 (section "sexp manipulation"
   ;; (general-evil-define-key
@@ -871,8 +939,8 @@ boolean is non-nil, also unbinds TAB in that mode."
   (general-define-key
    :keymaps 'evil-normal-state-map
    :prefix "SPC"
-    "dk" 'describe-key
-    "db" 'describe-bindings)
+   "dk" 'describe-key
+   "db" 'describe-bindings)
 
   (general-evil-define-key
       'normal '(emacs-lisp-mode-map
@@ -951,70 +1019,6 @@ boolean is non-nil, also unbinds TAB in that mode."
   ;;               magit-status-mode-map)
   ;;   "SPC" magit-status-mode-map)
 
-  (ok-rebind-in-all-maps
-   "magit" "-map"
-   '(magit-popup-mode-map
-     magit-popup-help-mode-map)
-   "x" "u"
-   "X" "U"
-   "g" nil
-   "G" nil
-   "u" nil
-   "U" nil
-   "M-f" nil
-   "M-p" nil)
-
-  (general-define-key
-   :keymaps 'magit-log-mode-map
-   "u" 'previous-line
-   "C-u" (cmd (previous-line 10))
-   "C-e" (cmd (next-line 10)))
-
-  (general-define-key
-   :keymaps 'git-rebase-mode-map
-   "a" 'git-rebase-edit
-   "c" 'git-rebase-kill-line
-   "p" 'git-rebase-pick
-   "q" 'with-editor-cancel
-   "k" 'git-rebase-undo)
-
-  (general-define-key
-   :keymaps '(magit-mode-map
-              git-rebase-mode-map
-              magit-log-select-mode-map
-              magit-log-mode-map)
-   "å" 'ace-window
-   "ä" 'other-window
-   "Ä" (cmd (other-window -1))
-   "u" 'previous-line
-   "e" 'next-line)
-
-  (general-define-key
-   :keymaps '(magit-mode-map
-              magit-status-mode-map)
-   "§" 'keyboard-quit
-   "<f2>" 'magit-refresh-all
-   "gg" 'evil-goto-first-line
-   "G" 'evil-goto-line
-   ":" 'evil-ex
-   "/" 'evil-ex-search-forward
-   "?" 'evil-ex-search-backward
-   "M-h" 'magit-dispatch-popup
-   "h" 'evil-ex-search-next
-   "H" 'evil-ex-search-previous
-   "e" 'next-line
-   "u" 'previous-line
-   "C-e" 'magit-section-forward
-   "C-u" 'magit-section-backward
-   "C-i" 'magit-section-forward-sibling
-   "C-n" 'magit-section-backward-sibling
-   "M-u" 'magit-previous-line
-   "M-e" 'magit-next-line
-   "M-C-e" 'move-down-15-lines
-   "M-C-u" 'move-up-15-lines
-   "C-q" 'set-mark-command
-   "C-r" 'magit-reset
-   )
 
   ;;; Additional keys, not as set in stone
 
