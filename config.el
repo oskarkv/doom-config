@@ -138,7 +138,7 @@ boolean is non-nil, also unbinds TAB in that mode."
              (list (ok-get-string-from-file "~/.doom.d/.freenode-pass")))))
 
 (setq webpaste-provider-priority
-      '("gist.github.com" "dpaste.com" "paste.mozilla.org" "dpaste.org"
+      '("dpaste.com" "gist.github.com" "paste.mozilla.org" "dpaste.org"
         "ix.io" "paste.pound-python.org"))
 
 ;; Avoid double \\ in re-builder
