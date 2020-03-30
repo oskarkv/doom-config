@@ -867,7 +867,18 @@ boolean is non-nil, also unbinds TAB in that mode."
      "M-C-u" 'move-up-15-lines
      "C-q" 'set-mark-command
      "C-r" 'magit-reset
-     )))
+     "x" 'magit-unstage
+     "X" 'magit-unstage-all
+     )
+
+    (map! :map magit-mode-map
+          :nv "C-d" 'magit-delete-thing)
+
+    (general-define-key
+     :keymaps 'magit-popup-mode-map
+     "x" 'magit-unstage
+     "X" 'magit-unstage-all
+    )))
 
 (section "sexp manipulation"
   ;; (general-evil-define-key
