@@ -121,6 +121,14 @@ boolean is non-nil, also unbinds TAB in that mode."
                     "```")
             t))
 
+(evil-define-motion ok-move-down-15-lines ()
+  :type line
+  (evil-next-visual-line 15))
+
+(evil-define-motion ok-move-up-15-lines ()
+  :type line
+  (evil-previous-visual-line 15))
+
 ;;; Settings
 
 ;; Make which-key show help for Vim operators
@@ -473,14 +481,6 @@ boolean is non-nil, also unbinds TAB in that mode."
       "RET" 'ivy-alt-done
       "C-RET" 'ivy-done
       "!" (cmd (insert "\\!")))
-
-(evil-define-motion ok-move-down-15-lines ()
-  :type line
-  (evil-next-visual-line 15))
-
-(evil-define-motion ok-move-up-15-lines ()
-  :type line
-  (evil-previous-visual-line 15))
 
 (general-define-key
  :keymaps 'key-translation-map
