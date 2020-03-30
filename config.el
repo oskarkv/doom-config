@@ -522,20 +522,13 @@ boolean is non-nil, also unbinds TAB in that mode."
       "C-RET" 'ivy-done
       "!" (cmd (insert "\\!")))
 
-(general-define-key
- :keymaps 'key-translation-map
- "ESC" (kbd "C-g"))
+(map! :map key-translation-map
+      "ESC" (kbd "C-g"))
 
-(general-define-key
- :keymaps 'evil-emacs-state-map
- "C-," 'evil-exit-emacs-state)
+(map! :map evil-emacs-state-map
+      "C-," 'evil-exit-emacs-state)
 
-(general-define-key
- :keymaps 'help-mode-map
- ",d" 'evil-delete-buffer)
-
-(general-define-key
- :keymaps 'global-map
+(map! :map global-map
  "C-å" 'ace-window
  "C-ä" 'other-window
  "C-s" 'save-buffer
@@ -546,122 +539,97 @@ boolean is non-nil, also unbinds TAB in that mode."
  "C-i" 'end-of-line
  "C-n" 'beginning-of-line
  "M-w" 'er/expand-region
- "<tab>" 'complete-symbol
- )
+ "<tab>" 'complete-symbol)
 
-(general-define-key
- :keymaps 'evil-normal-state-map
- "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state)))
+(map! :map evil-insert-state-map
+      "§" 'evil-normal-state
+      "C-<tab>" (cmd (insert "\t")))
 
-(general-define-key
- :keymaps 'evil-insert-state-map
- "§" 'evil-normal-state
- "C-<tab>" (cmd (insert "\t")))
+(map! :map evil-replace-state-map
+      "§" 'evil-normal-state)
 
-(general-define-key
- :keymaps 'evil-visual-state-map
- "§" 'evil-exit-visual-state)
+(map! :map evil-normal-state-map
+      ",h" 'webpaste-paste-buffer
+      "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
+      "C-n" nil
+      "u" nil
+      "e" nil
+      "j" nil
+      "J" nil
+      "M" nil
+      "n" nil
+      "N" nil
+      "h" nil
+      "H" nil
+      "i" nil
+      "I" nil
+      "SPC" nil
+      "k" 'undo
+      "E" 'evil-join
+      "Å" 'newline-and-indent
+      "l" 'evil-insert
+      "L" 'evil-insert-line
+      "M-y" 'goto-last-change
+      "M-o" 'goto-last-change-reverse
+      "C-x" 'evil-numbers/inc-at-pt
+      "C-z" 'evil-numbers/dec-at-pt)
 
-(general-define-key
- :keymaps 'evil-replace-state-map
- "§" 'evil-normal-state)
-
-(general-define-key
- :keymaps 'evil-normal-state-map
- "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
- "C-n" nil
- "u" nil
- "e" nil
- "j" nil
- "J" nil
- "M" nil
- "n" nil
- "N" nil
- "h" nil
- "H" nil
- "i" nil
- "I" nil
- "SPC" nil
- "k" 'undo
- "E" 'evil-join
- "Å" 'newline-and-indent
- "l" 'evil-insert
- "L" 'evil-insert-line
- "M-y" 'goto-last-change
- "M-o" 'goto-last-change-reverse
- "C-x" 'evil-numbers/inc-at-pt
- "C-z" 'evil-numbers/dec-at-pt
- )
-
-(general-define-key
- :keymaps 'evil-motion-state-map
- "SPC" nil
- "k" nil
- "E" nil
- "l" nil
- "L" nil
- "u" 'evil-previous-visual-line
- "e" 'evil-next-visual-line
- "j" 'evil-forward-word-end
- "J" 'evil-forward-WORD-end
- "C-u" 'ok-move-up-15-lines
- "C-e" 'ok-move-down-15-lines
- "n" 'evil-backward-char
- "h" 'evil-ex-search-next
- "H" 'evil-ex-search-previous
- "i" 'evil-forward-char
- "å" 'ace-window
- "ä" 'other-window
- "Ä" (cmd (other-window -1))
- "C-q" 'evil-visual-block
- "C-y" 'evil-jump-backward
- "C-o" 'evil-jump-forward
- "C-," 'evil-emacs-state
- )
+(map! :map evil-motion-state-map
+      "SPC" nil
+      "k" nil
+      "E" nil
+      "l" nil
+      "L" nil
+      "u" 'evil-previous-visual-line
+      "e" 'evil-next-visual-line
+      "j" 'evil-forward-word-end
+      "J" 'evil-forward-WORD-end
+      "C-u" 'ok-move-up-15-lines
+      "C-e" 'ok-move-down-15-lines
+      "n" 'evil-backward-char
+      "h" 'evil-ex-search-next
+      "H" 'evil-ex-search-previous
+      "i" 'evil-forward-char
+      "å" 'ace-window
+      "ä" 'other-window
+      "Ä" (cmd (other-window -1))
+      "C-q" 'evil-visual-block
+      "C-y" 'evil-jump-backward
+      "C-o" 'evil-jump-forward
+      "C-," 'evil-emacs-state)
 
 (map! :map doom-leader-map
       "h" nil)
 
-(map! :map evil-normal-state-map
-      ",h" #'webpaste-paste-buffer)
+(map! :map (evil-normal-state-map evil-visual-state-map)
+      "gh" 'ok-evil-webpaste
+      "gs" 'ok-evil-three-backticks-yank
+      "gy" 'ok-evil-reddit-yank
+      "go" '+evil:yank-unindented)
 
-(general-define-key
- :keymaps '(evil-normal-state-map evil-visual-state-map)
- "gh" 'ok-evil-webpaste
- "gs" 'ok-evil-three-backticks-yank
- "gy" 'ok-evil-reddit-yank
- "go" '+evil:yank-unindented
- )
+(map! :map evil-visual-state-map
+      "§" 'evil-exit-visual-state
+      "u" nil
+      "l" -visual-inside-keymap
+      "i" nil
+      "L" 'evil-insert
+      "A" 'evil-append)
 
-(general-define-key
- :keymaps 'evil-visual-state-map
- "u" nil
- "l" -visual-inside-keymap
- "i" nil
- "L" 'evil-insert
- "A" 'evil-append
- )
+(map! :map evil-operator-state-map
+      "l" -operator-inside-keymap
+      "i" nil
+      "e" 'evil-next-line
+      "u" 'evil-previous-line)
 
-(general-define-key
- :keymaps 'evil-operator-state-map
- "l" -operator-inside-keymap
- "i" nil
- "e" 'evil-next-line
- "u" 'evil-previous-line
- )
-
-(general-define-key
- :keymaps '(evil-normal-state-map
+(map! :map (evil-normal-state-map
             evil-visual-state-map)
- :prefix "SPC"
- "f" 'fill-paragraph)
+      :prefix "SPC"
+      "f" 'fill-paragraph)
 
-(general-define-key
- :keymaps '(evil-normal-state-map
+(map! :map (evil-normal-state-map
             evil-visual-state-map)
- :prefix ","
- "v" (cmd (find-file "~/.doom.d/config.el"))
- )
+      :prefix ","
+      "v" (cmd (find-file "~/.doom.d/config.el")))
 
 (after! clj-refactor
   (apply #'general-define-key
