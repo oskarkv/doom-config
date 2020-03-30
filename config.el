@@ -1,7 +1,11 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
+(require 'utils)
 (require 'patches)
 (require 'esexp)
-(require 'utils)
+(require 'seq)
+(require 's)
+(require 'cl-indent)
+(require 'dash)
 
 ;; Name and email address
 (setq user-full-name "Oskar Kvist"
@@ -119,13 +123,8 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 ;;; Settings
 
+;; Make which-key show help for Vim operators
 (setq which-key-show-operator-state-maps nil)
-
-(section "requires"
-  (require 'seq)
-  (require 's)
-  (require 'cl-indent)
-  (require 'dash))
 
 (setq rcirc-server-alist
       '(("irc.freenode.net"
@@ -154,7 +153,8 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 (after! evil-org
   ;; Cycle between 3 states on a heading (folded, subheadings, all)
-  (setq org-tab-first-hook (delete '+org-cycle-only-current-subtree-h org-tab-first-hook)))
+  (setq org-tab-first-hook
+        (delete '+org-cycle-only-current-subtree-h org-tab-first-hook)))
 
 (after! git
   (setq git-commit-summary-max-length 50))
@@ -170,9 +170,7 @@ boolean is non-nil, also unbinds TAB in that mode."
  version-control t
  ;;; Other
  ;; ag-highlight-search t
- ;; debug-on-error nil
  abbrev-mode t
- ;; debug-on-signal t
  evil-cross-lines t
  evil-ex-substitute-global t
  column-number-mode t
@@ -186,7 +184,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 ;; Don't ask before quitting
 (setq confirm-kill-emacs nil)
 
-;; Make ~cider-find-var~ be considered a jump in evil.
+;; Make cider-find-var be considered a jump in evil.
 (evil-add-command-properties #'cider-find-var :jump t)
 
 ;; Makes lines wrap instead of going off screen
@@ -331,577 +329,523 @@ boolean is non-nil, also unbinds TAB in that mode."
     (while-let 1)
     (with-gensyms 1)))
 
-(section "Functions and stuff that has to do with key bindings"
 
-  (defvar ok-clj-refactor-map (make-sparse-keymap))
-  (defvar -visual-inside-keymap (lookup-key evil-visual-state-map "i"))
-  (defvar -operator-inside-keymap (lookup-key evil-operator-state-map "i"))
+(defvar ok-clj-refactor-map (make-sparse-keymap))
+(defvar -visual-inside-keymap (lookup-key evil-visual-state-map "i"))
+(defvar -operator-inside-keymap (lookup-key evil-operator-state-map "i"))
 
-  (defmacro ok-eval-form-builder (sender)
-    `(lambda ()
-       (interactive)
-       (-let* (((b e) (esexp-true-form-positions)))
-         (,sender b e))))
+(defmacro ok-eval-form-builder (sender)
+  `(lambda ()
+     (interactive)
+     (-let* (((b e) (esexp-true-form-positions)))
+       (,sender b e))))
 
-  (defalias 'ok-eval-form (ok-eval-form-builder eval-region))
+(defalias 'ok-eval-form (ok-eval-form-builder eval-region))
 
-  (defalias 'ok-cider-eval-form (ok-eval-form-builder cider-eval-region))
+(defalias 'ok-cider-eval-form (ok-eval-form-builder cider-eval-region))
 
-  (defun ok-cider-eval (form-string)
-    (cider-interactive-eval form-string nil nil (cider--nrepl-pr-request-map)))
+(defun ok-cider-eval (form-string)
+  (cider-interactive-eval form-string nil nil (cider--nrepl-pr-request-map)))
 
-  (defun ok-before-doctring-p ()
-    (save-excursion
-      (re-search-forward "[^\s-]")
-      (clojure-in-docstring-p)))
+(defun ok-before-doctring-p ()
+  (save-excursion
+    (re-search-forward "[^\s-]")
+    (clojure-in-docstring-p)))
 
-  (defun ok-clojure-fill-paragraph ()
-    (interactive)
-    (if (ok-before-doctring-p)
-        (save-excursion
-          (re-search-forward "[^\s-]")
-          (clojure-fill-paragraph))
-      (clojure-fill-paragraph)))
+(defun ok-clojure-fill-paragraph ()
+  (interactive)
+  (if (ok-before-doctring-p)
+      (save-excursion
+        (re-search-forward "[^\s-]")
+        (clojure-fill-paragraph))
+    (clojure-fill-paragraph)))
 
-  (defun ok-hy-eval-toplevel ()
-    (interactive)
-    (save-excursion
-      (-let* (((b e) (esexp-true-toplevel-positions)))
-        (goto-char (1- e))
-        (hy-shell-eval-current-form))))
+(defun ok-hy-eval-toplevel ()
+  (interactive)
+  (save-excursion
+    (-let* (((b e) (esexp-true-toplevel-positions)))
+      (goto-char (1- e))
+      (hy-shell-eval-current-form))))
 
-  (defun ok-rebind-in-all-maps* (start end exclude-list to from)
-    (mapatoms (lambda (sym)
-                (if (and (boundp sym)
-                         (not (seq-contains exclude-list sym))
-                         (keymapp (symbol-value sym))
-                         (s-ends-with-p end (symbol-name sym))
-                         (s-starts-with-p start (symbol-name sym)))
-                    (let* ((km (symbol-value sym)))
-                      (define-key km (kbd to)
-                        (or (and from (lookup-key km (kbd from)))
-                            nil)))))
-              obarray))
+(defun ok-rebind-in-all-maps* (start end exclude-list to from)
+  (mapatoms (lambda (sym)
+              (if (and (boundp sym)
+                       (not (seq-contains exclude-list sym))
+                       (keymapp (symbol-value sym))
+                       (s-ends-with-p end (symbol-name sym))
+                       (s-starts-with-p start (symbol-name sym)))
+                  (let* ((km (symbol-value sym)))
+                    (define-key km (kbd to)
+                      (or (and from (lookup-key km (kbd from)))
+                          nil)))))
+            obarray))
 
-  (defun ok-rebind-in-all-maps (start end exclude-list &rest to-froms)
-    (apply #'ok-rebind-in-all-maps* start end exclude-list (seq-take to-froms 2))
-    (if (not (seq-empty-p (seq-drop to-froms 2)))
-        (apply #'ok-rebind-in-all-maps start end exclude-list (seq-drop to-froms 2))))
+(defun ok-rebind-in-all-maps (start end exclude-list &rest to-froms)
+  (apply #'ok-rebind-in-all-maps* start end exclude-list (seq-take to-froms 2))
+  (if (not (seq-empty-p (seq-drop to-froms 2)))
+      (apply #'ok-rebind-in-all-maps start end exclude-list (seq-drop to-froms 2))))
 
-  (defun ok-wrap-word-in-backticks ()
-    (interactive)
-    (save-excursion
-      (let* ((sep "[][(){}[:space:]\n\r.,\"]"))
-        (re-search-backward sep)
-        (forward-char)
-        (insert "`")
-        (re-search-forward sep)
-        (backward-char)
-        (insert "`")))))
+(defun ok-wrap-word-in-backticks ()
+  (interactive)
+  (save-excursion
+    (let* ((sep "[][(){}[:space:]\n\r.,\"]"))
+      (re-search-backward sep)
+      (forward-char)
+      (insert "`")
+      (re-search-forward sep)
+      (backward-char)
+      (insert "`"))))
 
-(section "Keybindings"
-  (evil-define-command ok-run-q-macro (count)
-    (interactive "<c>")
-    :repeat nil
-    (evil-execute-macro count (evil-get-register ?q)))
+(evil-define-command ok-run-q-macro (count)
+  (interactive "<c>")
+  :repeat nil
+  (evil-execute-macro count (evil-get-register ?q)))
 
-  (map! :map evil-normal-state-map
-        "M-t" #'ok-run-q-macro)
+(map! :map evil-normal-state-map
+      "M-t" #'ok-run-q-macro)
 
-  (after! org
-    (general-evil-define-key
-        'motion org-mode-map
-      "M-r" 'outline-next-visible-heading
-      "M-w" 'outline-previous-visible-heading
-      "M-s" 'org-forward-heading-same-level
-      "M-a" 'org-backward-heading-same-level
-      "M-q" (cmd (ignore-errors (outline-up-heading 1)))
-      )
-
-    (general-evil-define-key
-        'normal org-mode-map
-      "C-M-n" 'org-shiftmetaleft
-      "C-M-i" 'org-shiftmetaright
-      "C-M-u" 'org-shiftmetaup
-      "C-M-e" 'org-shiftmetadown
-      "M-n" 'org-metaleft
-      "M-i" 'org-metaright
-      "M-u" 'org-metaup
-      "M-e" 'org-metadown
-      "C-n" 'org-shiftleft
-      "C-i" 'org-shiftright
-      )
-
-    ;; (general-define-key
-    ;;  :keymaps 'org-mode-map
-    ;;  "TAB" nil)
-
-    (general-evil-define-key
-        'normal org-mode-map
+(map! :after org
+      :map org-mode-map
+      ;; motion state
+      :m "M-r" 'outline-next-visible-heading
+      :m "M-w" 'outline-previous-visible-heading
+      :m "M-s" 'org-forward-heading-same-level
+      :m "M-a" 'org-backward-heading-same-level
+      :m "M-q" (cmd (ignore-errors (outline-up-heading 1)))
+      ;; normal state
+      :n "C-M-n" 'org-shiftmetaleft
+      :n "C-M-i" 'org-shiftmetaright
+      :n "C-M-u" 'org-shiftmetaup
+      :n "C-M-e" 'org-shiftmetadown
+      :n "M-n" 'org-metaleft
+      :n "M-i" 'org-metaright
+      :n "M-u" 'org-metaup
+      :n "M-e" 'org-metadown
+      :n "C-n" 'org-shiftleft
+      :n "C-i" 'org-shiftright
       :prefix "SPC"
-      "<tab>" (cmd (org-cycle '(64)))
-      "v" (cmd (org-insert-todo-heading-respect-content) (evil-append 1))
-      "b" (cmd (org-insert-heading-respect-content) (evil-append 1))
-      "p" (cmd (org-insert-todo-heading '(4)) (evil-append 1))
-      "g" (cmd (org-insert-heading) (evil-append 1))
-      "t" (cmd (org-insert-todo-subheading '(4)) (evil-append 1))
-      "d" (cmd (org-insert-subheading nil) (evil-append 1))
-      "n" 'org-narrow-to-subtree
-      "w" 'widen
-      "a" 'org-sparse-tree
-      "m" 'org-refile
-      "f" 'org-fill-paragraph
-      "o" 'org-open-at-point
-      "l" 'org-insert-link
-      "e" 'org-edit-special
-      "c" '(lambda (s) (interactive "sCustom ID: ") (org-set-property "CUSTOM_ID" s))
-      )
+      :n "<tab>" (cmd (org-cycle '(64)))
+      :n "v" (cmd (org-insert-todo-heading-respect-content) (evil-append 1))
+      :n "b" (cmd (org-insert-heading-respect-content) (evil-append 1))
+      :n "p" (cmd (org-insert-todo-heading '(4)) (evil-append 1))
+      :n "g" (cmd (org-insert-heading) (evil-append 1))
+      :n "t" (cmd (org-insert-todo-subheading '(4)) (evil-append 1))
+      :n "d" (cmd (org-insert-subheading nil) (evil-append 1))
+      :n "n" 'org-narrow-to-subtree
+      :n "w" 'widen
+      :n "a" 'org-sparse-tree
+      :n "m" 'org-refile
+      :n "f" 'org-fill-paragraph
+      :n "o" 'org-open-at-point
+      :n "l" 'org-insert-link
+      :n "e" 'org-edit-special
+      :n "i" '(lambda (s) (interactive "sCustom ID: ") (org-set-property "CUSTOM_ID" s))
+      :v "t" 'org-table-create-or-convert-from-region
+      :map org-src-mode-map
+      :n "ce" 'org-edit-src-exit
+      :n "cc" 'org-edit-src-abort)
 
-    (general-evil-define-key
-        'normal org-src-mode-map
-      :prefix "SPC"
-      "ce" 'org-edit-src-exit
-      "cc" 'org-edit-src-abort
-      )
+(map! :map (evil-normal-state-map
+            evil-visual-state-map
+            evil-motion-state-map
+            evil-insert-state-map)
+ "TAB" nil)
 
-    (general-evil-define-key
-        'visual org-mode-map
-      "SPC t" 'org-table-create-or-convert-from-region
-      )
-    )
+(map! :after evil-org
+      :map evil-org-mode-map
+      :vo "ie" nil
+      :vo "iE" nil
+      :vo "ir" nil
+      :vo "iR" nil
+      :vo "i" nil
+      :vo "le" #'evil-org-inner-object
+      :vo "lE" #'evil-org-inner-element
+      :vo "lr" #'evil-org-inner-greater-element
+      :vo "lR" #'evil-org-inner-subtree
+      :nv "TAB" nil)
+
+(map! :after ivy
+      :map ivy-minibuffer-map
+      "C-u" 'ivy-previous-line
+      "C-e" 'ivy-next-line
+      "C-S-e" 'ivy-scroll-up-command
+      "C-S-u" 'ivy-scroll-down-command
+      "RET" 'ivy-alt-done
+      "C-RET" 'ivy-done
+      "!" (cmd (insert "\\!")))
+
+(evil-define-motion ok-move-down-15-lines ()
+  :type line
+  (evil-next-visual-line 15))
+
+(evil-define-motion ok-move-up-15-lines ()
+  :type line
+  (evil-previous-visual-line 15))
+
+(general-define-key
+ :keymaps 'key-translation-map
+ "ESC" (kbd "C-g"))
+
+(general-define-key
+ :keymaps 'evil-emacs-state-map
+ "C-," 'evil-exit-emacs-state)
+
+(general-define-key
+ :keymaps 'help-mode-map
+ ",d" 'evil-delete-buffer)
+
+(general-define-key
+ :keymaps 'global-map
+ "C-å" 'ace-window
+ "C-ä" 'other-window
+ "C-s" 'save-buffer
+ "M-f" 'switch-to-prev-buffer
+ "M-p" 'switch-to-next-buffer
+ "C-u" 'previous-line
+ "C-e" 'next-line
+ "C-i" 'end-of-line
+ "C-n" 'beginning-of-line
+ "M-w" 'er/expand-region
+ "<tab>" 'complete-symbol
+ )
+
+(general-define-key
+ :keymaps 'evil-normal-state-map
+ "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state)))
+
+(general-define-key
+ :keymaps 'evil-insert-state-map
+ "§" 'evil-normal-state
+ "C-<tab>" (cmd (insert "\t")))
+
+(general-define-key
+ :keymaps 'evil-visual-state-map
+ "§" 'evil-exit-visual-state)
+
+(general-define-key
+ :keymaps 'evil-replace-state-map
+ "§" 'evil-normal-state)
+
+(general-define-key
+ :keymaps 'evil-normal-state-map
+ "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
+ "C-n" nil
+ "u" nil
+ "e" nil
+ "j" nil
+ "J" nil
+ "M" nil
+ "n" nil
+ "N" nil
+ "h" nil
+ "H" nil
+ "i" nil
+ "I" nil
+ "SPC" nil
+ "k" 'undo
+ "E" 'evil-join
+ "Å" 'newline-and-indent
+ "l" 'evil-insert
+ "L" 'evil-insert-line
+ "M-y" 'goto-last-change
+ "M-o" 'goto-last-change-reverse
+ "C-x" 'evil-numbers/inc-at-pt
+ "C-z" 'evil-numbers/dec-at-pt
+ )
+
+(general-define-key
+ :keymaps 'evil-motion-state-map
+ "SPC" nil
+ "k" nil
+ "E" nil
+ "l" nil
+ "L" nil
+ "u" 'evil-previous-visual-line
+ "e" 'evil-next-visual-line
+ "j" 'evil-forward-word-end
+ "J" 'evil-forward-WORD-end
+ "C-u" 'ok-move-up-15-lines
+ "C-e" 'ok-move-down-15-lines
+ "n" 'evil-backward-char
+ "h" 'evil-ex-search-next
+ "H" 'evil-ex-search-previous
+ "i" 'evil-forward-char
+ "å" 'ace-window
+ "ä" 'other-window
+ "Ä" (cmd (other-window -1))
+ "C-q" 'evil-visual-block
+ "C-y" 'evil-jump-backward
+ "C-o" 'evil-jump-forward
+ "C-," 'evil-emacs-state
+ )
+
+(map! :map doom-leader-map
+      "h" nil)
+
+(map! :map evil-normal-state-map
+      ",h" #'webpaste-paste-buffer)
+
+(general-define-key
+ :keymaps '(evil-normal-state-map evil-visual-state-map)
+ "gh" 'ok-evil-webpaste
+ "gs" 'ok-evil-three-backticks-yank
+ "gy" 'ok-evil-reddit-yank
+ "go" '+evil:yank-unindented
+ )
+
+(general-define-key
+ :keymaps 'evil-visual-state-map
+ "u" nil
+ "l" -visual-inside-keymap
+ "i" nil
+ "L" 'evil-insert
+ "A" 'evil-append
+ )
+
+(general-define-key
+ :keymaps 'evil-operator-state-map
+ "l" -operator-inside-keymap
+ "i" nil
+ "e" 'evil-next-line
+ "u" 'evil-previous-line
+ )
+
+(general-define-key
+ :keymaps '(evil-normal-state-map
+            evil-visual-state-map)
+ :prefix "SPC"
+ "f" 'fill-paragraph)
+
+(general-define-key
+ :keymaps '(evil-normal-state-map
+            evil-visual-state-map)
+ :prefix ","
+ "v" (cmd (find-file "~/.doom.d/config.el"))
+ )
+
+(after! clj-refactor
+  (apply #'general-define-key
+         :keymaps 'ok-clj-refactor-map
+         (-reduce-from (-lambda (list (key fn))
+                         (cons key (cons fn list)))
+                       nil
+                       cljr--all-helpers))
 
   (general-define-key
-   :keymaps '(evil-normal-state-map
-              evil-visual-state-map
-              evil-motion-state-map
-              evil-insert-state-map)
-   ;;"<tab>" nil
-   "TAB" nil
-   )
+   :keymaps 'ok-clj-refactor-map
+   "nn" (cmd (cljr--clean-ns nil :no-prune)))
 
-  (map! :after evil-org
-        :map evil-org-mode-map
-        :vo "ie" nil
-        :vo "iE" nil
-        :vo "ir" nil
-        :vo "iR" nil
-        :vo "i" nil
-        :vo "le" #'evil-org-inner-object
-        :vo "lE" #'evil-org-inner-element
-        :vo "lr" #'evil-org-inner-greater-element
-        :vo "lR" #'evil-org-inner-subtree
-        :nv "TAB" nil
-        )
+  (defun clean-ns-more (&rest args)
+    (-let* (((beg end) (esexp-true-toplevel-positions)))
+      (while (re-search-forward "(:\\(require\\|use\\|import\\)" end t)
+        (re-search-forward " ")
+        (when (not (= (char-before (1- (point))) ?\n))
+          (backward-char)
+          (insert "\n")))
+      (goto-char beg)
+      ;; wrap naked words in libs in []
+      (when (re-search-forward ":require" end t)
+        (-let* (((beg end) (esexp-true-form-positions)))
+          (while (re-search-forward "^\\s-*[a-z]" end t)
+            (backward-char)
+            (insert "[")
+            (re-search-forward "\\b)*$")
+            (while (= ?\) (char-before))
+              (backward-char))
+            (insert "]")
+            (setq end (+ 2 end)))))
+      (goto-char beg)
+      (when (re-search-forward ":import" end t)
+        (-let* (((beg end) (esexp-true-toplevel-positions)))
+          (while (re-search-forward "^\\s-*[a-z]" end t)
+            (backward-char)
+            (insert "(")
+            (re-search-forward "$")
+            (insert ")")
+            (re-search-backward "\\.")
+            (replace-match " ")
+            (setq end (+ 2 end)))))
+      (goto-char beg)
+      (when (re-search-forward ":import" end t)
+        (-let* (((beg end) (esexp-true-toplevel-positions)))
+          (while (re-search-forward "\\[" end t)
+            (replace-match "(")
+            (re-search-forward "\\]")
+            (replace-match ")"))))
+      (indent-region beg end)))
 
-  (after! ivy
-    (general-define-key
-     :keymaps 'ivy-minibuffer-map
-     "C-u" 'ivy-previous-line
-     "C-e" 'ivy-next-line
-     "C-S-e" 'ivy-scroll-up-command
-     "C-S-u" 'ivy-scroll-down-command
-     "RET" 'ivy-alt-done
-     "C-RET" 'ivy-done
-     "!" (cmd (insert "\\!"))
-     ))
+  (advice-add 'cljr--clean-ns :after #'clean-ns-more))
 
-  (evil-define-motion ok-move-down-15-lines ()
-    :type line
-    (evil-next-visual-line 15))
+(after! magit
+  (setq magit-display-buffer-function #'magit-display-buffer-traditional)
 
-  (evil-define-motion ok-move-up-15-lines ()
-    :type line
-    (evil-previous-visual-line 15))
-
-  (general-define-key
-   :keymaps 'key-translation-map
-   "ESC" (kbd "C-g"))
-
-  (general-define-key
-   :keymaps 'evil-emacs-state-map
-   "C-," 'evil-exit-emacs-state)
-
-  (general-define-key
-   :keymaps 'help-mode-map
-   ",d" 'evil-delete-buffer)
-
-  (general-define-key
-   :keymaps 'global-map
-   "C-å" 'ace-window
-   "C-ä" 'other-window
-   "C-s" 'save-buffer
-   "M-f" 'switch-to-prev-buffer
-   "M-p" 'switch-to-next-buffer
-   "C-u" 'previous-line
-   "C-e" 'next-line
-   "C-i" 'end-of-line
-   "C-n" 'beginning-of-line
-   "M-w" 'er/expand-region
-   "<tab>" 'complete-symbol
-   )
-
-  (general-define-key
-   :keymaps 'evil-normal-state-map
-   "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state)))
-
-  (general-define-key
-   :keymaps 'evil-insert-state-map
-   "§" 'evil-normal-state
-   "C-<tab>" (cmd (insert "\t")))
-
-  (general-define-key
-   :keymaps 'evil-visual-state-map
-   "§" 'evil-exit-visual-state)
-
-  (general-define-key
-   :keymaps 'evil-replace-state-map
-   "§" 'evil-normal-state)
-
-  (general-define-key
-   :keymaps 'evil-normal-state-map
-   "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
-   "C-n" nil
+  (ok-rebind-in-all-maps
+   "magit" "-map"
+   '(magit-popup-mode-map
+     magit-popup-help-mode-map)
+   "x" "u"
+   "X" "U"
+   "g" nil
+   "G" nil
    "u" nil
-   "e" nil
-   "j" nil
-   "J" nil
-   "M" nil
-   "n" nil
-   "N" nil
-   "h" nil
-   "H" nil
-   "i" nil
-   "I" nil
-   "SPC" nil
-   "k" 'undo
-   "E" 'evil-join
-   "Å" 'newline-and-indent
-   "l" 'evil-insert
-   "L" 'evil-insert-line
-   "M-y" 'goto-last-change
-   "M-o" 'goto-last-change-reverse
-   "C-x" 'evil-numbers/inc-at-pt
-   "C-z" 'evil-numbers/dec-at-pt
-   )
+   "U" nil
+   "M-f" nil
+   "M-p" nil)
 
   (general-define-key
-   :keymaps 'evil-motion-state-map
-   "SPC" nil
-   "k" nil
-   "E" nil
-   "l" nil
-   "L" nil
-   "u" 'evil-previous-visual-line
-   "e" 'evil-next-visual-line
-   "j" 'evil-forward-word-end
-   "J" 'evil-forward-WORD-end
-   "C-u" 'ok-move-up-15-lines
-   "C-e" 'ok-move-down-15-lines
-   "n" 'evil-backward-char
-   "h" 'evil-ex-search-next
-   "H" 'evil-ex-search-previous
-   "i" 'evil-forward-char
+   :keymaps 'magit-log-mode-map
+   "u" 'previous-line
+   "C-u" (cmd (previous-line 10))
+   "C-e" (cmd (next-line 10)))
+
+  (general-define-key
+   :keymaps 'git-rebase-mode-map
+   "a" 'git-rebase-edit
+   "c" 'git-rebase-kill-line
+   "p" 'git-rebase-pick
+   "q" 'with-editor-cancel
+   "k" 'git-rebase-undo)
+
+  (general-define-key
+   :keymaps '(magit-mode-map
+              git-rebase-mode-map
+              magit-log-select-mode-map
+              magit-log-mode-map)
    "å" 'ace-window
    "ä" 'other-window
    "Ä" (cmd (other-window -1))
-   "C-q" 'evil-visual-block
-   "C-y" 'evil-jump-backward
-   "C-o" 'evil-jump-forward
-   "C-," 'evil-emacs-state
-   )
-
-  (section "webpaste"
-    (map! :map doom-leader-map
-          "h" nil)
-
-    (map! :map evil-normal-state-map
-          ",h" #'webpaste-paste-buffer)
-
-    (general-define-key
-     :keymaps '(evil-normal-state-map evil-visual-state-map)
-     "gh" 'ok-evil-webpaste
-     "gs" 'ok-evil-three-backticks-yank
-     "gy" 'ok-evil-reddit-yank
-     "go" '+evil:yank-unindented
-     ))
+   "u" 'previous-line
+   "e" 'next-line)
 
   (general-define-key
-   :keymaps 'evil-visual-state-map
-   "u" nil
-   "l" -visual-inside-keymap
-   "i" nil
-   "L" 'evil-insert
-   "A" 'evil-append
+   :keymaps '(magit-mode-map
+              magit-status-mode-map)
+   "§" 'keyboard-quit
+   "<f2>" 'magit-refresh-all
+   "gg" 'evil-goto-first-line
+   "G" 'evil-goto-line
+   ":" 'evil-ex
+   "/" 'evil-ex-search-forward
+   "?" 'evil-ex-search-backward
+   "M-h" 'magit-dispatch-popup
+   "h" 'evil-ex-search-next
+   "H" 'evil-ex-search-previous
+   "e" 'next-line
+   "u" 'previous-line
+   "C-e" 'magit-section-forward
+   "C-u" 'magit-section-backward
+   "C-i" 'magit-section-forward-sibling
+   "C-n" 'magit-section-backward-sibling
+   "M-u" 'magit-previous-line
+   "M-e" 'magit-next-line
+   "M-C-e" 'move-down-15-lines
+   "M-C-u" 'move-up-15-lines
+   "C-q" 'set-mark-command
+   "C-r" 'magit-reset
+   "x" 'magit-unstage
+   "X" 'magit-unstage-all
    )
 
-  (general-define-key
-   :keymaps 'evil-operator-state-map
-   "l" -operator-inside-keymap
-   "i" nil
-   "e" 'evil-next-line
-   "u" 'evil-previous-line
-   )
+  (map! :map magit-mode-map
+        :nv "C-d" 'magit-delete-thing)
 
   (general-define-key
-   :keymaps '(evil-normal-state-map
-              evil-visual-state-map)
-   :prefix "SPC"
-   "f" 'fill-paragraph)
+   :keymaps 'magit-popup-mode-map
+   "x" 'magit-unstage
+   "X" 'magit-unstage-all
+   ))
 
-  (general-define-key
-   :keymaps '(evil-normal-state-map
-              evil-visual-state-map)
-   :prefix ","
-   "v" (cmd (find-file "~/.doom.d/config.el"))
-   )
+(map!
+ :after (:or utils racket clojure hy)
+ :map (prog-mode-map
+       ;; lisp-mode-shared-map
+       ;; clojure-mode-map
+       ;; hy-mode-map
+       ;; inferior-hy-mode-map
+       ;; cider-repl-mode-map
+       ;; racket-mode-map
+       ;; racket-repl-mode-map
+       )
+ :n "(" 'esexp-backward-paren
+ :n ")" 'esexp-forward-paren
+ :n "M-i" 'esexp-transpose-sexps
+ :n "M-n" (cmd (esexp-transpose-sexps -1))
+ :n "C-M-i" (cmd (esexp-transpose-forms 1))
+ :n "C-M-n" (cmd (esexp-transpose-forms -1))
+ :n "M-e" 'paredit-splice-sexp
+ :n "M-u" 'paredit-raise-sexp
+ :n "C-M-u" 'esexp-raise-form
+ :n "C-i" 'esexp-forward-slurp-sexp
+ :n "C-n" 'esexp-backward-slurp-sexp
+ :n "C-m" 'esexp-backward-barf-sexp
+ :n "C-ä" 'esexp-forward-barf-sexp
+ :prefix "SPC"
+ :n "q" 'esexp-wrap-word-in-backticks
+ :n "f" 'ok-clojure-fill-paragraph
+ :n "i" 'esexp-insert-at-end
+ :n "n" 'esexp-insert-at-head
+ :n "l" 'esexp-wrap-form-parens-beg
+ :n "L" 'esexp-wrap-form-parens-end
+ :n "w" 'esexp-wrap-element-parens-beg
+ :n "W" 'esexp-wrap-element-parens-end
+ :n "e[" 'esexp-wrap-element-brackets-beg
+ :n "e]" 'esexp-wrap-element-brackets-end
+ :n "e{" 'esexp-wrap-element-braces-beg
+ :n "e}" 'esexp-wrap-element-braces-end
+ :n "[" 'esexp-wrap-form-brackets-beg
+ :n "]" 'esexp-wrap-form-brackets-end
+ :n "{" 'esexp-wrap-form-braces-beg
+ :n "}" 'esexp-wrap-form-braces-end
+ )
 
-  (after! clj-refactor
-    (apply #'general-define-key
-           :keymaps 'ok-clj-refactor-map
-           (-reduce-from (-lambda (list (key fn))
-                           (cons key (cons fn list)))
-                         nil
-                         cljr--all-helpers))
+(general-define-key
+ :keymaps 'evil-normal-state-map
+ :prefix "SPC"
+ "dk" 'describe-key
+ "db" 'describe-bindings)
 
-    (general-define-key
-     :keymaps 'ok-clj-refactor-map
-     "nn" (cmd (cljr--clean-ns nil :no-prune)))
-
-    (defun clean-ns-more (&rest args)
-      (-let* (((beg end) (esexp-true-toplevel-positions)))
-        (while (re-search-forward "(:\\(require\\|use\\|import\\)" end t)
-          (re-search-forward " ")
-          (when (not (= (char-before (1- (point))) ?\n))
-            (backward-char)
-            (insert "\n")))
-        (goto-char beg)
-        ;; wrap naked words in libs in []
-        (when (re-search-forward ":require" end t)
-          (-let* (((beg end) (esexp-true-form-positions)))
-            (while (re-search-forward "^\\s-*[a-z]" end t)
-              (backward-char)
-              (insert "[")
-              (re-search-forward "\\b)*$")
-              (while (= ?\) (char-before))
-                (backward-char))
-              (insert "]")
-              (setq end (+ 2 end)))))
-        (goto-char beg)
-        (when (re-search-forward ":import" end t)
-          (-let* (((beg end) (esexp-true-toplevel-positions)))
-            (while (re-search-forward "^\\s-*[a-z]" end t)
-              (backward-char)
-              (insert "(")
-              (re-search-forward "$")
-              (insert ")")
-              (re-search-backward "\\.")
-              (replace-match " ")
-              (setq end (+ 2 end)))))
-        (goto-char beg)
-        (when (re-search-forward ":import" end t)
-          (-let* (((beg end) (esexp-true-toplevel-positions)))
-            (while (re-search-forward "\\[" end t)
-              (replace-match "(")
-              (re-search-forward "\\]")
-              (replace-match ")"))))
-        (indent-region beg end)))
-
-    (advice-add 'cljr--clean-ns :after #'clean-ns-more))
-
-  (after! magit
-    (setq magit-display-buffer-function #'magit-display-buffer-traditional)
-
-    (ok-rebind-in-all-maps
-     "magit" "-map"
-     '(magit-popup-mode-map
-       magit-popup-help-mode-map)
-     "x" "u"
-     "X" "U"
-     "g" nil
-     "G" nil
-     "u" nil
-     "U" nil
-     "M-f" nil
-     "M-p" nil)
-
-    (general-define-key
-     :keymaps 'magit-log-mode-map
-     "u" 'previous-line
-     "C-u" (cmd (previous-line 10))
-     "C-e" (cmd (next-line 10)))
-
-    (general-define-key
-     :keymaps 'git-rebase-mode-map
-     "a" 'git-rebase-edit
-     "c" 'git-rebase-kill-line
-     "p" 'git-rebase-pick
-     "q" 'with-editor-cancel
-     "k" 'git-rebase-undo)
-
-    (general-define-key
-     :keymaps '(magit-mode-map
-                git-rebase-mode-map
-                magit-log-select-mode-map
-                magit-log-mode-map)
-     "å" 'ace-window
-     "ä" 'other-window
-     "Ä" (cmd (other-window -1))
-     "u" 'previous-line
-     "e" 'next-line)
-
-    (general-define-key
-     :keymaps '(magit-mode-map
-                magit-status-mode-map)
-     "§" 'keyboard-quit
-     "<f2>" 'magit-refresh-all
-     "gg" 'evil-goto-first-line
-     "G" 'evil-goto-line
-     ":" 'evil-ex
-     "/" 'evil-ex-search-forward
-     "?" 'evil-ex-search-backward
-     "M-h" 'magit-dispatch-popup
-     "h" 'evil-ex-search-next
-     "H" 'evil-ex-search-previous
-     "e" 'next-line
-     "u" 'previous-line
-     "C-e" 'magit-section-forward
-     "C-u" 'magit-section-backward
-     "C-i" 'magit-section-forward-sibling
-     "C-n" 'magit-section-backward-sibling
-     "M-u" 'magit-previous-line
-     "M-e" 'magit-next-line
-     "M-C-e" 'move-down-15-lines
-     "M-C-u" 'move-up-15-lines
-     "C-q" 'set-mark-command
-     "C-r" 'magit-reset
-     "x" 'magit-unstage
-     "X" 'magit-unstage-all
-     )
-
-    (map! :map magit-mode-map
-          :nv "C-d" 'magit-delete-thing)
-
-    (general-define-key
-     :keymaps 'magit-popup-mode-map
-     "x" 'magit-unstage
-     "X" 'magit-unstage-all
-    )))
-
-(section "sexp manipulation"
-  ;; (general-evil-define-key
-  ;;     'normal '(lisp-mode-shared-map
-  ;;               clojure-mode-map
-  ;;               hy-mode-map
-  ;;               inferior-hy-mode-map
-  ;;               cider-repl-mode-map
-  ;;               racket-mode-map
-  ;;               racket-repl-mode-map)
-  ;;   "(" 'esexp-backward-paren
-  ;;   ")" 'esexp-forward-paren
-  ;;   "M-i" 'esexp-transpose-sexps
-  ;;   "M-n" (cmd (esexp-transpose-sexps -1))
-  ;;   "C-M-i" (cmd (esexp-transpose-forms 1))
-  ;;   "C-M-n" (cmd (esexp-transpose-forms -1))
-  ;;   "M-e" 'paredit-splice-sexp
-  ;;   "M-u" 'paredit-raise-sexp
-  ;;   "C-M-u" 'esexp-raise-form
-  ;;   "C-i C-i" 'esexp-forward-slurp-sexp
-  ;;   "C-i C-n" 'esexp-forward-barf-sexp
-  ;;   "C-n C-i" 'esexp-backward-barf-sexp
-  ;;   "C-n C-n" 'esexp-backward-slurp-sexp
-  ;;   )
-
-  (map!
-   :after (:or utils racket clojure hy)
-   :map (prog-mode-map
-         ;; lisp-mode-shared-map
-         ;; clojure-mode-map
-         ;; hy-mode-map
-         ;; inferior-hy-mode-map
-         ;; cider-repl-mode-map
-         ;; racket-mode-map
-         ;; racket-repl-mode-map
-         )
-   :n "(" 'esexp-backward-paren
-   :n ")" 'esexp-forward-paren
-   :n "M-i" 'esexp-transpose-sexps
-   :n "M-n" (cmd (esexp-transpose-sexps -1))
-   :n "C-M-i" (cmd (esexp-transpose-forms 1))
-   :n "C-M-n" (cmd (esexp-transpose-forms -1))
-   :n "M-e" 'paredit-splice-sexp
-   :n "M-u" 'paredit-raise-sexp
-   :n "C-M-u" 'esexp-raise-form
-   :n "C-i" 'esexp-forward-slurp-sexp
-   :n "C-n" 'esexp-backward-slurp-sexp
-   :n "C-m" 'esexp-backward-barf-sexp
-   :n "C-ä" 'esexp-forward-barf-sexp
-   :prefix "SPC"
-   :n "q" 'esexp-wrap-word-in-backticks
-   :n "f" 'ok-clojure-fill-paragraph
-   :n "i" 'esexp-insert-at-end
-   :n "n" 'esexp-insert-at-head
-   :n "l" 'esexp-wrap-form-parens-beg
-   :n "L" 'esexp-wrap-form-parens-end
-   :n "w" 'esexp-wrap-element-parens-beg
-   :n "W" 'esexp-wrap-element-parens-end
-   :n "e[" 'esexp-wrap-element-brackets-beg
-   :n "e]" 'esexp-wrap-element-brackets-end
-   :n "e{" 'esexp-wrap-element-braces-beg
-   :n "e}" 'esexp-wrap-element-braces-end
-   :n "[" 'esexp-wrap-form-brackets-beg
-   :n "]" 'esexp-wrap-form-brackets-end
-   :n "{" 'esexp-wrap-form-braces-beg
-   :n "}" 'esexp-wrap-form-braces-end
-   )
-
-  (general-define-key
-   :keymaps 'evil-normal-state-map
-   :prefix "SPC"
-   "dk" 'describe-key
-   "db" 'describe-bindings)
-
-  (general-evil-define-key
-      'normal '(emacs-lisp-mode-map
-                lisp-interaction-mode-map)
-    :prefix "SPC"
-    "dd" 'describe-symbol
-    "dv" 'describe-variable
-    "df" 'describe-function
-    "et" 'eval-defun
-    "sw" 'evil-goto-definition
-    "ed" (cmd (eval-defun t))
-    "eb" 'eval-buffer
-    "ef" 'ok-eval-form
-    "es" 'eval-last-sexp
-    "m" 'macrostep-expand
-    )
-  ;; (general-evil-define-key
-  ;;     'normal '(lisp-mode-shared-map
-  ;;               clojure-mode-map
-  ;;               hy-mode-map
-  ;;               inferior-hy-mode-map
-  ;;               cider-repl-mode-map
-  ;;               racket-mode-map
-  ;;               racket-repl-mode-map)
-  ;;   :prefix "SPC"
-  ;;   "q" 'esexp-wrap-word-in-backticks
-  ;;   "f" 'ok-clojure-fill-paragraph
-  ;;   "i" 'esexp-insert-at-end
-  ;;   "n" 'esexp-insert-at-head
-  ;;   "l" 'esexp-wrap-form-parens-beg
-  ;;   "L" 'esexp-wrap-form-parens-end
-  ;;   "w" 'esexp-wrap-element-parens-beg
-  ;;   "W" 'esexp-wrap-element-parens-end
-  ;;   "e[" 'esexp-wrap-element-brackets-beg
-  ;;   "e]" 'esexp-wrap-element-brackets-end
-  ;;   "e{" 'esexp-wrap-element-braces-beg
-  ;;   "e}" 'esexp-wrap-element-braces-end
-  ;;   "[" 'esexp-wrap-form-brackets-beg
-  ;;   "]" 'esexp-wrap-form-brackets-end
-  ;;   "{" 'esexp-wrap-form-braces-beg
-  ;;   "}" 'esexp-wrap-form-braces-end
-  ;;   )
+(general-evil-define-key
+    'normal '(emacs-lisp-mode-map
+              lisp-interaction-mode-map)
+  :prefix "SPC"
+  "dd" 'describe-symbol
+  "dv" 'describe-variable
+  "df" 'describe-function
+  "et" 'eval-defun
+  "sw" 'evil-goto-definition
+  "ed" (cmd (eval-defun t))
+  "eb" 'eval-buffer
+  "ef" 'ok-eval-form
+  "es" 'eval-last-sexp
+  "m" 'macrostep-expand
   )
+;; (general-evil-define-key
+;;     'normal '(lisp-mode-shared-map
+;;               clojure-mode-map
+;;               hy-mode-map
+;;               inferior-hy-mode-map
+;;               cider-repl-mode-map
+;;               racket-mode-map
+;;               racket-repl-mode-map)
+;;   :prefix "SPC"
+;;   "q" 'esexp-wrap-word-in-backticks
+;;   "f" 'ok-clojure-fill-paragraph
+;;   "i" 'esexp-insert-at-end
+;;   "n" 'esexp-insert-at-head
+;;   "l" 'esexp-wrap-form-parens-beg
+;;   "L" 'esexp-wrap-form-parens-end
+;;   "w" 'esexp-wrap-element-parens-beg
+;;   "W" 'esexp-wrap-element-parens-end
+;;   "e[" 'esexp-wrap-element-brackets-beg
+;;   "e]" 'esexp-wrap-element-brackets-end
+;;   "e{" 'esexp-wrap-element-braces-beg
+;;   "e}" 'esexp-wrap-element-braces-end
+;;   "[" 'esexp-wrap-form-brackets-beg
+;;   "]" 'esexp-wrap-form-brackets-end
+;;   "{" 'esexp-wrap-form-braces-beg
+;;   "}" 'esexp-wrap-form-braces-end
+;;   )
+
 
 (section-comment "Old keybindings I haven't look at yet"
 
