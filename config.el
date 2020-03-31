@@ -112,6 +112,15 @@ boolean is non-nil, also unbinds TAB in that mode."
 ;; '(rainbow-delimiters-depth-10-face :foreground "#CC00EE")
 ;; '(rainbow-delimiters-depth-11-face :foreground "#9933FF")
 
+(dolist (fn '(evil-visualstar/begin-search-forward
+              evil-visualstar/begin-search-backward
+              evil-ex-search-word-forward
+              evil-ex-search-word-backward
+              evil-ex-search-next
+              evil-ex-search-previous
+              evil-ex-search-forward
+              evil-ex-search-backward))
+  (advice-remove fn #'doom-preserve-window-position-a))
 ;;; Some operators
 
 (evil-define-operator ok-evil-webpaste (beg end)
