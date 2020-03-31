@@ -93,10 +93,24 @@ boolean is non-nil, also unbinds TAB in that mode."
   evil-org)
 
 ;;; Faces
+(defface rainbow-delimiters-depth-10-face '((t (:foreground "#CC00EE"))) "")
+(defface rainbow-delimiters-depth-11-face '((t (:foreground "#9933FF"))) "")
+(setq rainbow-delimiters-max-face-count 11)
 (custom-set-faces!
   '(clojure-quote-face :foreground "#ff0088")
   '(clojure-number-face :foreground "#d419ff")
-  '(highlight-numbers-number :foreground "#d419ff" :weight normal))
+  '(highlight-numbers-number :foreground "#d419ff" :weight normal)
+  '(rainbow-delimiters-depth-1-face :foreground "#CCCCCC")
+  '(rainbow-delimiters-depth-2-face :foreground "#33FF33")
+  '(rainbow-delimiters-depth-3-face :foreground "#008800")
+  '(rainbow-delimiters-depth-4-face :foreground "#00FFFF")
+  '(rainbow-delimiters-depth-5-face :foreground "#0066CC")
+  '(rainbow-delimiters-depth-6-face :foreground "#DDFF11")
+  '(rainbow-delimiters-depth-7-face :foreground "#FF6000")
+  '(rainbow-delimiters-depth-8-face :foreground "#EE0000")
+  '(rainbow-delimiters-depth-9-face :foreground "#FF88BB"))
+;; '(rainbow-delimiters-depth-10-face :foreground "#CC00EE")
+;; '(rainbow-delimiters-depth-11-face :foreground "#9933FF")
 
 ;;; Some operators
 
