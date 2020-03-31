@@ -93,9 +93,10 @@ boolean is non-nil, also unbinds TAB in that mode."
   evil-org)
 
 ;;; Faces
-
-(defface clojure-quote-face '((t (:foreground "#ff0088"))) "")
-(defface clojure-number-face '((t (:foreground "#d419ff"))) "")
+(custom-set-faces!
+  '(clojure-quote-face :foreground "#ff0088")
+  '(clojure-number-face :foreground "#d419ff")
+  '(highlight-numbers-number :foreground "#d419ff" :weight normal))
 
 ;;; Some operators
 
