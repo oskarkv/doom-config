@@ -674,7 +674,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       :nv "C-d" 'magit-delete-thing)
 
 (map! :map prog-mode-map
-      :after (:or utils racket clojure hy)
+      ;; :after (:or utils racket clojure hy)
       :n "(" 'esexp-backward-paren
       :n ")" 'esexp-forward-paren
       :n "M-i" 'esexp-transpose-sexps
@@ -688,6 +688,8 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "C-n" 'esexp-backward-slurp-sexp
       :n "C-m" 'esexp-backward-barf-sexp
       :n "C-ä" 'esexp-forward-barf-sexp
+      :n "M-l" 'paredit-backward-up
+      :n "M-q" 'paredit-backward-up
       :prefix "SPC"
       :n "q" 'esexp-wrap-word-in-backticks
       :n "f" 'ok-clojure-fill-paragraph
