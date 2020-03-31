@@ -92,6 +92,11 @@ boolean is non-nil, also unbinds TAB in that mode."
   (ivy ivy-minibuffer-map)
   evil-org)
 
+;;; Faces
+
+(defface clojure-quote-face '((t (:foreground "#ff0088"))) "")
+(defface clojure-number-face '((t (:foreground "#d419ff"))) "")
+
 ;;; Some operators
 
 (evil-define-operator ok-evil-webpaste (beg end)
@@ -306,6 +311,7 @@ boolean is non-nil, also unbinds TAB in that mode."
   (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o ?d ?h)))
 
 (after! clojure-mode
+  (add-hook 'clojure-mode-hook (fn (highlight-numbers-mode -1)))
   (setq clojure-indent-style :always-align
         clojure-docstring-fill-column 72)
 
@@ -913,9 +919,6 @@ boolean is non-nil, also unbinds TAB in that mode."
   )
 
 (section-comment "Old customization"
-  ;;; Customizations made with customize-group
-  (defface clojure-quote-face '((t (:foreground "#ff0088"))) "")
-  (defface clojure-number-face '((t (:foreground "#d419ff"))) "")
 
   (custom-set-faces
    ;; custom-set-faces was added by Custom.

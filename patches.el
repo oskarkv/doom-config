@@ -19,6 +19,57 @@
         (server-edit)
       (kill-buffer nil))))
 
+(after! magit
+;;;###autoload (autoload 'magit-dispatch "magit" nil t)
+  (define-transient-command magit-dispatch ()
+    "Invoke a Magit command from a list of available commands."
+    ["Transient and dwim commands"
+     [("A" "Apply"          magit-cherry-pick)
+      ("b" "Branch"         magit-branch)
+      ("B" "Bisect"         magit-bisect)
+      ("c" "Commit"         magit-commit)
+      ("C" "Clone"          magit-clone)
+      ("d" "Diff"           magit-diff)
+      ("D" "Diff (change)"  magit-diff-refresh)
+      ("e" "Ediff (dwim)"   magit-ediff-dwim)
+      ("E" "Ediff"          magit-ediff)]
+     [("f" "Fetch"          magit-fetch)
+      ("F" "Pull"           magit-pull)
+      ("l" "Log"            magit-log)
+      ("L" "Log (change)"   magit-log-refresh)
+      ("m" "Merge"          magit-merge)
+      ("M" "Remote"         magit-remote)
+      ("o" "Submodule"      magit-submodule)
+      ("O" "Subtree"        magit-subtree)]
+     [("P" "Push"           magit-push)
+      ("r" "Rebase"         magit-rebase)
+      ("t" "Tag"            magit-tag)
+      ("T" "Note"           magit-notes)
+      ("V" "Revert"         magit-revert)
+      ("w" "Apply patches"  magit-am)
+      ("W" "Format patches" magit-patch)
+      ("X" "Reset"          magit-reset)]
+     [("y" "Show Refs"      magit-show-refs)
+      ("Y" "Cherries"       magit-cherry)
+      ("z" "Stash"          magit-stash)
+      ("!" "Run"            magit-run)
+      ("%" "Worktree"       magit-worktree)]]
+    ["Applying changes"
+     :if-derived magit-mode
+     [("a" "Apply"          magit-apply)
+      ("v" "Reverse"        magit-reverse)
+      ("k" "Discard"        magit-discard)]
+     [("s" "Stage"          magit-stage)
+      ("x" "Unstage"        magit-unstage)]
+     [("S" "Stage all"      magit-stage-modified)
+      ("X" "Unstage all"    magit-unstage-all)]]
+    ["Essential commands"
+     :if-derived magit-mode
+     ("g" "       refresh current buffer"   magit-refresh)
+     ("<tab>" "   toggle section at point"  magit-section-toggle)
+     ("<return>" "visit thing at point"     magit-visit-thing)
+     ("C-h m" "   show all key bindings"    describe-mode)]))
+
 (after! clojure-mode
   ;; CHANGE: Indent docstrings relative to their parent forms
   (defun clojure-indent-line ()
@@ -35,180 +86,184 @@
   ;; CHANGE: Lots of changes to font locking
   (setq clojure-font-lock-keywords
         (eval-when-compile
-          `( ;; Top-level variable definition
-            ;; (,(concat "(\\(?:" clojure--sym-regexp "/\\)?\\("
-            (,(concat "(\\(\\(?:" clojure--sym-regexp "/\\)?"
-                      (regexp-opt '("def" "def-" "defconst" "defonce" "defs"))
-                      ;; variable declarations
-                      "\\)\\>"
-                      ;; Any whitespace
-                      "[ \r\n\t]*"
-                      ;; Possibly type or metadata
-                      "\\(?:#?^\\(?:{[^}]*}\\|\\sw+\\)[ \r\n\t]*\\)*"
-                      "\\(\\sw+\\)?")
-             (1 font-lock-keyword-face)
-             (2 font-lock-variable-name-face nil t))
-            ;; Type definition
-            (,(concat "(\\(?:clojure.core/\\)?\\("
-                      (regexp-opt '("defstruct" "deftype" "defprotocol"
-                                    "defrecord" "deftype-"))
-                      ;; type declarations
-                      "\\)\\>"
-                      ;; Any whitespace
-                      "[ \r\n\t]*"
-                      ;; Possibly type or metadata
-                      "\\(?:#?^\\(?:{[^}]*}\\|\\sw+\\)[ \r\n\t]*\\)*"
-                      "\\(\\sw+\\)?")
-             (1 font-lock-keyword-face)
-             (2 font-lock-type-face nil t))
-            ;; Function definition (anything that starts with def and is not
-            ;; listed above)
-            (,(concat "(\\(\\(?:" clojure--sym-regexp "/\\)?"
-                      "def[^ \r\n\t]*\\)"
-                      ;; Function declarations
-                      "\\>"
-                      ;; Any whitespace
-                      "[ \r\n\t]*"
-                      ;; Possibly type or metadata
-                      "\\(?:#?^\\(?:{[^}]*}\\|\\sw+\\)[ \r\n\t]*\\)*"
-                      (concat "\\(" clojure--sym-regexp "\\)?"))
-             (1 font-lock-keyword-face)
-             (2 font-lock-function-name-face nil t))
-            ;; (fn name? args ...)
-            (,(concat "(\\(?:clojure.core/\\)?\\(fn\\)[ \t]+"
-                      ;; Possibly type
-                      "\\(?:#?^\\sw+[ \t]*\\)?"
-                      ;; Possibly name
-                      "\\(\\sw+\\)?" )
-             (1 font-lock-keyword-face)
-             (2 font-lock-function-name-face nil t))
-            ;; lambda arguments - %, %&, %1, %2, etc
-            ("\\<%[&1-9]?" (0 font-lock-variable-name-face))
-            ;; Special forms
-            (,(concat
-               "("
-               (regexp-opt
-                '("def" "do" "if" "let" "let*" "var" "fn" "fn*" "loop" "loop*"
-                  "recur" "throw" "try" "catch" "finally"
-                  "set!" "new" "."
-                  "monitor-enter" "monitor-exit" "quote") t)
-               "\\>")
-             1 font-lock-keyword-face)
-            ;; Built-in binding and flow of control forms
-            (,(concat
-               "(\\(?:clojure.core/\\)?"
-               (regexp-opt
-                '("letfn" "case" "cond" "cond->" "cond->>" "condp"
-                  "for" "when" "when-not" "when-let" "when-first" "when-some"
-                  "if-let" "if-not" "if-some"
-                  ".." "->" "->>" "as->" "doto" "and" "or"
-                  "dosync" "doseq" "dotimes" "dorun" "doall"
-                  "ns" "in-ns"
-                  "with-open" "with-local-vars" "binding"
-                  "with-redefs" "with-redefs-fn"
-                  "declare") t)
-               "\\>")
-             1 font-lock-keyword-face)
-            ;; Macros similar to let, when, and while
-            ;; (,(rx symbol-start
-            ;;       (or "let" "when" "while") "-"
-            ;;       (1+ (or (syntax word) (syntax symbol)))
-            ;;       symbol-end)
-            ;;  0 font-lock-keyword-face)
-            (,(concat
-               "\\<"
-               (regexp-opt
-                '("*1" "*2" "*3" "*agent*"
-                  "*allow-unresolved-vars*" "*assert*" "*clojure-version*"
-                  "*command-line-args*" "*compile-files*"
-                  "*compile-path*" "*data-readers*" "*default-data-reader-fn*"
-                  "*e" "*err*" "*file*" "*flush-on-newline*"
-                  "*in*" "*macro-meta*" "*math-context*" "*ns*" "*out*"
-                  "*print-dup*" "*print-length*" "*print-level*"
-                  "*print-meta*" "*print-readably*"
-                  "*read-eval*" "*source-path*"
-                  "*unchecked-math*"
-                  "*use-context-classloader*" "*warn-on-reflection*")
-                t)
-               "\\>")
-             0 font-lock-builtin-face)
-            ;; Dynamic variables - *something* or @*something*
-            (,(concat "\\(?:\\<\\|/\\)@?\\(\\*" clojure--sym-regexp "\\*\\)\\>")
-             1 font-lock-variable-name-face)
-            ;; Global constants - nil, true, false
-            (,(concat
-               "\\<"
-               (regexp-opt
-                '("true" "false" "nil") t)
-               "\\>")
-             0 'clojure-number-face)
-            ;; Character literals - \1, \a, \newline, \u0000
-            ("\\\\\\([[:punct:]]\\|[a-z0-9]+\\>\\)" 0 'clojure-character-face)
+          (let ((clojure--num-regexp "-?[0-9]+\\(\\.[0-9]+\\)?"))
+            `( ;; Top-level variable definition
+              ;; (,(concat "(\\(?:" clojure--sym-regexp "/\\)?\\("
+              (,(concat "(\\(\\(?:" clojure--sym-regexp "/\\)?"
+                        (regexp-opt '("def" "def-" "defconst" "defonce" "defs"))
+                        ;; variable declarations
+                        "\\)\\>"
+                        ;; Any whitespace
+                        "[ \r\n\t]*"
+                        ;; Possibly type or metadata
+                        "\\(?:#?^\\(?:{[^}]*}\\|\\sw+\\)[ \r\n\t]*\\)*"
+                        "\\(\\sw+\\)?")
+               (1 font-lock-keyword-face)
+               (2 font-lock-variable-name-face nil t))
+              ;; Type definition
+              (,(concat "(\\(?:clojure.core/\\)?\\("
+                        (regexp-opt '("defstruct" "deftype" "defprotocol"
+                                      "defrecord" "deftype-"))
+                        ;; type declarations
+                        "\\)\\>"
+                        ;; Any whitespace
+                        "[ \r\n\t]*"
+                        ;; Possibly type or metadata
+                        "\\(?:#?^\\(?:{[^}]*}\\|\\sw+\\)[ \r\n\t]*\\)*"
+                        "\\(\\sw+\\)?")
+               (1 font-lock-keyword-face)
+               (2 font-lock-type-face nil t))
+              ;; Function definition (anything that starts with def and is not
+              ;; listed above)
+              (,(concat "(\\(\\(?:" clojure--sym-regexp "/\\)?"
+                        "def[^ \r\n\t]*\\)"
+                        ;; Function declarations
+                        "\\>"
+                        ;; Any whitespace
+                        "[ \r\n\t]*"
+                        ;; Possibly type or metadata
+                        "\\(?:#?^\\(?:{[^}]*}\\|\\sw+\\)[ \r\n\t]*\\)*"
+                        (concat "\\(" clojure--sym-regexp "\\)?"))
+               (1 font-lock-keyword-face)
+               (2 font-lock-function-name-face nil t))
+              ;; (fn name? args ...)
+              (,(concat "(\\(?:clojure.core/\\)?\\(fn\\)[ \t]+"
+                        ;; Possibly type
+                        "\\(?:#?^\\sw+[ \t]*\\)?"
+                        ;; Possibly name
+                        "\\(\\sw+\\)?" )
+               (1 font-lock-keyword-face)
+               (2 font-lock-function-name-face nil t))
+              ;; lambda arguments - %, %&, %1, %2, etc
+              ("\\<%[&1-9]?" (0 font-lock-variable-name-face))
+              ;; Special forms
+              (,(concat
+                 "("
+                 (regexp-opt
+                  '("def" "do" "if" "let" "let*" "var" "fn" "fn*" "loop" "loop*"
+                    "recur" "throw" "try" "catch" "finally"
+                    "set!" "new" "."
+                    "monitor-enter" "monitor-exit" "quote") t)
+                 "\\>")
+               1 font-lock-keyword-face)
+              ;; Built-in binding and flow of control forms
+              (,(concat
+                 "(\\(?:clojure.core/\\)?"
+                 (regexp-opt
+                  '("letfn" "case" "cond" "cond->" "cond->>" "condp"
+                    "for" "when" "when-not" "when-let" "when-first" "when-some"
+                    "if-let" "if-not" "if-some"
+                    ".." "->" "->>" "as->" "doto" "and" "or"
+                    "dosync" "doseq" "dotimes" "dorun" "doall"
+                    "ns" "in-ns"
+                    "with-open" "with-local-vars" "binding"
+                    "with-redefs" "with-redefs-fn"
+                    "declare") t)
+                 "\\>")
+               1 font-lock-keyword-face)
+              ;; Macros similar to let, when, and while
+              ;; (,(rx symbol-start
+              ;;       (or "let" "when" "while") "-"
+              ;;       (1+ (or (syntax word) (syntax symbol)))
+              ;;       symbol-end)
+              ;;  0 font-lock-keyword-face)
+              (,(concat
+                 "\\<"
+                 (regexp-opt
+                  '("*1" "*2" "*3" "*agent*"
+                    "*allow-unresolved-vars*" "*assert*" "*clojure-version*"
+                    "*command-line-args*" "*compile-files*"
+                    "*compile-path*" "*data-readers*" "*default-data-reader-fn*"
+                    "*e" "*err*" "*file*" "*flush-on-newline*"
+                    "*in*" "*macro-meta*" "*math-context*" "*ns*" "*out*"
+                    "*print-dup*" "*print-length*" "*print-level*"
+                    "*print-meta*" "*print-readably*"
+                    "*read-eval*" "*source-path*"
+                    "*unchecked-math*"
+                    "*use-context-classloader*" "*warn-on-reflection*")
+                  t)
+                 "\\>")
+               0 font-lock-builtin-face)
+              ;; Dynamic variables - *something* or @*something*
+              (,(concat "\\(?:\\<\\|/\\)@?\\(\\*" clojure--sym-regexp "\\*\\)\\>")
+               1 font-lock-variable-name-face)
+              ;; Global constants - nil, true, false
+              (,(concat
+                 "\\<"
+                 (regexp-opt
+                  '("true" "false" "nil") t)
+                 "\\>")
+               0 'clojure-number-face)
+              ;; Character literals - \1, \a, \newline, \u0000
+              ("\\\\\\([[:punct:]]\\|[a-z0-9]+\\>\\)" 0 'clojure-character-face)
 
-            ;; namespace definitions: (ns foo.bar)
-            (,(concat "(\\<ns\\>[ \r\n\t]*"
-                      ;; Possibly metadata, shorthand and/or longhand
-                      "\\(?:\\^?\\(?:{[^}]+}\\|:[^ \r\n\t]+[ \r\n\t]\\)[ \r\n\t]*\\)*"
-                      ;; namespace
-                      "\\(" clojure--sym-regexp "\\)")
-             (1 font-lock-type-face))
+              ;; namespace definitions: (ns foo.bar)
+              (,(concat "(\\<ns\\>[ \r\n\t]*"
+                        ;; Possibly metadata, shorthand and/or longhand
+                        "\\(?:\\^?\\(?:{[^}]+}\\|:[^ \r\n\t]+[ \r\n\t]\\)[ \r\n\t]*\\)*"
+                        ;; namespace
+                        "\\(" clojure--sym-regexp "\\)")
+               (1 font-lock-type-face))
 
-            ;; TODO dedupe the code for matching of keywords, type-hints and unmatched symbols
+              ;; TODO dedupe the code for matching of keywords, type-hints and unmatched symbols
 
-            ;; keywords: {:oneword/ve/yCom|pLex.stu-ff 0}
-            (,(concat "\\(:\\{1,2\\}\\)\\(" clojure--sym-regexp "?\\)\\(/\\)\\(" clojure--sym-regexp "\\)")
-             (1 'clojure-keyword-face)
-             (2 font-lock-type-face)
-             ;; (2 'clojure-keyword-face)
-             (3 'default)
-             (4 'clojure-keyword-face))
-            (,(concat "\\(:\\{1,2\\}\\)\\(" clojure--sym-regexp "\\)")
-             (1 'clojure-keyword-face)
-             (2 'clojure-keyword-face))
+              ;; keywords: {:oneword/ve/yCom|pLex.stu-ff 0}
+              (,(concat "\\(:\\{1,2\\}\\)\\(" clojure--sym-regexp "?\\)\\(/\\)\\(" clojure--sym-regexp "\\)")
+               (1 'clojure-keyword-face)
+               (2 font-lock-type-face)
+               ;; (2 'clojure-keyword-face)
+               (3 'default)
+               (4 'clojure-keyword-face))
+              (,(concat "\\(:\\{1,2\\}\\)\\(" clojure--sym-regexp "\\)")
+               (1 'clojure-keyword-face)
+               (2 'clojure-keyword-face))
 
-            ;; type-hints: #^oneword
-            (,(concat "\\(#?\\^\\)\\(" clojure--sym-regexp "?\\)\\(/\\)\\(" clojure--sym-regexp "\\)")
-             (1 'default)
-             (2 font-lock-type-face)
-             (3 'default)
-             (4 'default))
-            (,(concat "\\(#?\\^\\)\\(" clojure--sym-regexp "\\)")
-             (1 'default)
-             (2 font-lock-type-face))
+              ;; type-hints: #^oneword
+              (,(concat "\\(#?\\^\\)\\(" clojure--sym-regexp "?\\)\\(/\\)\\(" clojure--sym-regexp "\\)")
+               (1 'default)
+               (2 font-lock-type-face)
+               (3 'default)
+               (4 'default))
+              (,(concat "\\(#?\\^\\)\\(" clojure--sym-regexp "\\)")
+               (1 'default)
+               (2 font-lock-type-face))
 
-            ;; clojure symbols not matched by the previous regexps; influences CIDER's
-            ;; dynamic syntax highlighting (CDSH). See https://git.io/vxEEA:
-            ;; (,(concat "\\(" clojure--sym-regexp "?\\)\\(/\\)\\(" clojure--sym-regexp "\\)")
-            ;;  (1 font-lock-type-face)
-            ;;  ;; 2nd and 3th matching groups can be font-locked to `nil' or `default'.
-            ;;  ;; CDSH seems to kick in only for functions and variables referenced w/o
-            ;;  ;; writing their namespaces.
-            ;;  (2 nil)
-            ;;  (3 clojure-pink-face))
-            ;; (,(concat "\\(" clojure--sym-regexp "\\)")
-            ;;  ;; this matching group must be font-locked to `nil' otherwise CDSH breaks.
-            ;;  (1 nil))
+              ;; clojure symbols not matched by the previous regexps; influences CIDER's
+              ;; dynamic syntax highlighting (CDSH). See https://git.io/vxEEA:
+              ;; (,(concat "\\(" clojure--sym-regexp "?\\)\\(/\\)\\(" clojure--sym-regexp "\\)")
+              ;;  (1 font-lock-type-face)
+              ;;  ;; 2nd and 3th matching groups can be font-locked to `nil' or `default'.
+              ;;  ;; CDSH seems to kick in only for functions and variables referenced w/o
+              ;;  ;; writing their namespaces.
+              ;;  (2 nil)
+              ;;  (3 clojure-pink-face))
+              ;; (,(concat "\\(" clojure--sym-regexp "\\)")
+              ;;  ;; this matching group must be font-locked to `nil' otherwise CDSH breaks.
+              ;;  (1 nil))
 
-            ;; #_ and (comment ...) macros.
-            (clojure--search-comment-macro 1 font-lock-comment-face t)
-            ;; Highlight `code` marks, just like `elisp'.
-            (,(rx "`" (group-n 1 (optional "#'")
-                               (+ (or (syntax symbol) (syntax word)))) "`")
-             (1 'font-lock-constant-face prepend))
-            ;; Highlight [[var]] comments
-            (,(rx "[[" (group-n 1 (optional "#'")
-                                (+ (or (syntax symbol) (syntax word)))) "]]")
-             (1 'font-lock-constant-face prepend))
-            ;; Highlight escaped characters in strings.
-            (clojure-font-lock-escaped-chars 0 'bold prepend)
-            ;; Highlight grouping constructs in regular expressions
-            (clojure-font-lock-regexp-groups
-             (1 'font-lock-regexp-grouping-construct prepend))
-            ;; ("\\<-?[0-9]+\\(\\.[0-9]+\\)?\\>" 0 'clojure-number-face)
-            (,(concat "\\<" clojure--num-regexp "\\(\\(e\\|E\\)" clojure--num-regexp "\\)?\\>")
-             0 'clojure-number-face)
-            ("[~@'`#]" 0 'clojure-quote-face)))
-        "Default expressions to highlight in Clojure mode."))
+              ;; #_ and (comment ...) macros.
+              (clojure--search-comment-macro 1 font-lock-comment-face t)
+              ;; Highlight `code` marks, just like `elisp'.
+              (,(rx "`" (group-n 1 (optional "#'")
+                                 (+ (or (syntax symbol) (syntax word)))) "`")
+               (1 'font-lock-constant-face prepend))
+              ;; Highlight [[var]] comments
+              (,(rx "[[" (group-n 1 (optional "#'")
+                                  (+ (or (syntax symbol) (syntax word)))) "]]")
+               (1 'font-lock-constant-face prepend))
+              ;; Highlight escaped characters in strings.
+              (clojure-font-lock-escaped-chars 0 'bold prepend)
+              ;; Highlight grouping constructs in regular expressions
+              (clojure-font-lock-regexp-groups
+               (1 'font-lock-regexp-grouping-construct prepend))
+              ;; ("\\<-?[0-9]+\\(\\.[0-9]+\\)?\\>" 0 'clojure-number-face)
+              (,(rx (and symbol-start
+                         (? "-")
+                         digit
+                         (*? any)
+                         symbol-end))
+               0 'clojure-number-face)
+              ("[~@'`#]" 0 'clojure-quote-face))))))
 
 (after! cider
   ;; CHANGE: Fix (def v (a-fn ...)) not font locking a-fn
