@@ -552,8 +552,10 @@ boolean is non-nil, also unbinds TAB in that mode."
       "C-e" 'next-line
       "C-i" 'end-of-line
       "C-n" 'beginning-of-line
-      "M-w" 'er/expand-region
-      "<tab>" 'complete-symbol)
+      "M-w" 'er/expand-region)
+
+;; Makes tab not call yas-expand
+(map! :i [tab] 'complete-symbol)
 
 (map! :map evil-insert-state-map
       "§" 'evil-normal-state
