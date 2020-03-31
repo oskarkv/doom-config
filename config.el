@@ -100,6 +100,14 @@ boolean is non-nil, also unbinds TAB in that mode."
   '(clojure-quote-face :foreground "#ff0088")
   '(clojure-number-face :foreground "#d419ff")
   '(highlight-numbers-number :foreground "#d419ff" :weight normal)
+  '(org-level-1 :inherit default :foreground "#33ff33")
+  '(org-level-2 :inherit default :foreground "#FFb030")
+  '(org-level-3 :inherit default :foreground "#FF44FF")
+  '(org-level-4 :inherit default :foreground "#00FFFF")
+  '(org-level-5 :inherit default :foreground "#FFFF55")
+  '(org-level-6 :inherit default :foreground "#FF9966")
+  '(org-level-7 :inherit default :foreground "#FFaaBB")
+  '(org-level-8 :inherit default :foreground "#ff3333")
   '(rainbow-delimiters-depth-1-face :foreground "#CCCCCC")
   '(rainbow-delimiters-depth-2-face :foreground "#33FF33")
   '(rainbow-delimiters-depth-3-face :foreground "#008800")
@@ -112,6 +120,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 ;; '(rainbow-delimiters-depth-10-face :foreground "#CC00EE")
 ;; '(rainbow-delimiters-depth-11-face :foreground "#9933FF")
 
+;; Disable buggy scrolling when searching
 (dolist (fn '(evil-visualstar/begin-search-forward
               evil-visualstar/begin-search-backward
               evil-ex-search-word-forward
@@ -121,6 +130,10 @@ boolean is non-nil, also unbinds TAB in that mode."
               evil-ex-search-forward
               evil-ex-search-backward))
   (advice-remove fn #'doom-preserve-window-position-a))
+
+;; Don't pop up completion menu after idling in insert mode.
+(setq company-idle-delay nil)
+
 ;;; Some operators
 
 (evil-define-operator ok-evil-webpaste (beg end)
@@ -579,6 +592,11 @@ boolean is non-nil, also unbinds TAB in that mode."
       :prefix "SPC"
       "dk" 'describe-key
       "db" 'describe-bindings)
+
+;; Apparently C-x is a common prefix, and many modes use it.
+;; Shadow all of them for now.
+(map! :map general-override-mode-map
+      :n "C-x" 'evil-numbers/inc-at-pt)
 
 (map! :map evil-motion-state-map
       "SPC" nil
