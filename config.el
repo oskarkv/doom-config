@@ -312,7 +312,8 @@ boolean is non-nil, also unbinds TAB in that mode."
 (after! org
   (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
   (setq org-clock-clocked-in-display nil
-        org-M-RET-may-split-line nil)
+        org-M-RET-may-split-line nil
+        org-todo-keywords '((sequence "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)")))
   (add-hook 'org-mode-hook
             (lambda ()
               (setq paragraph-separate "[ 	\f]*$"
