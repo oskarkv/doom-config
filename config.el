@@ -527,6 +527,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 (map! :map evil-normal-state-map
       ",h" 'webpaste-paste-buffer
+      ",e" 'eval-expression
       "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
       "C-n" nil
       "u" nil
@@ -588,7 +589,11 @@ boolean is non-nil, also unbinds TAB in that mode."
       "A" 'evil-append)
 
 (map! :map doom-leader-map
-      "h" nil)
+      "h" nil
+      "k" 'org-capture)
+
+(map! :map doom-leader-buffer-map
+      "b" 'switch-to-buffer)
 
 (map! :map (evil-normal-state-map evil-visual-state-map)
       "gh" 'ok-evil-webpaste
