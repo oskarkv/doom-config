@@ -1004,23 +1004,4 @@ boolean is non-nil, also unbinds TAB in that mode."
       (display-buffer-use-some-window buffer nil)))
 
   (setq display-buffer-alist
-        '(("\\*Backtrace\\*" . ((display-buffer-min)))))
-
-  (use-package orgtbl-aggregate
-    :ensure t)
-
-  (use-package magit
-    :ensure t
-    :config
-    (add-hook 'git-commit-mode-hook
-              (lambda ()
-                (setq fill-column 72)
-                (turn-on-auto-fill))))
-
-  (use-package fill-column-indicator
-    :config
-    (setq fci-rule-color "#502727")
-    (setq fci-rule-width 4)
-    (setq fci-always-use-textual-rule nil)
-    (add-hook 'clojure-mode-hook 'fci-mode)
-    (add-hook 'hy-mode-hook 'fci-mode)))
+        '(("\\*Backtrace\\*" . ((display-buffer-min))))))
