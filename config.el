@@ -322,9 +322,10 @@ boolean is non-nil, also unbinds TAB in that mode."
         org-todo-keywords '((sequence
                              "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)")))
   (add-hook 'org-mode-hook
-            (lambda ()
+            (fn
               (setq paragraph-separate "[ 	\f]*$"
-                    paragraph-start "\f\\|[ 	]*$"))))
+                    paragraph-start "\f\\|[ 	]*$")))
+  (add-hook 'org-mode-hook (fn (hl-fill-column-mode -1))))
 
 ;;; States
 
