@@ -93,6 +93,7 @@ boolean is non-nil, also unbinds TAB in that mode."
   evil-org)
 
 ;;; Faces
+
 (defface rainbow-delimiters-depth-10-face '((t (:foreground "#CC00EE"))) "")
 (defface rainbow-delimiters-depth-11-face '((t (:foreground "#9933FF"))) "")
 (setq rainbow-delimiters-max-face-count 11)
@@ -329,6 +330,11 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 ;;; Misc
 
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'org-mode-hook #'rainbow-delimiters-mode-disable)
+(add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'text-mode-hook #'rainbow-delimiters-mode)
+
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (add-hook 'text-mode-hook
           (fn (setq fill-column 60)))
@@ -400,6 +406,15 @@ boolean is non-nil, also unbinds TAB in that mode."
     (when-lets 1)
     (while-let 1)
     (with-gensyms 1)))
+
+(after! cider
+  (setq-default
+   cider-font-lock-reader-conditionals nil
+   cider-pprint-fn 'fipp
+   cider-repl-use-pretty-printing t
+   cider-font-lock-dynamically t
+   cider-prompt-for-symbol nil))
+
 
 (defvar ok-clj-refactor-map (make-sparse-keymap))
 (defvar -visual-inside-keymap (lookup-key evil-visual-state-map "i"))
@@ -927,7 +942,7 @@ boolean is non-nil, also unbinds TAB in that mode."
   (general-evil-define-key
       'normal 'racket-describe-mode-map
     "q" 'quit-window
-    )
+    ))
 
 (section-comment "Old customization"
 
@@ -983,29 +998,6 @@ boolean is non-nil, also unbinds TAB in that mode."
   (setq display-buffer-alist
         '(("\\*Backtrace\\*" . ((display-buffer-min)))))
 
-  (use-package rainbow-delimiters
-    :ensure t
-    :config
-    (defmacro rainbow-delimiters--define-depth-faces ()
-      (let ((faces '())
-            (light-colors ["#707183" "#7388d6" "#909183" "#709870" "#907373"
-                           "#6276ba" "#858580" "#80a880" "#887070"])
-            (dark-colors ["grey55" "#93a8c6" "#b0b1a3" "#97b098" "#aebed8"
-                          "#b0b0b3" "#90a890" "#a2b6da" "#9cb6ad"]))
-        (dotimes (i 2)
-          (push `(defface ,(intern (format "rainbow-delimiters-depth-%d-face" (+ 10 i)))
-                   '((((class color) (background light)) :foreground ,(aref light-colors i))
-                     (((class color) (background dark)) :foreground ,(aref dark-colors i)))
-                   ,(format "nested delimiter face, depth %d." (+ 10 i))
-                   :group 'rainbow-delimiters-faces)
-                faces))
-        `(progn ,@faces)))
-    (rainbow-delimiters--define-depth-faces)
-    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
-    (add-hook 'org-mode-hook #'rainbow-delimiters-mode-disable)
-    (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode)
-    (add-hook 'text-mode-hook #'rainbow-delimiters-mode))
-
   (use-package orgtbl-aggregate
     :ensure t)
 
@@ -1016,19 +1008,6 @@ boolean is non-nil, also unbinds TAB in that mode."
               (lambda ()
                 (setq fill-column 72)
                 (turn-on-auto-fill))))
-
-  (use-package cider
-    :load-path "~/code/cider"
-    :ensure t
-    :config
-                                        ;(setq cider-latest-middleware-version "0.21.2-snapshot")
-    (emacs-mode-in-mode cider--debug-mode-hook cider--debug-mode)
-    (setq-default
-     cider-font-lock-reader-conditionals nil
-     cider-pprint-fn 'fipp
-     cider-repl-use-pretty-printing t
-     cider-font-lock-dynamically t
-     cider-prompt-for-symbol nil))
 
   (use-package fill-column-indicator
     :config
