@@ -73,10 +73,12 @@
 
 (defmacro cmd (&rest body)
   "Wraps BODY in an interactive lambda."
+  (declare (indent defun))
   `(lambda () (interactive) ,@body))
 
 (defmacro fn (&rest body)
   "Wraps BODY in a lambda."
+  (declare (indent defun))
   `(lambda (&rest args) ,@body))
 
 (defmacro update-place (place fn &rest args)
