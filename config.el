@@ -78,7 +78,8 @@ unless <tab> was already bound, then unbinds TAB."
     `(after! ,mode
        (ok-bind-tab-to-TAB
         (or ,map
-            (symbol-value (intern-soft (concat (symbol-name ',mode) "-mode-map"))))))))
+            (symbol-value (intern-soft (concat (symbol-name ',mode)
+                                               "-mode-map"))))))))
 
 (defmacro ok-fix-tab (&rest modes)
   "Binds whatever TAB was bound to to <tab> in the mode's keymap. A mode in
@@ -98,6 +99,9 @@ boolean is non-nil, also unbinds TAB in that mode."
 (defface rainbow-delimiters-depth-11-face '((t (:foreground "#9933FF"))) "")
 (setq rainbow-delimiters-max-face-count 11)
 (custom-set-faces!
+  '(font-lock-comment-face :foreground "#777777")
+  '(font-lock-doc-face :foreground "#8888aa")
+  '(hl-fill-column-face :background "#773333")
   '(clojure-quote-face :foreground "#ff0088")
   '(clojure-number-face :foreground "#d419ff")
   '(highlight-numbers-number :foreground "#d419ff" :weight normal)
@@ -154,7 +158,8 @@ boolean is non-nil, also unbinds TAB in that mode."
     (or (cdr (assoc m mode-alist))
         (ok-string-drop-at-end (str m) 5))))
 
-(evil-define-operator ok-evil-three-backticks-yank (beg end type register yank-handler)
+(evil-define-operator ok-evil-three-backticks-yank
+  (beg end type register yank-handler)
   "Yanks text and adds three backticks around it, as well as a
   language after the first backticks, depending on the Emacs
   mode. Works with evil."
@@ -314,7 +319,8 @@ boolean is non-nil, also unbinds TAB in that mode."
   (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
   (setq org-clock-clocked-in-display nil
         org-M-RET-may-split-line nil
-        org-todo-keywords '((sequence "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)")))
+        org-todo-keywords '((sequence
+                             "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)")))
   (add-hook 'org-mode-hook
             (lambda ()
               (setq paragraph-separate "[ 	\f]*$"
@@ -469,7 +475,8 @@ boolean is non-nil, also unbinds TAB in that mode."
 (defun ok-rebind-in-all-maps (start end exclude-list &rest to-froms)
   (apply #'ok-rebind-in-all-maps* start end exclude-list (seq-take to-froms 2))
   (if (not (seq-empty-p (seq-drop to-froms 2)))
-      (apply #'ok-rebind-in-all-maps start end exclude-list (seq-drop to-froms 2))))
+      (apply #'ok-rebind-in-all-maps start end exclude-list
+             (seq-drop to-froms 2))))
 
 (defun ok-wrap-word-in-backticks ()
   (interactive)
