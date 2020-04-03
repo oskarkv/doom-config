@@ -717,6 +717,45 @@ boolean is non-nil, also unbinds TAB in that mode."
       "X" 'magit-unstage-all
       :nv "C-d" 'magit-delete-thing)
 
+(map! :after (:or clojure-mode cider)
+      :map (clojure-mode-map cider-repl-mode-map)
+      :prefix "SPC"
+      :n "aa" 'cider-apropos
+      :n "ad" 'cider-apropos-documentation
+      :n "al" 'clojure-align
+      :n "as" 'cider-apropos-documentation-select
+      :n "c" ok-clj-refactor-map
+      :n "dc" 'cider-javadoc
+      :n "dd" 'cider-doc
+      :n "dg" 'cider-grimoire
+      :n "dw" 'cider-grimoire-web
+      :n "eb" (cmd (cider-load-buffer) (run-at-time 1 nil #'fci-mode 1))
+      :n "ed" 'cider-debug-defun-at-point
+      :n "ef" 'ok-cider-eval-form
+      :n "en" 'cider-eval-ns-form
+      :n "et" 'cider-eval-defun-at-point
+      :n "gn" 'cider-find-ns
+      :n "gr" 'cider-find-resource
+      :n "jb" 'cider-jack-in-clj&cljs
+      :n "jj" 'cider-jack-in
+      :n "js" 'cider-jack-in-cljs
+      :n "m" 'esexp-cider-macroexpand
+      :n "ra" 'clojure-unwind-all
+      :n "rb" 'clojure-thread-all-but-last
+      :n "rc" 'cider-repl-clear-buffer
+      :n "rf" 'clojure-thread-first-all
+      :n "rl" 'clojure-thread-last-all
+      :n "rnr" (cmd (cider-switch-to-repl-buffer t))
+      :n "rns" 'cider-repl-set-ns
+      :n "rr" 'cider-switch-to-repl-buffer
+      :n "rt" 'clojure-thread
+      :n "ru" 'clojure-unwind
+      :n "sw" 'cider-find-var
+      :n "tn" 'cider-toggle-trace-ns
+      :n "tv" 'cider-toggle-trace-var
+      :v "er" 'cider-eval-region
+      :v "et" 'cider-eval-region)
+
 (map! :map prog-mode-map
       ;; :after (:or utils racket clojure hy)
       :n "(" 'esexp-backward-paren
@@ -802,38 +841,6 @@ boolean is non-nil, also unbinds TAB in that mode."
 
   ;;; Additional keys, not as set in stone
 
-  (general-define-key
-   :keymaps '(evil-normal-state-map
-              evil-visual-state-map)
-   :prefix ","
-   "," 'avy-goto-char
-   "s" 'magit-status
-   "ä" 'make-frame
-   "k" 'org-capture
-   "w" 'webpaste-paste-buffer
-   "g" 'projectile-ag
-   "f" 'ido-find-file
-   "p" 'projectile-find-file
-   "n" 'switch-to-buffer
-   "e" 'eval-expression
-   "i" 'org-clock-in
-   "o" 'org-clock-out
-   "l" 'org-clock-in-last
-   "d" 'evil-delete-buffer ;(cmd (find-file "~/spelet/todo.org"))
-   )
-
-  (general-define-key
-   :keymaps 'evil-visual-state-map
-   :prefix ","
-   "w" 'webpaste-paste-region
-   )
-
-
-  ;; (general-evil-define-key
-  ;;     'visual lisp-mode-shared-map
-  ;;   :prefix "SPC"
-  ;;   "et" 'eval-region
-  ;;   )
 
   (general-evil-define-key
       'normal '(cider-stacktrace-mode-map
@@ -870,78 +877,36 @@ boolean is non-nil, also unbinds TAB in that mode."
    "M-p" nil
    )
 
-  (general-evil-define-key
-      'normal '(clojure-mode-map cider-repl-mode-map)
-    :prefix "SPC"
-    "aa" 'cider-apropos
-    "ad" 'cider-apropos-documentation
-    "al" 'clojure-align
-    "as" 'cider-apropos-documentation-select
-    "dc" 'cider-javadoc
-    "dd" 'cider-doc
-    "dg" 'cider-grimoire
-    "dw" 'cider-grimoire-web
-    "eb" (cmd (cider-load-buffer) (run-at-time 1 nil #'fci-mode 1))
-    "ef" 'ok-cider-eval-form
-    "ed" 'cider-debug-defun-at-point
-    "ej" 'cider-jack-in
-    "js" 'cider-jack-in-cljs
-    "jb" 'cider-jack-in-clj&cljs
-    "en" 'cider-eval-ns-form
-    "et" 'cider-eval-defun-at-point
-    "gn" 'cider-find-ns
-    "gr" 'cider-find-resource
-    "m" 'esexp-cider-macroexpand
-    "rt" 'clojure-thread
-    "ru" 'clojure-unwind
-    "ra" 'clojure-unwind-all
-    "rf" 'clojure-thread-first-all
-    "rl" 'clojure-thread-last-all
-    "rb" 'clojure-thread-all-but-last
-    "rnr" (cmd (cider-switch-to-repl-buffer t))
-    "rns" 'cider-repl-set-ns
-    "rr" 'cider-switch-to-repl-buffer
-    "rc" 'cider-repl-clear-buffer
-    "c" ok-clj-refactor-map
-    "sw" 'cider-find-var
-    "tn" 'cider-toggle-trace-ns
-    "tv" 'cider-toggle-trace-var
-    )
 
-  (general-evil-define-key
-      'normal '(slime-mode-map)
+  ;; THIS MIGHT BE WRONG, DUNNO THE NAME OF THE PACKAGE
+  (map! :after slime
+   :map slime-mode-map
     :prefix "SPC"
-    "et" 'slime-eval-defun
-    "er" 'slime-eval-region
-    "eb" 'slime-eval-buffer
-    "ct" 'slime-compile-defun
-    "cb" 'slime-compile-and-load-file
-    "sw" 'slime-edit-definition
-    "dd" 'slime-describe-function
-    "ds" 'slime-describe-symbol
-    "aa" 'slime-apropos
-    "dh" 'slime-hyperspec-lookup
-    "dm" 'hyperspec-lookup-reader-macro
-    "df" 'hyperspec-lookup-format
-    "wc" 'slime-who-calls
-    "ww" 'slime-calls-who
-    "mm" 'slime-macroexpand-1
-    "ma" 'slime-macroexpand-all
-    "ej" 'slime
-    "rr" (cmd (other-window 1) (slime-repl)))
+    :n "et" 'slime-eval-defun
+    :v "er" 'slime-eval-region
+    :n "eb" 'slime-eval-buffer
+    :n "ct" 'slime-compile-defun
+    :n "cb" 'slime-compile-and-load-file
+    :n "sw" 'slime-edit-definition
+    :n "dd" 'slime-describe-function
+    :n "ds" 'slime-describe-symbol
+    :n "aa" 'slime-apropos
+    :n "dh" 'slime-hyperspec-lookup
+    :n "dm" 'hyperspec-lookup-reader-macro
+    :n "df" 'hyperspec-lookup-format
+    :n "wc" 'slime-who-calls
+    :n "ww" 'slime-calls-who
+    :n "mm" 'slime-macroexpand-1
+    :n "ma" 'slime-macroexpand-all
+    :n "ej" 'slime
+    :n "rr" (cmd (other-window 1) (slime-repl)))
 
-  (general-evil-define-key
-      'normal hy-mode-map
+  (map! :after hy-mode
+      :map hy-mode-map
     :prefix "SPC"
-    "ef" 'hy-shell-eval-current-form
-    "en" 'hy-shell-eval-buffer
-    "et" 'ok-hy-eval-toplevel)
-
-  (general-evil-define-key
-      'visual clojure-mode-map
-    :prefix "SPC"
-    "et" 'cider-eval-region
-    )
+    :n "ef" 'hy-shell-eval-current-form
+    :n "en" 'hy-shell-eval-buffer
+    :n "et" 'ok-hy-eval-toplevel)
 
   ;;; Racket
 
@@ -964,12 +929,6 @@ boolean is non-nil, also unbinds TAB in that mode."
     "q" 'quit-window
     )
 
-  (general-evil-define-key
-      'insert '(racket-mode-map
-                racket-repl-mode-map)
-    "<tab>" 'complete-symbol)
-  )
-
 (section-comment "Old customization"
 
   (custom-set-faces
@@ -985,26 +944,7 @@ boolean is non-nil, also unbinds TAB in that mode."
    ;;'(font-lock-doc-face ((t (:foreground "#858175"))))
    '(linum ((t (:background "#272822" :foreground "#8F908A" :underline nil :height 113))))
    '(mode-line ((((class color) (min-colors 257)) (:inverse-video unspecified :underline unspecified :foreground "#F8F8F0" :background "#49483E" :box (:line-width 1 :color "#64645E" :style unspecified))) (((class color) (min-colors 89)) (:inverse-video unspecified :underline unspecified :foreground "#F5F5F5" :background "#1B1E1C" :box (:line-width 1 :color "#474747" :style unspecified)))))
-   '(org-level-1 ((t (:inherit default :foreground "#33ff33" :height 1.2))))
-   '(org-level-2 ((t (:inherit default :foreground "#FFb030" :height 1.1))))
-   '(org-level-3 ((t (:inherit default :foreground "#FF44FF" :height 1.0))))
-   '(org-level-4 ((t (:inherit default :foreground "#00FFFF" :height 1.0))))
-   '(org-level-5 ((t (:inherit default :foreground "#FF9966" :height 1.0))))
-   '(org-level-6 ((t (:inherit default :foreground "#FFFF55" :height 1.0))))
-   '(org-level-7 ((t (:inherit default :foreground "#FFaaBB" :height 1.0))))
-   '(org-level-8 ((t (:inherit default :foreground "#ff3333" :height 1.0))))
-   '(racket-selfeval-face ((t (:foreground "#5cf"))))
-   '(rainbow-delimiters-depth-1-face ((t (:foreground "#CCCCCC"))))
-   '(rainbow-delimiters-depth-10-face ((t (:foreground "#CC00EE"))))
-   '(rainbow-delimiters-depth-11-face ((t (:foreground "#9933FF"))))
-   '(rainbow-delimiters-depth-2-face ((t (:foreground "#33FF33"))))
-   '(rainbow-delimiters-depth-3-face ((t (:foreground "#008800"))))
-   '(rainbow-delimiters-depth-4-face ((t (:foreground "#00FFFF"))))
-   '(rainbow-delimiters-depth-5-face ((t (:foreground "#0066CC"))))
-   '(rainbow-delimiters-depth-6-face ((t (:foreground "#DDFF11"))))
-   '(rainbow-delimiters-depth-7-face ((t (:foreground "#FF6000"))))
-   '(rainbow-delimiters-depth-8-face ((t (:foreground "#EE0000"))))
-   '(rainbow-delimiters-depth-9-face ((t (:foreground "#FF88BB")))))
+   '(racket-selfeval-face ((t (:foreground "#5cf")))))
 
   (custom-set-variables
    ;; custom-set-variables was added by Custom.
@@ -1012,16 +952,7 @@ boolean is non-nil, also unbinds TAB in that mode."
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
    '(cider-cljs-lein-repl "(do (require 'cljs.repl.node)
-                               (cider.piggieback/cljs-repl (cljs.repl.node/repl-env)))")
-   '(custom-safe-themes
-     (quote
-      ("946e871c780b159c4bb9f580537e5d2f7dba1411143194447604ecbaf01bd90c" "3eb93cd9a0da0f3e86b5d932ac0e3b5f0f50de7a0b805d4eb1f67782e9eb67a4" default)))
-   '(monokai-cyan "#FF33FF")
-   '(rainbow-delimiters-max-face-count 10)
-   '(safe-local-variable-values
-     (quote
-      ((bug-reference-bug-regexp . "#\\(?2:[[:digit:]]+\\)")
-       (checkdoc-package-keywords-flag)))))
+                               (cider.piggieback/cljs-repl (cljs.repl.node/repl-env)))"))
   )
 
 (section-comment "Crap from old config"
