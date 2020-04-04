@@ -713,7 +713,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       "Ä" (cmd (other-window -1))
       "u" 'previous-line
       "e" 'next-line
-      :map magit-status-mode-map
+      :map (magit-status-mode-map magit-mode-map)
       "§" 'keyboard-quit
       "<f2>" 'magit-refresh-all
       "gg" 'evil-goto-first-line
@@ -737,6 +737,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       "C-q" 'set-mark-command
       "C-r" 'magit-reset
       "x" 'magit-unstage
+      :nv "X" 'magit-unstage-all
       "X" 'magit-unstage-all
       :nv "C-d" 'magit-delete-thing)
 
