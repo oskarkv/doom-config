@@ -589,8 +589,6 @@ boolean is non-nil, also unbinds TAB in that mode."
       "§" 'evil-normal-state)
 
 (map! :map evil-normal-state-map
-      ",h" 'webpaste-paste-buffer
-      ",e" 'eval-expression
       "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
       "C-n" nil
       "u" nil
@@ -656,9 +654,13 @@ boolean is non-nil, also unbinds TAB in that mode."
       "L" 'evil-insert
       "A" 'evil-append)
 
-(map! :map doom-leader-map
-      "h" nil
-      "k" 'org-capture)
+(map! :leader
+      :desc "Open config" "v" (cmd (find-file "~/.doom.d/config.el"))
+      "h" 'webpaste-paste-buffer
+      "e" 'eval-expression
+      "k" 'org-capture
+      "X" nil
+      ";" nil)
 
 (map! :map doom-leader-buffer-map
       "b" 'switch-to-buffer)
@@ -669,9 +671,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       "gy" 'ok-evil-reddit-yank
       "go" '+evil:yank-unindented
       :prefix "SPC"
-      "f" 'fill-paragraph
-      :prefix ","
-      "v" (cmd (find-file "~/.doom.d/config.el")))
+      "f" 'fill-paragraph)
 
 (map! :map evil-operator-state-map
       "l" -operator-inside-keymap
