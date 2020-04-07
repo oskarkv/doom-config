@@ -312,13 +312,16 @@ boolean is non-nil, also unbinds TAB in that mode."
 ;; line
 (setq evil-snipe-scope 'buffer)
 
-;; Start frame 91 columns wide
+ ;; Start frame X columns wide
 (add-to-list 'default-frame-alist '(width . 81))
 
 (after! org
   (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
   (setq org-clock-clocked-in-display nil
         org-M-RET-may-split-line nil
+        org-enforce-todo-dependencies nil
+        org-enforce-todo-checkbox-dependencies nil
+        org-fontify-done-headline nil
         org-todo-keywords '((sequence
                              "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)")))
   (add-hook 'org-mode-hook
