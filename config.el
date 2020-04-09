@@ -753,6 +753,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       "C-q" 'set-mark-command
       "C-r" 'magit-reset
       "x" 'magit-unstage
+      :nv "x" 'magit-unstage
       :nv "X" 'magit-unstage-all
       "X" 'magit-unstage-all
       :nv "C-d" 'magit-delete-thing)
