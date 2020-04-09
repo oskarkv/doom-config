@@ -296,6 +296,15 @@ boolean is non-nil, also unbinds TAB in that mode."
  inhibit-startup-screen t
  tab-width 4)
 
+(define-abbrev-table 'global-abbrev-table
+  '(
+    ("tex" "t.ex.")
+    ("dvs" "d.v.s.")
+    ("osv" "o.s.v.")
+    ))
+
+(add-hook! 'minibuffer-setup-hook (abbrev-mode -1))
+
 ;; Define modes for file extensions.
 (add-to-list 'auto-mode-alist '("\\.joke\\'" . clojure-mode))
 
