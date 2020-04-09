@@ -287,6 +287,7 @@ boolean is non-nil, also unbinds TAB in that mode."
  kept-old-versions 2
  version-control t
  ;;; Other
+ evil-auto-indent nil
  ;; ag-highlight-search t
  abbrev-mode t
  evil-cross-lines t
