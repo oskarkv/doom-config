@@ -809,6 +809,8 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "M-u" 'paredit-raise-sexp
       :n "C-M-u" 'esexp-raise-form
       :n "C-i" 'esexp-forward-slurp-sexp
+      ;; If <tab> is not bound then tab calls C-i
+      :n "<tab>" (cmd)
       :n "C-n" 'esexp-backward-slurp-sexp
       :n "C-m" 'esexp-backward-barf-sexp
       :n "C-ä" 'esexp-forward-barf-sexp
