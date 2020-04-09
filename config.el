@@ -333,11 +333,10 @@ boolean is non-nil, also unbinds TAB in that mode."
         org-fontify-done-headline nil
         org-todo-keywords '((sequence
                              "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)")))
-  (add-hook 'org-mode-hook
-            (fn
-              (setq paragraph-separate "[ 	\f]*$"
-                    paragraph-start "\f\\|[ 	]*$")))
-  (add-hook 'org-mode-hook (fn (hl-fill-column-mode -1))))
+  (add-hook! 'org-mode-hook
+    (setq paragraph-separate "[ 	\f]*$"
+          paragraph-start "\f\\|[ 	]*$"))
+  (add-hook! 'org-mode-hook (hl-fill-column-mode -1)))
 
 ;;; States
 
@@ -355,10 +354,8 @@ boolean is non-nil, also unbinds TAB in that mode."
 (add-hook 'text-mode-hook #'rainbow-delimiters-mode)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
-(add-hook 'text-mode-hook
-          (fn (setq fill-column 60)))
-(add-hook 'term-mode-hook (fn (yas-minor-mode -1)
-                              (setq yas-dont-activate t)))
+(add-hook! 'text-mode-hook (setq fill-column 60))
+(add-hook! 'term-mode-hook (yas-minor-mode -1) (setq yas-dont-activate t))
 
 ;;; Babashka and Joker
 
@@ -374,7 +371,7 @@ boolean is non-nil, also unbinds TAB in that mode."
   (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o ?d ?h)))
 
 (after! clojure-mode
-  (add-hook 'clojure-mode-hook (fn (highlight-numbers-mode -1)))
+  (add-hook! 'clojure-mode-hook (highlight-numbers-mode -1))
   (setq clojure-indent-style :always-align
         clojure-docstring-fill-column 72)
 
@@ -433,7 +430,6 @@ boolean is non-nil, also unbinds TAB in that mode."
    cider-repl-use-pretty-printing t
    cider-font-lock-dynamically t
    cider-prompt-for-symbol nil))
-
 
 (defvar ok-clj-refactor-map (make-sparse-keymap))
 (defvar -visual-inside-keymap (lookup-key evil-visual-state-map "i"))
