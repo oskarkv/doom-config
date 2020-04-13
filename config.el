@@ -768,7 +768,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "dd" 'cider-doc
       :n "dg" 'cider-grimoire
       :n "dw" 'cider-grimoire-web
-      :n "eb" (cmd (cider-load-buffer) (run-at-time 1 nil #'fci-mode 1))
+      :n "eb" 'cider-load-buffer
       :n "ed" 'cider-debug-defun-at-point
       :n "ef" 'ok-cider-eval-form
       :n "en" 'cider-eval-ns-form
@@ -795,7 +795,9 @@ boolean is non-nil, also unbinds TAB in that mode."
       :v "er" 'cider-eval-region
       :v "et" 'cider-eval-region)
 
-(map! :map prog-mode-map
+(map! :after (:or cider evil)
+      :map (prog-mode-map
+            cider-repl-mode-map)
       ;; :after (:or utils racket clojure hy)
       :n "(" 'esexp-backward-paren
       :n ")" 'esexp-forward-paren
@@ -811,6 +813,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "<tab>" (cmd)
       :n "C-n" 'esexp-backward-slurp-sexp
       :n "C-m" 'esexp-backward-barf-sexp
+      :n "<return>" (cmd)
       :n "C-ä" 'esexp-forward-barf-sexp
       :n "M-l" 'paredit-backward-up
       :n "M-q" 'paredit-backward-up
