@@ -597,6 +597,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 (map! :map evil-insert-state-map
       "§" 'evil-normal-state
+      "C-e" 'doom/delete-backward-word
       "C-<tab>" (cmd (insert "\t")))
 
 (map! :map evil-replace-state-map
