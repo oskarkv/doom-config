@@ -302,6 +302,7 @@ boolean is non-nil, also unbinds TAB in that mode."
     ("tex" "t.ex.")
     ("dvs" "d.v.s.")
     ("osv" "o.s.v.")
+    ("pga" "p.g.a.")
     ))
 
 (add-hook! 'minibuffer-setup-hook (abbrev-mode -1))
