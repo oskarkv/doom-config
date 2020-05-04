@@ -434,7 +434,12 @@ boolean is non-nil, also unbinds TAB in that mode."
     (with-gensyms 1)))
 
 (after! cider
+  (set-popup-rules!
+    '(("^\\*cider-error*" :ignore t)
+      ("^\\*cider-repl" :ignore t)
+      ("^\\*cider-repl-history" :vslot 2 :ttl nil)))
   (setq-default
+   cider-repl-result-prefix ""
    cider-font-lock-reader-conditionals nil
    cider-pprint-fn 'fipp
    cider-repl-use-pretty-printing t
