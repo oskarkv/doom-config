@@ -97,13 +97,14 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 (defface rainbow-delimiters-depth-10-face '((t (:foreground "#CC00EE"))) "")
 (defface rainbow-delimiters-depth-11-face '((t (:foreground "#9933FF"))) "")
+(defface clojure-quote-face '((t (:foreground "#ff0088"))) "")
+(defface clojure-number-face '((t (:foreground "#d419ff"))) "")
 (setq rainbow-delimiters-max-face-count 11)
 (custom-set-faces!
+  ;; '(org-headline-done :foreground "#ffffff")
   '(font-lock-comment-face :foreground "#777777")
   '(font-lock-doc-face :foreground "#8888aa")
   '(hl-fill-column-face :background "#773333")
-  '(clojure-quote-face :foreground "#ff0088")
-  '(clojure-number-face :foreground "#d419ff")
   '(highlight-numbers-number :foreground "#d419ff" :weight normal)
   '(org-level-1 :inherit default :foreground "#33ff33")
   '(org-level-2 :inherit default :foreground "#FFb030")
