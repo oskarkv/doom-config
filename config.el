@@ -677,17 +677,17 @@ boolean is non-nil, also unbinds TAB in that mode."
       "L" nil
       "u" 'evil-previous-visual-line
       "e" 'evil-next-visual-line
-      "j" 'evil-forward-word-end
-      "J" 'evil-forward-WORD-end
       "C-u" 'ok-move-up-15-lines
       "C-e" 'ok-move-down-15-lines
+      "j" 'evil-forward-word-end
+      "J" 'evil-forward-WORD-end
       "n" 'evil-backward-char
       "h" 'evil-ex-search-next
       "H" 'evil-ex-search-previous
       "i" 'evil-forward-char
       "å" 'ace-window
-      "ä" 'other-window
-      "Ä" (cmd (other-window -1))
+      "ä" 'evil-window-next
+      "Ä" 'evil-window-prev
       "C-q" 'evil-visual-block
       "C-y" 'evil-jump-backward
       "C-o" 'evil-jump-forward
@@ -756,8 +756,8 @@ boolean is non-nil, also unbinds TAB in that mode."
             magit-log-select-mode-map
             magit-log-mode-map)
       "å" 'ace-window
-      "ä" 'other-window
-      "Ä" (cmd (other-window -1))
+      "ä" 'evil-window-next
+      "Ä" 'evil-window-prev
       "u" 'previous-line
       "e" 'next-line
       :map (magit-status-mode-map magit-mode-map)
