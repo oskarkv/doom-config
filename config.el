@@ -513,6 +513,20 @@ boolean is non-nil, also unbinds TAB in that mode."
       (backward-char)
       (insert "`"))))
 
+(map! :map Buffer-menu-mode-map
+      :n "u" 'evil-previous-visual-line
+      :n "e" 'evil-next-visual-line
+      :n "C-u" 'ok-move-up-15-lines
+      :n "C-e" 'ok-move-down-15-lines
+      :n "a" 'Buffer-menu-save
+      :n "k" 'Buffer-menu-unmark
+      :n "K" 'Buffer-menu-unmark-all
+      :n "gg" 'evil-goto-first-line
+      :n "r" 'Buffer-menu-toggle-read-only
+      :n "%" 'Buffer-menu-toggle-read-only
+      :n "o" 'Buffer-menu-other-window
+      :n "f" 'Buffer-menu-switch-other-window)
+
 (map! :after org
       :map org-mode-map
       ;; motion state
