@@ -799,6 +799,11 @@ boolean is non-nil, also unbinds TAB in that mode."
       "X" 'magit-unstage-all
       :nv "C-d" 'magit-delete-thing)
 
+(map! :after cider
+      :map (cider-repl-mode-map cider-stacktrace-mode-map)
+      "M-p" nil
+      "M-f" nil)
+
 (map! :after (:or clojure-mode cider)
       :map (clojure-mode-map cider-repl-mode-map)
       :prefix "SPC"
