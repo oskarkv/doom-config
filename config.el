@@ -701,16 +701,26 @@ boolean is non-nil, also unbinds TAB in that mode."
       "L" 'evil-insert
       "A" 'evil-append)
 
+(defun ok-switch-to-window (name)
+  (select-window (get-buffer-window name)))
+
+(defun ok-list-buffers ()
+  (interactive)
+  (list-buffers)
+  (ok-switch-to-window "*Buffer List*"))
+
 (map! :leader
       :desc "Open config" "v" (cmd (find-file "~/.doom.d/config.el"))
-      "h" 'webpaste-paste-buffer
+      :desc "webpaste buffer" "h" 'webpaste-paste-buffer
+      :desc "list buffers" "l" 'ok-list-buffers
       "e" 'eval-expression
       "k" 'org-capture
       "X" nil
       ";" nil)
 
 (map! :map doom-leader-buffer-map
-      "b" 'switch-to-buffer)
+      "b" 'switch-to-buffer
+      "l" 'ok-list-buffers)
 
 (map! :map (evil-normal-state-map evil-visual-state-map)
       "gh" 'ok-evil-webpaste
