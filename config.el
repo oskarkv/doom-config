@@ -783,10 +783,11 @@ boolean is non-nil, also unbinds TAB in that mode."
       "H" 'evil-ex-search-previous
       "e" 'next-line
       "u" 'previous-line
-      "C-e" 'magit-section-forward
       "C-u" 'magit-section-backward
-      "C-i" 'magit-section-forward-sibling
+      :nv "C-u" 'magit-section-backward
+      "C-e" 'magit-section-forward
       "C-n" 'magit-section-backward-sibling
+      "C-i" 'magit-section-forward-sibling
       "M-u" 'magit-previous-line
       "M-e" 'magit-next-line
       "M-C-e" 'move-down-15-lines
