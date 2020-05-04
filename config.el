@@ -594,11 +594,16 @@ boolean is non-nil, also unbinds TAB in that mode."
       "C-," 'evil-exit-emacs-state)
 
 (map! :map global-map
+      "<f5>" 'helpful-key
+      "<f6>" 'counsel-descbinds
+      "<f7>" 'eval-expression
       "C-å" 'ace-window
       "C-ä" 'other-window
       "C-s" 'save-buffer
       "M-f" 'switch-to-prev-buffer
       "M-p" 'switch-to-next-buffer
+      "M-c" 'evil-snipe-repeat-reverse
+      "M-v" 'evil-snipe-repeat
       "C-u" 'previous-line
       "C-e" 'next-line
       "C-i" 'end-of-line
