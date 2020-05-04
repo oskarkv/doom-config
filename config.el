@@ -64,6 +64,11 @@
   (advice-remove fn #'doom-run-switch-to-next-prev-buffer-hooks-a))
 
 ;;; Fix TAB shadowing C-i
+(when (daemonp)
+  (add-to-list 'load-path "~/.doom.d")
+  (require 'edit-server)
+  (edit-server-start)
+  (add-hook 'edit-server-start-hook 'evil-insert-state))
 
 (defun ok-bind-tab-to-TAB (keymap)
   "Bind <tab> (regular tab) to what TAB (C-i) was bound to in KEYMAP,
