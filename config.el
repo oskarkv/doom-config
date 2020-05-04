@@ -336,6 +336,8 @@ boolean is non-nil, also unbinds TAB in that mode."
   (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
   (setq org-clock-clocked-in-display nil
         org-M-RET-may-split-line nil
+        org-export-with-smart-quotes nil
+        org-export-with-sub-superscripts nil
         org-enforce-todo-dependencies nil
         org-enforce-todo-checkbox-dependencies nil
         org-fontify-done-headline nil
