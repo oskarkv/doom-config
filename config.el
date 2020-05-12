@@ -304,6 +304,9 @@ boolean is non-nil, also unbinds TAB in that mode."
  inhibit-startup-screen t
  tab-width 4)
 
+(after! python
+  (add-hook! 'python-mode-hook (setq indent-tabs-mode t)))
+
 (define-abbrev-table 'global-abbrev-table
   '(
     ("tex" "t.ex.")
