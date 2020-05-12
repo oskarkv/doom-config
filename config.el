@@ -655,6 +655,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       "H" nil
       "i" nil
       "I" nil
+      "zx" 'evil-delete-buffer
       "SPC" nil
       "k" 'undo
       "E" 'evil-join
