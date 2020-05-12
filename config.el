@@ -381,6 +381,10 @@ boolean is non-nil, also unbinds TAB in that mode."
   (setq aw-keys '(?a ?r ?s ?t ?n ?e ?i ?o ?d ?h)))
 
 (after! clojure-mode
+  ;; A bug in my version, fixed in later versions (the symbol-end was missing)
+  (setq clojure-namespace-regexp
+        (rx line-start "(" (? "clojure.core/") (or "in-ns" "ns" "ns+")
+            symbol-end))
   (add-hook! 'clojure-mode-hook (highlight-numbers-mode -1))
   (setq clojure-indent-style :always-align
         clojure-docstring-fill-column 72)
