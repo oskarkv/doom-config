@@ -329,6 +329,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 ;; Makes evil snipe (t, f, s) search in whole buffer instead of just the current
 ;; line
 (setq evil-snipe-scope 'buffer)
+(setq evil-snipe-repeat-scope 'buffer)
 
  ;; Start frame X columns wide
 (add-to-list 'default-frame-alist '(width . 81))
