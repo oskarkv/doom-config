@@ -107,6 +107,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 (setq rainbow-delimiters-max-face-count 11)
 (custom-set-faces!
   ;; '(org-headline-done :foreground "#ffffff")
+  '(show-paren-match :background "#333355" :foreground nil)
   '(font-lock-comment-face :foreground "#777777")
   '(font-lock-doc-face :foreground "#8888aa")
   '(hl-fill-column-face :background "#773333")
