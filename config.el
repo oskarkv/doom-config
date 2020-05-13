@@ -282,6 +282,7 @@ boolean is non-nil, also unbinds TAB in that mode."
   (advice-add 'cljr--clean-ns :after #'clean-ns-more))
 
 (after! magit
+  (setq magit-diff-refine-hunk nil)
   (setq magit-display-buffer-function #'magit-display-buffer-traditional))
 
 (setq-default
