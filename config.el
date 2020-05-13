@@ -743,6 +743,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 (map! :map evil-operator-state-map
       "l" -operator-inside-keymap
       "i" nil
+      "o" (cmd (forward-evil-symbol))
       "e" 'evil-next-line
       "u" 'evil-previous-line)
 
