@@ -81,7 +81,8 @@
   (add-to-list 'load-path "~/.doom.d")
   (require 'edit-server)
   (edit-server-start)
-  (add-hook 'edit-server-start-hook 'evil-insert-state))
+  (add-hook 'edit-server-start-hook 'evil-insert-state)
+  (add-hook 'edit-server-start-hook (fn (auto-fill-mode -1))))
 
 (defun ok-bind-tab-to-TAB (keymap)
   "Bind <tab> (regular tab) to what TAB (C-i) was bound to in KEYMAP,
