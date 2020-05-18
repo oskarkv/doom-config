@@ -120,7 +120,16 @@ boolean is non-nil, also unbinds TAB in that mode."
 (defface clojure-number-face '((t (:foreground "#d419ff"))) "")
 (setq rainbow-delimiters-max-face-count 11)
 (custom-set-faces!
+  ;; '(font-lock-keyword-face :foreground "#fb2874")
   ;; '(org-headline-done :foreground "#ffffff")
+  ;; I had these set before:
+  ;; linum
+  ;; mode-line
+  ;; clojure-interop-method-face
+  ;; clojure-pink-face
+  ;; clojure-keyword-face
+  ;; font-lock-keyword-face
+  ;; racket-selfeval-face
   '(show-paren-match :background "#333355" :foreground nil)
   '(font-lock-comment-face :foreground "#777777")
   '(font-lock-doc-face :foreground "#8888aa")
@@ -1049,29 +1058,14 @@ boolean is non-nil, also unbinds TAB in that mode."
     ))
 
 (section-comment "Old customization"
-
-  (custom-set-faces
-   ;; custom-set-faces was added by Custom.
-   ;; If you edit it by hand, you could mess it up, so be careful.
-   ;; Your init file should contain only one such instance.
-   ;; If there is more than one, they won't work right.
-   '(default ((t (:family "Ubuntu Mono" :foundry "DAMA" :slant normal :weight normal :height 113 :width normal))))
-   '(clojure-interop-method-face ((t (:inherit font-lock-type-face))))
-   '(clojure-keyword-face ((t (:foreground "#ae81ff"))))
-   '(clojure-pink-face ((t (:foreground "#ff0088"))))
-   '(font-lock-keyword-face ((t (:foreground "#ff2233"))))
-   ;;'(font-lock-doc-face ((t (:foreground "#858175"))))
-   '(linum ((t (:background "#272822" :foreground "#8F908A" :underline nil :height 113))))
-   '(mode-line ((((class color) (min-colors 257)) (:inverse-video unspecified :underline unspecified :foreground "#F8F8F0" :background "#49483E" :box (:line-width 1 :color "#64645E" :style unspecified))) (((class color) (min-colors 89)) (:inverse-video unspecified :underline unspecified :foreground "#F5F5F5" :background "#1B1E1C" :box (:line-width 1 :color "#474747" :style unspecified)))))
-   '(racket-selfeval-face ((t (:foreground "#5cf")))))
-
   (custom-set-variables
    ;; custom-set-variables was added by Custom.
    ;; If you edit it by hand, you could mess it up, so be careful.
    ;; Your init file should contain only one such instance.
    ;; If there is more than one, they won't work right.
-   '(cider-cljs-lein-repl "(do (require 'cljs.repl.node)
-                               (cider.piggieback/cljs-repl (cljs.repl.node/repl-env)))"))
+   '(cider-cljs-lein-repl
+     "(do (require 'cljs.repl.node)
+          (cider.piggieback/cljs-repl (cljs.repl.node/repl-env)))"))
   )
 
 (section-comment "Crap from old config"
