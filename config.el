@@ -855,6 +855,7 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "c" ok-clj-refactor-map
       :n "dc" 'cider-javadoc
       :n "dd" 'cider-doc
+      :n "da" 'cider-clojuredocs-web
       :n "dg" 'cider-grimoire
       :n "dw" 'cider-grimoire-web
       :n "eb" 'cider-load-buffer
