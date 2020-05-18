@@ -257,6 +257,11 @@ boolean is non-nil, also unbinds TAB in that mode."
 ;; Make which-key show help for Vim operators
 (setq which-key-show-operator-state-maps nil)
 
+;; Disable using cljfmt on save and getting error about it
+(setq +format-on-save-enabled-modes
+      '(not emacs-lisp-mode sql-mode
+            tex-mode latex-mode clojure-mode cider-mode))
+
 (setq rcirc-server-alist
       '(("irc.freenode.net"
          :channels ("#rcirc" "#emacs" "#evil-mode")))
