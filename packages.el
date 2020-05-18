@@ -56,4 +56,6 @@
 (package! webpaste
   :recipe (:host github :repo "etu/webpaste.el"))
 
+(package! fill-column-indicator)
+
 (add-load-path! ".")

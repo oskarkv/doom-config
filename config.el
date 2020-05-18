@@ -26,7 +26,20 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-molokai)
+;; (setq doom-theme 'doom-molokai)
+(load-theme 'doom-molokai t)
+
+(add-hook! '(text-mode-hook prog-mode-hook conf-mode-hook)
+           #'fci-mode)
+
+(after! fill-column-indicator
+  (setq fci-rule-color "#602020")
+  (setq fci-rule-width 5))
+
+;; Uncomment these lines if you want fci-mode globally
+;; since fci doesn't define a global mode...
+;; (define-global-minor-mode global-fci-mode fci-mode fci-mode)
+;; (add-hook 'doom-first-buffer-hook #'global-fci-mode)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
