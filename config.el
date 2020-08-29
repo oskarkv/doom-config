@@ -331,7 +331,9 @@ boolean is non-nil, also unbinds TAB in that mode."
  column-number-mode t
  indent-tabs-mode nil
  inhibit-startup-screen t
- tab-width 4)
+ tab-width 4
+ python-guess-indent nil
+ python-indent-guess-indent-offset nil)
 
 (after! python
   (add-hook! 'python-mode-hook (setq indent-tabs-mode t)))
