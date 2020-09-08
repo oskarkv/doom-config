@@ -336,7 +336,9 @@ boolean is non-nil, also unbinds TAB in that mode."
  python-indent-guess-indent-offset nil)
 
 (after! python
-  (add-hook! 'python-mode-hook (setq indent-tabs-mode t)))
+  (add-hook! 'python-mode-hook
+    (setq indent-tabs-mode t)
+    (setenv "PAGER" "cat")))
 
 (define-abbrev-table 'global-abbrev-table
   '(
