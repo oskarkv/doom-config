@@ -352,6 +352,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 ;; Define modes for file extensions.
 (add-to-list 'auto-mode-alist '("\\.joke\\'" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.pl\\'" . prolog-mode))
 
 ;; Don't ask before quitting
 (setq confirm-kill-emacs nil)
