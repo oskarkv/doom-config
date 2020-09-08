@@ -385,7 +385,7 @@ boolean is non-nil, also unbinds TAB in that mode."
   (add-hook! 'org-mode-hook
     (setq paragraph-separate "[ 	\f]*$"
           paragraph-start "\f\\|[ 	]*$"))
-  (add-hook! 'org-mode-hook (hl-fill-column-mode -1)))
+  (add-hook! 'org-mode-hook (fci-mode -1) (hl-fill-column-mode -1)))
 
 ;;; States
 
