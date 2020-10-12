@@ -6,6 +6,7 @@
 (require 's)
 (require 'cl-indent)
 (require 'dash)
+(require 'ediprolog)
 
 ;; Name and email address
 (setq user-full-name "Oskar Kvist"
@@ -581,6 +582,71 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "et"  (cmd (python-shell-send-region (point-at-bol) (point-at-eol)))
       :v "et" 'python-shell-send-region)
 
+(defun open-prolog-history ()
+  (interactive)
+  (evil-window-vsplit)
+  (evil-window-next nil)
+  (switch-to-buffer "*ediprolog-history*")
+  (goto-char (point-max))
+  (evil-window-prev nil))
+
+(defun ok-delete-ediprolog-consult ()
+  (interactive)
+  (delete-window (get-buffer-window "*ediprolog-consult*")))
+
+(defun ediprolog-kill-process ()
+  (interactive)
+  (save-window-excursion
+    (shell-command "pkill --signal 9 -f /usr/bin/prolog")))
+
+(defun -ediprolog-ensure-no-trace ()
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (if (search-forward "?- trace," (+ (point) 12) t)
+        (delete-backward-char 7))))
+
+(defun -ediprolog-ensure-trace ()
+  (save-excursion
+    (beginning-of-line)
+    (if (search-forward "?- " (+ (point) 10) t)
+        (insert "trace, ")
+      (message "Not on a query!"))))
+
+(defun ediprolog-toggle-trace ()
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (if (search-forward "?- trace," (+ (point) 12) t)
+        (delete-backward-char 7)
+      (-ediprolog-ensure-trace))))
+
+(defun ediprolog-debug-query ()
+  (interactive)
+  (ediprolog-toggle-trace)
+  (ediprolog-query))
+
+(defun ediprolog-eval-query ()
+  (interactive)
+  (-ediprolog-ensure-no-trace)
+  (ediprolog-dwim))
+
+(after! ediprolog
+  (setq ediprolog-system 'swi
+        ediprolog-program "/usr/bin/prolog"))
+
+(map! :after ediprolog
+      :map prolog-mode-map
+      :prefix "SPC"
+      :n "t" 'ediprolog-toggle-trace
+      :n "c" 'ediprolog-consult
+      :n "k" 'ediprolog-kill-process
+      :n "r" 'ediprolog-remove-interactions
+      :n "s" 'ok-to-snum
+      :n "et" 'ediprolog-eval-query
+      :n "ed" 'ediprolog-debug-query
+      :n "h" 'open-prolog-history
+      :n "d" 'ok-delete-ediprolog-consult)
 
 (map! :after org
       :map org-mode-map
