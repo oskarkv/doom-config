@@ -990,7 +990,6 @@ boolean is non-nil, also unbinds TAB in that mode."
 (map! :after (:or cider evil)
       :map (prog-mode-map
             cider-repl-mode-map)
-      ;; :after (:or utils racket clojure hy)
       :n "(" 'esexp-backward-paren
       :n ")" 'esexp-forward-paren
       :n "M-i" 'esexp-transpose-sexps
@@ -1053,7 +1052,6 @@ boolean is non-nil, also unbinds TAB in that mode."
    "SPC" nil
    )
 
-
   ;; (defmacro magit-undefine-key (&rest binds)
   ;;   `(general-define-key
   ;;     :keymaps ',
@@ -1075,10 +1073,6 @@ boolean is non-nil, also unbinds TAB in that mode."
   ;;     'normal '(magit-mode-map
   ;;               magit-status-mode-map)
   ;;   "SPC" magit-status-mode-map)
-
-
-  ;;; Additional keys, not as set in stone
-
 
   (general-evil-define-key
       'normal '(cider-stacktrace-mode-map
