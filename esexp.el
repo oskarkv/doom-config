@@ -5,6 +5,7 @@
 (require 'paredit)
 (require 'seq)
 (require 'dash)
+(require 'smartparens)
 
 (defvar esexp-element-separator-re "[][[:space:]\n\r(){}]")
 
@@ -468,5 +469,124 @@ STAY-AT-END is nil, move to front instead."
       (-let (((beg end) (esexp-true-form-positions)))
         (goto-char end)
         (cider-macroexpand-1)))))
+
+;;; Non-Lisp things
+
+;; FIXME: Make C-things be not just calls, but strings and lists too.
+
+(defun ok-c-thing-bounds (separator-regex)
+  "Finds the bounds of a C thing, i.e. identifier(...), at point.
+SEPARATOR-REGEX should match what does not count as part of the
+identifier."
+  (save-excursion
+    (let ((beg))
+      (cl-flet ((on-paren? (which)
+                           (-contains? (if (eq which 'closing)
+                                           (list ?\) ?\])
+                                         (list ?\( ?\[))
+                                       (char-after))))
+        ;; If we start on a closing paren, bounds include the whole call
+        (if (on-paren? 'closing)
+            (evil-jump-item))
+        ;; If we are on opening paren, bounds also include the whole call
+        (if (on-paren? 'opening)
+            ;; If no identifier before the paren, start here
+            (if (string-match-p separator-regex (string (char-before)))
+                (setq beg (point))
+              (backward-char)))
+        ;; If there is an identifier, search backward will succeed
+        (search-backward-regexp separator-regex)
+        (forward-char)
+        (if (null beg) (setq beg (point)))
+        (search-forward-regexp separator-regex)
+        (backward-char)
+        (if (on-paren? 'opening)
+            (evil-jump-item)
+          (backward-char))
+        (forward-char)
+        (list beg (point))))))
+
+(defun ok-jump-to-next-c-thing (separator-regex dir)
+  "Move point to the next C thing. If DIR is positive, move jump
+forward, otherwise backward."
+  (-let (((beg end) (ok-c-thing-bounds separator-regex)))
+    (goto-char (if (pos? dir) end beg))
+    (search-forward-regexp "[][[:alnum:]\_()]" nil t dir)
+    (if (pos? dir) (backward-char))))
+
+(defun ok-c-thing-jump-allowed (separator-regex dir)
+  "Check if jumping is allowed. Jumping is not allowed if we are
+at the last thing inside parentheses and we are trying to move
+foward (DIR is positive), or vice versa."
+  (save-excursion
+    (ok-jump-to-next-c-thing separator-regex dir)
+    (not (s-contains? (string (char-after)) (if (pos? dir) ")]}" "([{")))))
+
+(defun ok-next-c-thing-bounds (separator-regex dir)
+  "Returns the bounds of the next C thing in DIR direction."
+  (save-excursion
+    (ok-jump-to-next-c-thing separator-regex dir)
+    (ok-c-thing-bounds separator-regex)))
+
+(defun ok-swap-text (bounds bounds2)
+  "Swap the the positions of the pieces of text in BOUNDS and
+BOUNDS2. Preserves the position of point relative to the word it
+is in."
+  ;; bounds must come before bounds2
+  (if (> (car bounds) (car bounds2))
+      (ok-swap-text bounds2 bounds)
+    (-let* ((old-point (point))
+            ((beg end) bounds)
+            ((beg2 end2) bounds2)
+            (len (- end beg))
+            (len2 (- end2 beg2))
+            ;; delete last text first to not mess up bounds
+            (text2 (delete-and-extract-region beg2 end2))
+            (text (delete-and-extract-region beg end)))
+      (goto-char (- beg2 len))
+      (insert text)
+      (goto-char beg)
+      (insert text2)
+      ;; fix point position
+      (if (<= beg old-point end)
+          (goto-char (+ beg2 (- len2 len) (- old-point beg)))
+        (goto-char (+ beg (- old-point beg2)))))))
+
+(defun ok-transpose-c-things (separator-regex dir)
+  "Transposes C things."
+  (ok-swap-text
+   (ok-c-thing-bounds separator-regex)
+   (ok-next-c-thing-bounds separator-regex dir)))
+
+(defvar ok-python-separator-regex "[^[:alnum:]\.\_]")
+
+(defun ok-python-transpose-thing (dir)
+  (interactive)
+  (if (ok-c-thing-jump-allowed ok-python-separator-regex dir)
+      (ok-transpose-c-things ok-python-separator-regex dir)))
+
+(defun ok-python-move-up-len ()
+  "Returns the distance point moves if going backwards up through
+parens that are stacked together."
+  (save-excursion
+    (let ((old-point (point)))
+      (sp-backward-up-sexp)
+      (while (s-contains? (string (char-before)) "([{")
+        (backward-char))
+      (- old-point (point)))))
+
+(defun ok-python-transpose-big-thing (dir)
+  "Like ok-python-transpose-thing but considers the wrapping call
+or list to be the thing to transpose."
+  (interactive)
+  (let ((distance (ok-python-move-up-len)))
+    (backward-char distance)
+    (if (ok-c-thing-jump-allowed ok-python-separator-regex dir)
+        (ok-transpose-c-things ok-python-separator-regex dir))
+    (forward-char distance)))
+
+(evil-define-text-object ok-python-thing-text-object
+  (count &optional beg end type)
+  (ok-c-thing-bounds ok-python-separator-regex))
 
 (provide 'esexp)
