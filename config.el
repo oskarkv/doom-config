@@ -76,6 +76,9 @@
 (dolist (fn '(switch-to-next-buffer switch-to-prev-buffer))
   (advice-remove fn #'doom-run-switch-to-next-prev-buffer-hooks-a))
 
+;; Disable automatically inserting closing parens, quotes, etc.
+(remove-hook 'doom-first-buffer-hook #'smartparens-global-mode)
+
 ;;; Fix TAB shadowing C-i
 (when (daemonp)
   (add-to-list 'load-path "~/.doom.d")
@@ -286,12 +289,6 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 ;; Avoid double \\ in re-builder
 (setq reb-re-syntax 'string)
-
-;; Disable automatically inserting closing parens, quotes, etc.
-(after! smartparens
-  (remove-hook! 'minibuffer-setup-hook
-    #'doom-init-smartparens-in-minibuffer-maybe-h)
-  (smartparens-global-mode -1))
 
 (setq +evil-want-o/O-to-continue-comments nil)
 
