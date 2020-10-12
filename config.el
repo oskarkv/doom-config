@@ -918,7 +918,6 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "M-q" 'paredit-backward-up
       :prefix "SPC"
       :n "q" 'esexp-wrap-word-in-backticks
-      :n "f" 'ok-clojure-fill-paragraph
       :n "i" 'esexp-insert-at-end
       :n "n" 'esexp-insert-at-head
       :n "l" 'esexp-wrap-form-parens-beg
@@ -932,7 +931,9 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "[" 'esexp-wrap-form-brackets-beg
       :n "]" 'esexp-wrap-form-brackets-end
       :n "{" 'esexp-wrap-form-braces-beg
-      :n "}" 'esexp-wrap-form-braces-end)
+      :n "}" 'esexp-wrap-form-braces-end
+      :map clojure-mode-map
+      :n "f" 'ok-clojure-fill-paragraph)
 
 (map! :map (emacs-lisp-mode-map lisp-interaction-mode-map)
       :prefix "SPC"
