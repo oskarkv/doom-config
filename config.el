@@ -572,6 +572,8 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "M-n" (cmd (ok-python-transpose-thing -1))
       :n "C-M-i" (cmd (ok-python-transpose-big-thing 1))
       :n "C-M-n" (cmd (ok-python-transpose-big-thing -1))
+      :n "M-I" (cmd (ok-python-transpose-big-thing 1 t))
+      :n "M-N" (cmd (ok-python-transpose-big-thing -1 t))
       :prefix "SPC"
       :n "w" (cmd (evil-execute-macro 1 "ysll)l"))
       :n "jj" 'run-python
