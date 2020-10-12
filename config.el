@@ -698,8 +698,6 @@ boolean is non-nil, also unbinds TAB in that mode."
 (map! :after evil-org
       :map evil-org-mode-map
       :i "C-h" nil
-      ;; insert state
-      ;; :i "RET" 'org-return
       :i "<return>" 'org-return
       :vo "ie" nil
       :vo "iE" nil
