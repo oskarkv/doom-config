@@ -251,6 +251,26 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 ;;; Settings
 
+;; Buffer stuff, sigh...
+
+;; Add buffers you want to be able to switch to in this function. There is also
+;; doom-mark-as-real-buffer-h that can be used, but this seems easier.
+(defun ok-buffer-frame-predicate (buf)
+  "To be used as the default frame buffer-predicate parameter. Returns nil if
+BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
+  (or (doom-real-buffer-p buf)
+      (eq buf (doom-fallback-buffer))
+      (-contains? (-map #'get-buffer (list
+                                      "*Python*"))
+                  buf)))
+
+(setcdr (assoc 'buffer-predicate default-frame-alist)
+        'ok-buffer-frame-predicate)
+
+;; To be able to switch to all buffers, empty this list.
+;; (setq-default doom-unreal-buffer-functions
+;; '(minibufferp doom-special-buffer-p doom-non-file-visiting-buffer-p))
+
 ;; Make which-key show help for Vim operators
 (setq which-key-show-operator-state-maps nil)
 
