@@ -381,6 +381,13 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 ;; Makes lines wrap instead of going off screen
 (global-visual-line-mode)
 
+;; Make *format-all-errors* use visual-line-mode, it doesn't respect the global
+;; setting.
+(defadvice! wrap-errors (&rest _)
+  :after #'format-all--show-or-hide-errors
+  (with-current-buffer (get-buffer "*format-all-errors*")
+    (visual-line-mode +1)))
+
 ;; Makes evil snipe (t, f, s) search in whole buffer instead of just the current
 ;; line
 (setq evil-snipe-scope 'buffer)
