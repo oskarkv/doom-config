@@ -556,6 +556,31 @@ boolean is non-nil, also unbinds TAB in that mode."
       (backward-char)
       (insert "`"))))
 
+;; Don't format with LSP formatter
+(setq-hook! 'python-mode-hook +format-with-lsp nil)
+
+;; Defined in esexp
+(map! :map evil-outer-text-objects-map
+      "l" 'ok-python-thing-text-object
+      :map evil-inner-text-objects-map
+      "l" 'ok-python-thing-text-object)
+
+(map! :after python
+      :map python-mode-map
+      :n "M-i" (cmd (ok-python-transpose-thing 1))
+      :n "M-n" (cmd (ok-python-transpose-thing -1))
+      :n "C-M-i" (cmd (ok-python-transpose-big-thing 1))
+      :n "C-M-n" (cmd (ok-python-transpose-big-thing -1))
+      :prefix "SPC"
+      :n "w" (cmd (evil-execute-macro 1 "ysll)l"))
+      :n "jj" 'run-python
+      :n "eb" 'python-shell-send-buffer
+      :n "ef" 'python-shell-send-defun
+      :n "sw" 'lsp-find-definition
+      :n "r" 'lsp-rename
+      :n "et"  (cmd (python-shell-send-region (point-at-bol) (point-at-eol)))
+      :v "et" 'python-shell-send-region)
+
 
 (map! :after org
       :map org-mode-map
