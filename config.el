@@ -62,9 +62,6 @@
 (setq fancy-splash-image "~/.doom.d/doom.png"
       +doom-dashboard-banner-padding '(0 . 1))
 
-(dolist (fn '(switch-to-next-buffer switch-to-prev-buffer))
-  (advice-remove fn #'doom-run-switch-to-next-prev-buffer-hooks-a))
-
 ;; Disable automatically inserting closing parens, quotes, etc.
 (remove-hook 'doom-first-buffer-hook #'smartparens-global-mode)
 
