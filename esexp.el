@@ -98,7 +98,9 @@ include whitespace (before or after) if INCLUDE-WHITESPACE is non-nil."
   (ignore-errors
     (setf (car pos) (esexp-exclude-macro-char (car pos) (not shrink)))
     (let* ((pos2 (if shrink (esexp-shrink-bounds pos) pos)))
-      (if include-whitespace (esexp-expand-around pos2 include-newlines) pos2))))
+      (if include-whitespace
+          (esexp-expand-around pos2 include-newlines)
+        pos2))))
 
 (defun esexp-true-string-positions ()
   (let ((pos (ignore-errors (bounds-of-evil-string-at-point))))
@@ -199,7 +201,8 @@ leading whitespace)."
             (list beg end)
           (progn
             (goto-char beg)
-            (setq beg (re-search-forward (concat "\\s-*" comment-start "+[ \t]+")))
+            (setq beg (re-search-forward
+                       (concat "\\s-*" comment-start "+[ \t]+")))
             (update-place end #'1-)
             (list beg end)))))))
 
@@ -264,8 +267,8 @@ leading whitespace)."
               (place '(beg end)))
           (list thing wrapper place)))))
 
-;; Define wrappers esexp-wrap-thing-type-place, e.g. esexp-wrap-form-parens-beg for
-;; all combinations found in esexp-define-wrappers macro.
+;; Define wrappers esexp-wrap-thing-type-place, e.g. esexp-wrap-form-parens-beg
+;; for all combinations found in esexp-define-wrappers macro.
 (esexp-define-wrappers)
 
 (defun esexp-define-text-object-form (modifier name val type)
