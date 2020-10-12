@@ -556,19 +556,6 @@ boolean is non-nil, also unbinds TAB in that mode."
       (backward-char)
       (insert "`"))))
 
-(map! :map Buffer-menu-mode-map
-      :n "u" 'evil-previous-visual-line
-      :n "e" 'evil-next-visual-line
-      :n "C-u" 'ok-move-up-15-lines
-      :n "C-e" 'ok-move-down-15-lines
-      :n "a" 'Buffer-menu-save
-      :n "k" 'Buffer-menu-unmark
-      :n "K" 'Buffer-menu-unmark-all
-      :n "gg" 'evil-goto-first-line
-      :n "r" 'Buffer-menu-toggle-read-only
-      :n "%" 'Buffer-menu-toggle-read-only
-      :n "o" 'Buffer-menu-other-window
-      :n "f" 'Buffer-menu-switch-other-window)
 
 (map! :after org
       :map org-mode-map
@@ -750,6 +737,22 @@ boolean is non-nil, also unbinds TAB in that mode."
   (select-window (get-buffer-window name)))
 
 (defun ok-list-buffers ()
+  ;; This map! doesn't work if just by itself for some reason.
+  (map! :map Buffer-menu-mode-map
+        :n "u" 'evil-previous-visual-line
+        :n "n" 'evil-backward-char
+        :n "i" 'evil-forward-char
+        :n "e" 'evil-next-visual-line
+        :n "C-u" 'ok-move-up-5-lines
+        :n "C-e" 'ok-move-down-5-lines
+        :n "a" 'Buffer-menu-save
+        :n "k" 'Buffer-menu-unmark
+        :n "K" 'Buffer-menu-unmark-all
+        :n "gg" 'evil-goto-first-line
+        :n "r" 'Buffer-menu-toggle-read-only
+        :n "%" 'Buffer-menu-toggle-read-only
+        :n "o" 'Buffer-menu-other-window
+        :n "f" 'Buffer-menu-switch-other-window)
   (interactive)
   (list-buffers)
   (ok-switch-to-window "*Buffer List*"))
