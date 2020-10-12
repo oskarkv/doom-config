@@ -817,8 +817,11 @@ boolean is non-nil, also unbinds TAB in that mode."
       "å" 'ace-window
       "ä" 'evil-window-next
       "Ä" 'evil-window-prev
-      "u" 'previous-line
-      "e" 'next-line
+      :n "u" 'previous-line
+      :n "e" 'next-line
+      :n "t" 'git-rebase-edit
+      :n "M-u" 'git-rebase-move-line-up
+      :n "M-e" 'git-rebase-move-line-down
       :map (magit-status-mode-map magit-mode-map)
       "§" 'keyboard-quit
       "<f2>" 'magit-refresh-all
