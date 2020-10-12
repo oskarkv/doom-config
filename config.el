@@ -605,7 +605,8 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "o" 'org-open-at-point
       :n "l" 'org-insert-link
       :n "e" 'org-edit-special
-      :n "i" '(lambda (s) (interactive "sCustom ID: ") (org-set-property "CUSTOM_ID" s))
+      :n "i" '(lambda (s) (interactive "sCustom ID: ")
+                (org-set-property "CUSTOM_ID" s))
       :v "t" 'org-table-create-or-convert-from-region
       :map org-src-mode-map
       :n "ce" 'org-edit-src-exit
