@@ -825,7 +825,11 @@ boolean is non-nil, also unbinds TAB in that mode."
   (select-window (get-buffer-window name)))
 
 (defun ok-list-buffers ()
+  (interactive)
+  (list-buffers)
+  (ok-switch-to-window "*Buffer List*")
   ;; This map! doesn't work if just by itself for some reason.
+  ;; And it has to be after (list-buffers)
   (map! :map Buffer-menu-mode-map
         :n "u" 'evil-previous-visual-line
         :n "n" 'evil-backward-char
@@ -840,10 +844,7 @@ boolean is non-nil, also unbinds TAB in that mode."
         :n "r" 'Buffer-menu-toggle-read-only
         :n "%" 'Buffer-menu-toggle-read-only
         :n "o" 'Buffer-menu-other-window
-        :n "f" 'Buffer-menu-switch-other-window)
-  (interactive)
-  (list-buffers)
-  (ok-switch-to-window "*Buffer List*"))
+        :n "f" 'Buffer-menu-switch-other-window))
 
 (map! :leader
       :desc "Open config" "v" (cmd (find-file "~/.doom.d/config.el"))
