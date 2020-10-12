@@ -943,7 +943,8 @@ boolean is non-nil, also unbinds TAB in that mode."
       :nv "x" 'magit-unstage
       :nv "X" 'magit-unstage-all
       "X" 'magit-unstage-all
-      :nv "C-d" 'magit-delete-thing)
+      :nv "C-d" 'magit-delete-thing
+      :n "z" 'magit-stash)
 
 (map! :after cider
       :map (cider-repl-mode-map cider-stacktrace-mode-map)
