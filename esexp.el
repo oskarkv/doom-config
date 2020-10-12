@@ -474,44 +474,55 @@ STAY-AT-END is nil, move to front instead."
 
 ;; FIXME: Make C-things be not just calls, but strings and lists too.
 
-(defun ok-c-thing-bounds (separator-regex)
-  "Finds the bounds of a C thing, i.e. identifier(...), at point.
-SEPARATOR-REGEX should match what does not count as part of the
-identifier."
+(defun ok-string-bounds ()
+  "Get the bounds of string or comment the point is in."
   (save-excursion
-    (let ((beg))
-      (cl-flet ((on-paren? (which)
-                           (-contains? (if (eq which 'closing)
-                                           (list ?\) ?\])
-                                         (list ?\( ?\[))
-                                       (char-after))))
-        ;; If we start on a closing paren, bounds include the whole call
-        (if (on-paren? 'closing)
-            (evil-jump-item))
-        ;; If we are on opening paren, bounds also include the whole call
-        (if (on-paren? 'opening)
-            ;; If no identifier before the paren, start here
-            (if (string-match-p separator-regex (string (char-before)))
-                (setq beg (point))
-              (backward-char)))
-        ;; If there is an identifier, search backward will succeed
-        (search-backward-regexp separator-regex)
+    (let ((bounds (sp-get-quoted-string-bounds)))
+      (when (and (not bounds) (= (char-after) ?\"))
         (forward-char)
-        (if (null beg) (setq beg (point)))
-        (search-forward-regexp separator-regex)
-        (backward-char)
-        (if (on-paren? 'opening)
-            (evil-jump-item)
-          (backward-char))
-        (forward-char)
-        (list beg (point))))))
+        (setq bounds (sp-get-quoted-string-bounds)))
+      (when bounds
+        (-cons-to-list bounds)))))
+
+(defun ok-c-thing-bounds (separator-regex)
+  "Finds the bounds of a C thing at point. SEPARATOR-REGEX should
+match what does not count as part of the identifier."
+  (or
+   (ok-string-bounds)
+   (save-excursion
+     (let ((beg))
+       (cl-flet ((on-paren? (which)
+                            (-contains? (if (eq which 'closing)
+                                            (list ?\) ?\])
+                                          (list ?\( ?\[))
+                                        (char-after))))
+         ;; If we start on a closing paren, bounds include the whole call
+         (if (on-paren? 'closing)
+             (evil-jump-item))
+         ;; If we are on opening paren, bounds also include the whole call
+         (if (on-paren? 'opening)
+             ;; If no identifier before the paren, start here
+             (if (string-match-p separator-regex (string (char-before)))
+                 (setq beg (point))
+               (backward-char)))
+         ;; If there is an identifier, search backward will succeed
+         (search-backward-regexp separator-regex)
+         (forward-char)
+         (if (null beg) (setq beg (point)))
+         (search-forward-regexp separator-regex)
+         (backward-char)
+         (if (on-paren? 'opening)
+             (evil-jump-item)
+           (backward-char))
+         (forward-char)
+         (list beg (point)))))))
 
 (defun ok-jump-to-next-c-thing (separator-regex dir)
   "Move point to the next C thing. If DIR is positive, move jump
 forward, otherwise backward."
   (-let (((beg end) (ok-c-thing-bounds separator-regex)))
     (goto-char (if (pos? dir) end beg))
-    (search-forward-regexp "[][[:alnum:]\_()]" nil t dir)
+    (search-forward-regexp "[][[:alnum:]\_()\'\"]" nil t dir)
     (if (pos? dir) (backward-char))))
 
 (defun ok-c-thing-jump-allowed (separator-regex dir)
