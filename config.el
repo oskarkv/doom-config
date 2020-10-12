@@ -1043,7 +1043,8 @@ boolean is non-nil, also unbinds TAB in that mode."
       :n "eb" 'eval-buffer
       :n "ef" 'ok-eval-form
       :n "es" 'eval-last-sexp
-      :n "m" 'macrostep-expand)
+      :n "m" 'macrostep-expand
+      :v "et" 'eval-region)
 
 (section-comment "Old keybindings I haven't look at yet"
 
