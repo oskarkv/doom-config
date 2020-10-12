@@ -400,7 +400,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'org-mode-hook #'rainbow-delimiters-mode-disable)
 (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode)
-(add-hook 'text-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'text-mode-hook #'rainbow-delimiters-mode-disable)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (add-hook! 'text-mode-hook (setq fill-column 60))
