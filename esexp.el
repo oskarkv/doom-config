@@ -576,21 +576,22 @@ is in."
   (if (ok-c-thing-jump-allowed ok-python-separator-regex dir)
       (ok-transpose-c-things ok-python-separator-regex dir)))
 
-(defun ok-python-move-up-len ()
+(defun ok-python-move-up-len (&optional bigger)
   "Returns the distance point moves if going backwards up through
-parens that are stacked together."
+a paren. If BIGGER is non-nil, go through parens that are stacked
+together."
   (save-excursion
     (let ((old-point (point)))
       (sp-backward-up-sexp)
-      (while (s-contains? (string (char-before)) "([{")
+      (while (and bigger (s-contains? (string (char-before)) "([{"))
         (backward-char))
       (- old-point (point)))))
 
-(defun ok-python-transpose-big-thing (dir)
+(defun ok-python-transpose-big-thing (dir &optional bigger)
   "Like ok-python-transpose-thing but considers the wrapping call
 or list to be the thing to transpose."
   (interactive)
-  (let ((distance (ok-python-move-up-len)))
+  (let ((distance (ok-python-move-up-len bigger)))
     (backward-char distance)
     (if (ok-c-thing-jump-allowed ok-python-separator-regex dir)
         (ok-transpose-c-things ok-python-separator-regex dir))
