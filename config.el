@@ -256,8 +256,13 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 ;; Disable using cljfmt on save and getting error about it
 (setq +format-on-save-enabled-modes
-      '(not emacs-lisp-mode sql-mode
-            tex-mode latex-mode clojure-mode cider-mode))
+      '(not emacs-lisp-mode
+            sql-mode
+            tex-mode
+            latex-mode
+            clojure-mode
+            cider-mode
+            python-mode))
 
 (setq rcirc-server-alist
       '(("irc.freenode.net"
