@@ -385,8 +385,9 @@ boolean is non-nil, also unbinds TAB in that mode."
                              "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)")))
   (add-hook! 'org-mode-hook
     (setq paragraph-separate "[ 	\f]*$"
-          paragraph-start "\f\\|[ 	]*$"))
-  (add-hook! 'org-mode-hook (fci-mode -1) (hl-fill-column-mode -1)))
+          paragraph-start "\f\\|[ 	]*$")
+    (fci-mode -1))
+  (setq-hook! 'org-mode-hook evil-auto-indent nil))
 
 ;;; States
 
