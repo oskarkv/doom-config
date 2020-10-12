@@ -336,11 +336,6 @@ boolean is non-nil, also unbinds TAB in that mode."
  python-guess-indent nil
  python-indent-guess-indent-offset nil)
 
-(after! python
-  (add-hook! 'python-mode-hook
-    (setq indent-tabs-mode t)
-    (setenv "PAGER" "cat")))
-
 (define-abbrev-table 'global-abbrev-table
   '(
     ("tex" "t.ex.")
@@ -558,8 +553,12 @@ boolean is non-nil, also unbinds TAB in that mode."
       (backward-char)
       (insert "`"))))
 
-;; Don't format with LSP formatter
-(setq-hook! 'python-mode-hook +format-with-lsp nil)
+(after! python
+  (add-hook! 'python-mode-hook
+    (setq indent-tabs-mode t)
+    (setenv "PAGER" "cat"))
+  ;; Don't format with LSP formatter
+  (setq-hook! 'python-mode-hook +format-with-lsp nil))
 
 ;; Defined in esexp
 (map! :map evil-outer-text-objects-map
