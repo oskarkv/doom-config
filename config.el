@@ -369,7 +369,7 @@ boolean is non-nil, also unbinds TAB in that mode."
 (setq evil-snipe-repeat-scope 'buffer)
 
  ;; Start frame X columns wide
-(add-to-list 'default-frame-alist '(width . 81))
+(add-to-list 'default-frame-alist '(width . 91))
 
 (after! org
   (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
