@@ -493,8 +493,8 @@ match what does not count as part of the identifier."
      (let ((beg))
        (cl-flet ((on-paren? (which)
                             (-contains? (if (eq which 'closing)
-                                            (list ?\) ?\])
-                                          (list ?\( ?\[))
+                                            (list ?\) ?\] ?\})
+                                          (list ?\( ?\[ ?\{))
                                         (char-after))))
          ;; If we start on a closing paren, bounds include the whole call
          (if (on-paren? 'closing)
@@ -522,7 +522,7 @@ match what does not count as part of the identifier."
 forward, otherwise backward."
   (-let (((beg end) (ok-c-thing-bounds separator-regex)))
     (goto-char (if (pos? dir) end beg))
-    (search-forward-regexp "[][[:alnum:]\_()\'\"]" nil t dir)
+    (search-forward-regexp "[][[:alnum:]\_(){}\'\"]" nil t dir)
     (if (pos? dir) (backward-char))))
 
 (defun ok-c-thing-jump-allowed (separator-regex dir)
