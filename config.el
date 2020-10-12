@@ -207,6 +207,14 @@ boolean is non-nil, also unbinds TAB in that mode."
   :type line
   (evil-previous-visual-line 15))
 
+(evil-define-motion ok-move-down-5-lines ()
+  :type line
+  (evil-next-visual-line 5))
+
+(evil-define-motion ok-move-up-5-lines ()
+  :type line
+  (evil-previous-visual-line 5))
+
 (defun clean-ns-more (&rest args)
   "Clean up a Clojure ns form more."
   (-let* (((beg end) (esexp-true-toplevel-positions)))
