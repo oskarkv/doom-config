@@ -260,9 +260,10 @@ boolean is non-nil, also unbinds TAB in that mode."
 BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (or (doom-real-buffer-p buf)
       (eq buf (doom-fallback-buffer))
-      (-contains? (-map #'get-buffer (list
-                                      "*Python*"))
-                  buf)))
+      (-some? (lambda (x) (s-starts-with? x (buffer-name buf)))
+              (list
+               "*Python*"
+               "*cider-repl"))))
 
 (setcdr (assoc 'buffer-predicate default-frame-alist)
         'ok-buffer-frame-predicate)
