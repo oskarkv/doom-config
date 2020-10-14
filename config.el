@@ -993,6 +993,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "dd" 'cider-doc
       :n "da" 'cider-clojuredocs-web
       :n "dg" 'cider-grimoire
+      :n "db" 'cider-browse-ns
       :n "dw" 'cider-grimoire-web
       :n "eb" 'cider-load-buffer
       :n "ed" 'cider-debug-defun-at-point
