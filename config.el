@@ -998,11 +998,11 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "al" 'clojure-align
       :n "as" 'cider-apropos-documentation-select
       :n "c" ok-clj-refactor-map
+      :n "da" 'cider-clojuredocs-web
+      :n "db" 'cider-browse-ns
       :n "dc" 'cider-javadoc
       :n "dd" 'cider-doc
-      :n "da" 'cider-clojuredocs-web
       :n "dg" 'cider-grimoire
-      :n "db" 'cider-browse-ns
       :n "dw" 'cider-grimoire-web
       :n "eb" 'cider-load-buffer
       :n "ed" 'cider-debug-defun-at-point
@@ -1014,6 +1014,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "jb" 'cider-jack-in-clj&cljs
       :n "jj" 'cider-jack-in
       :n "js" 'cider-jack-in-cljs
+      :n "ll" 'cider-toggle-trace-ns
+      :n "lv" 'cider-toggle-trace-var
       :n "m" 'esexp-cider-macroexpand
       :n "ra" 'clojure-unwind-all
       :n "rb" 'clojure-thread-all-but-last
@@ -1027,9 +1029,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "ru" 'clojure-unwind
       :n "sw" 'cider-find-var
       :n "tn" 'cider-test-run-ns-tests
+      :n "tp" 'cider-test-run-project-tests
       :n "tt" 'cider-test-run-test
-      :n "cn" 'cider-toggle-trace-ns
-      :n "cv" 'cider-toggle-trace-var
       :v "er" 'cider-eval-region
       :v "et" 'cider-eval-region)
 
