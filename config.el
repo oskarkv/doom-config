@@ -320,9 +320,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
                        nil
                        cljr--all-helpers))
 
-  (general-define-key
-   :keymaps 'ok-clj-refactor-map
-   "nn" (cmd (cljr--clean-ns nil :no-prune)))
+  (map! :map ok-clj-refactor-map
+        :prefix "SPC"
+        "nn" (cmd (cljr--clean-ns nil :no-prune)))
 
   (advice-add 'cljr--clean-ns :after #'clean-ns-more))
 
