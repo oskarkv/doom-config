@@ -886,6 +886,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
         :n "o" 'Buffer-menu-other-window
         :n "f" 'Buffer-menu-switch-other-window))
 
+(map! :map doom-leader-file-map
+      "p" 'counsel-projectile-find-file)
+
 (map! :leader
       :desc "Open config" "v" (cmd (find-file "~/.doom.d/config.el"))
       :desc "webpaste buffer" "h" 'webpaste-paste-buffer
