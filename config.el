@@ -1026,8 +1026,10 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "rt" 'clojure-thread
       :n "ru" 'clojure-unwind
       :n "sw" 'cider-find-var
-      :n "tn" 'cider-toggle-trace-ns
-      :n "tv" 'cider-toggle-trace-var
+      :n "tn" 'cider-test-run-ns-tests
+      :n "tt" 'cider-test-run-test
+      :n "cn" 'cider-toggle-trace-ns
+      :n "cv" 'cider-toggle-trace-var
       :v "er" 'cider-eval-region
       :v "et" 'cider-eval-region)
 
