@@ -583,6 +583,11 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       (backward-char)
       (insert "`"))))
 
+(map! :map comint-mode-map
+      "," nil
+      "M-f" nil
+      "M-p" nil)
+
 (after! python
   (add-hook! 'python-mode-hook
     (setq indent-tabs-mode t)
@@ -1077,7 +1082,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :v "et" 'eval-region)
 
 (section-comment "Old keybindings I haven't look at yet"
-
   ;; These modes were emacs state modes
   (general-define-key
    :keymaps '(debugger-mode-map help-mode-map completion-list-mode-map)
@@ -1132,18 +1136,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (general-evil-define-key
       'normal macrostep-keymap
     "q" (cmd (macrostep-collapse-all) (fci-mode 1)))
-
-  (general-define-key
-   :keymaps '(cider-stacktrace-mode-map
-              cider-repl-mode-map
-              comint-mode-map
-              slime-repl-mode-map
-              ag-mode-map)
-   "," nil
-   "M-f" nil
-   "M-p" nil
-   )
-
 
   ;; THIS MIGHT BE WRONG, DUNNO THE NAME OF THE PACKAGE
   (map! :after slime
