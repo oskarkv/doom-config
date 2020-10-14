@@ -610,6 +610,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "M-I" (cmd (ok-python-transpose-big-thing 1 t))
       :n "M-N" (cmd (ok-python-transpose-big-thing -1 t))
       :prefix "SPC"
+      :n "l" 'lsp
       :n "cf" '+format/buffer
       :n "w" (cmd (evil-execute-macro 1 "ysll)l"))
       :n "jj" 'run-python
