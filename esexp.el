@@ -490,7 +490,7 @@ match what does not count as part of the C thing."
   (or
    (ok-string-bounds)
    (save-excursion
-     (let ((beg))
+     (let (beg)
        (cl-flet ((on-paren? (which)
                             (-contains? (if (eq which 'closing)
                                             (list ?\) ?\] ?\})
