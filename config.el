@@ -602,7 +602,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "l" 'ok-python-thing-text-object)
 
 (map! :after python
-      :map python-mode-map
+      :map (python-mode-map
+            inferior-python-mode-map)
       :n "M-i" (cmd (ok-python-transpose-thing 1))
       :n "M-n" (cmd (ok-python-transpose-thing -1))
       :n "C-M-i" (cmd (ok-python-transpose-big-thing 1))
