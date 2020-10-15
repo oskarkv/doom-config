@@ -486,7 +486,7 @@ STAY-AT-END is nil, move to front instead."
 
 (defun ok-c-thing-bounds (separator-regex)
   "Finds the bounds of a C thing at point. SEPARATOR-REGEX should
-match what does not count as part of the identifier."
+match what does not count as part of the C thing."
   (or
    (ok-string-bounds)
    (save-excursion
