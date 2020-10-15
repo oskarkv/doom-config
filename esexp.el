@@ -1,11 +1,11 @@
 ;;; -*- lexical-binding: t -*-
-(require 'utils)
+(require 'dash)
 (require 'evil)
 (require 'evil-nerd-commenter)
 (require 'paredit)
 (require 'seq)
-(require 'dash)
 (require 'smartparens)
+(require 'utils)
 
 (defvar esexp-element-separator-re "[][[:space:]\n\r(){}]")
 
