@@ -795,6 +795,17 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (map! :map evil-replace-state-map
       "§" 'evil-normal-state)
 
+;; Because evil-join has advice and is buggy.
+(evil-define-operator ok-evil-join (beg end)
+  "Join the selected lines."
+  :motion evil-line
+  (let ((count (count-lines beg end)))
+    (when (> count 1)
+      (setq count (1- count)))
+    (goto-char beg)
+    (dotimes (_ count)
+      (join-line 1))))
+
 (map! :map evil-normal-state-map
       "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
       "C-n" nil
@@ -812,7 +823,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "zx" 'evil-delete-buffer
       "SPC" nil
       "k" 'undo
-      "E" 'evil-join
+      "E" 'ok-evil-join
       "Å" 'newline-and-indent
       "l" 'evil-insert
       "L" 'evil-insert-line
