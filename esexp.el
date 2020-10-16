@@ -472,8 +472,6 @@ STAY-AT-END is nil, move to front instead."
 
 ;;; Non-Lisp things
 
-;; FIXME: Make C-things be not just calls, but strings and lists too.
-
 (defun ok-string-bounds ()
   "Get the bounds of string or comment the point is in."
   (save-excursion
