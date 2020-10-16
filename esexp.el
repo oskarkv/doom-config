@@ -504,11 +504,13 @@ match what does not count as part of the C thing."
                  (setq beg (point))
                (backward-char)))
          ;; If there is an identifier, search backward will succeed
-         (search-backward-regexp separator-regex)
-         (forward-char)
+         (if (not (search-backward-regexp separator-regex nil t))
+             (goto-char (point-min))
+           (forward-char))
          (if (null beg) (setq beg (point)))
-         (search-forward-regexp separator-regex)
-         (backward-char)
+         (if (not (search-forward-regexp separator-regex nil t))
+             (goto-char (point-max))
+           (backward-char))
          (if (on-paren? 'opening)
              (evil-jump-item)
            (backward-char))
@@ -520,7 +522,7 @@ match what does not count as part of the C thing."
 forward, otherwise backward."
   (-let (((beg end) (ok-c-thing-bounds separator-regex)))
     (goto-char (if (pos? dir) end beg))
-    (search-forward-regexp "[][[:alnum:]\_(){}\'\"]" nil t dir)
+    (search-forward-regexp "[][a-zA-Z0-9_(){}'\"]" nil t dir)
     (if (pos? dir) (backward-char))))
 
 (defun ok-c-thing-jump-allowed (separator-regex dir)
@@ -563,11 +565,12 @@ is in."
 
 (defun ok-transpose-c-things (separator-regex dir)
   "Transposes C things."
-  (ok-swap-text
-   (ok-c-thing-bounds separator-regex)
-   (ok-next-c-thing-bounds separator-regex dir)))
+  (let ((bounds (ok-c-thing-bounds separator-regex))
+        (next-bounds (ok-next-c-thing-bounds separator-regex dir)))
+    (unless (equal bounds next-bounds)
+      (ok-swap-text bounds next-bounds))))
 
-(defvar ok-python-separator-regex "[^[:alnum:]\.\_]")
+(defvar ok-python-separator-regex "[^a-zA-Z0-9._]")
 
 (defun ok-python-transpose-thing (dir)
   (interactive)
