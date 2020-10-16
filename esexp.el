@@ -602,4 +602,10 @@ or list to be the thing to transpose."
   (count &optional beg end type)
   (ok-c-thing-bounds ok-python-separator-regex))
 
+(defun ok-wrap-python-thing ()
+  (interactive)
+  (-let (((beg end) (ok-c-thing-bounds ok-python-separator-regex)))
+    (evil-surround-region beg end 'block ?\))
+    (evil-insert 1)))
+
 (provide 'esexp)

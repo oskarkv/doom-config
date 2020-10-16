@@ -627,7 +627,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :prefix "SPC"
       :n "l" 'lsp
       :n "cf" '+format/buffer
-      :n "w" (cmd (evil-execute-macro 1 "ysll)l"))
+      :n "w" 'ok-wrap-python-thing
       :n "jj" 'run-python
       :n "eb" 'python-shell-send-buffer
       :n "ef" 'python-shell-send-defun
