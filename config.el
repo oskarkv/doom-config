@@ -283,6 +283,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
      nil
      t)))
 
+(defadvice eval-region (after eval-region-message activate)
+  (message "evaled region"))
+
 ;; Make which-key show help for Vim operators
 (setq which-key-show-operator-state-maps nil)
 
