@@ -272,6 +272,17 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 ;; (setq-default doom-unreal-buffer-functions
 ;; '(minibufferp doom-special-buffer-p doom-non-file-visiting-buffer-p))
 
+(defadvice message (after message-tail activate)
+  "Goto point max after a message."
+  (with-current-buffer "*Messages*"
+    (goto-char (point-max))
+    (walk-windows
+     (lambda (window)
+       (if (string-equal (buffer-name (window-buffer window)) "*Messages*")
+           (set-window-point window (point-max))))
+     nil
+     t)))
+
 ;; Make which-key show help for Vim operators
 (setq which-key-show-operator-state-maps nil)
 
