@@ -747,12 +747,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "ce" 'org-edit-src-exit
       :n "cc" 'org-edit-src-abort)
 
-(map! :map (evil-normal-state-map
-            evil-visual-state-map
-            evil-motion-state-map
-            evil-insert-state-map)
-      "TAB" nil)
-
 (map! :after evil-org
       :map evil-org-mode-map
       :i "C-h" nil
@@ -781,37 +775,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (map! :map key-translation-map
       "ESC" (kbd "C-g"))
 
-(map! :map evil-emacs-state-map
-      "C-," 'evil-exit-emacs-state)
-
-(map! :map global-map
-      "<f5>" 'helpful-key
-      "<f6>" 'counsel-descbinds
-      "<f7>" 'eval-expression
-      "C-å" 'ace-window
-      "C-ä" 'other-window
-      "C-s" 'save-buffer
-      "M-f" 'switch-to-prev-buffer
-      "M-p" 'switch-to-next-buffer
-      "M-c" 'evil-snipe-repeat-reverse
-      "M-v" 'evil-snipe-repeat
-      "C-u" 'previous-line
-      "C-e" 'next-line
-      "C-i" 'end-of-line
-      "C-n" 'beginning-of-line
-      "M-w" 'er/expand-region)
-
-;; Makes tab not call yas-expand
-(map! :i [tab] 'complete-symbol)
-
-(map! :map evil-insert-state-map
-      "§" 'evil-normal-state
-      "C-e" 'doom/delete-backward-word
-      "C-<tab>" (cmd (insert "\t")))
-
-(map! :map evil-replace-state-map
-      "§" 'evil-normal-state)
-
 ;; Because evil-join has advice and is buggy.
 (evil-define-operator ok-evil-join (beg end)
   "Join the selected lines."
@@ -823,72 +786,101 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (dotimes (_ count)
       (join-line 1))))
 
-(map! :map evil-normal-state-map
-      "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
-      "C-n" nil
-      "u" nil
-      "e" nil
-      "j" nil
-      "J" nil
-      "M" nil
-      "n" nil
-      "N" nil
-      "h" nil
-      "H" nil
-      "i" nil
-      "I" nil
-      "zx" 'evil-delete-buffer
-      "SPC" nil
-      "k" 'undo
-      "E" 'ok-evil-join
-      "Å" 'newline-and-indent
-      "l" 'evil-insert
-      "L" 'evil-insert-line
-      "M-y" 'goto-last-change
-      "M-o" 'goto-last-change-reverse
-      "C-x" 'evil-numbers/inc-at-pt
-      "C-z" 'evil-numbers/dec-at-pt
-      "M-t" #'ok-run-q-macro
+(map! :e "C-," 'evil-exit-emacs-state
+      :o "l" -operator-inside-keymap
+      :o "i" nil
+      :o "o" (cmd (forward-evil-symbol))
+      :o "e" 'evil-next-line
+      :o "u" 'evil-previous-line
+      ;; Makes tab not call yas-expand
+      :i [tab] 'complete-symbol
+      :i "§" 'evil-normal-state
+      :v "§" 'evil-exit-visual-state
+      :i "C-e" 'doom/delete-backward-word
+      :i "C-<tab>" (cmd (insert "\t"))
+      :r "§" 'evil-normal-state
+      :nmvi "TAB" nil
+      "<f5>" 'helpful-key
+      "<f6>" 'counsel-descbinds
+      "<f7>" 'eval-expression
+      "C-e" 'next-line
+      "C-i" 'end-of-line
+      "C-n" 'beginning-of-line
+      "C-s" 'save-buffer
+      "C-u" 'previous-line
+      "C-ä" 'other-window
+      "C-å" 'ace-window
+      "M-c" 'evil-snipe-repeat-reverse
+      "M-f" 'switch-to-prev-buffer
+      "M-p" 'switch-to-next-buffer
+      "M-v" 'evil-snipe-repeat
+      "M-w" 'er/expand-region
+      :nv "gB" 'ok-remove-some-spaces
+      :nv "gb" 'ok-remove-spaces
+      :nv "gh" 'ok-evil-webpaste
+      :nv "go" '+evil:yank-unindented
+      :m "gs" nil
+      :nv "gs" 'ok-evil-three-backticks-yank
+      :nv "gy" 'ok-evil-reddit-yank
+      :n "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
+      :n "C-n" nil
+      :n "u" nil
+      :n "e" nil
+      :n "j" nil
+      :n "J" nil
+      :n "M" nil
+      :n "n" nil
+      :n "N" nil
+      :n "h" nil
+      :n "H" nil
+      :n "i" nil
+      :n "I" nil
+      :n "zx" 'evil-delete-buffer
+      :n "SPC" nil
+      :n "k" 'undo
+      :n "E" 'ok-evil-join
+      :n "Å" 'newline-and-indent
+      :n "l" 'evil-insert
+      :n "L" 'evil-insert-line
+      :n "M-y" 'goto-last-change
+      :n "M-o" 'goto-last-change-reverse
+      :n "C-x" 'evil-numbers/inc-at-pt
+      :n "C-z" 'evil-numbers/dec-at-pt
+      :n "M-t" #'ok-run-q-macro
+      :m "SPC" nil
+      :m "k" nil
+      :m "E" nil
+      :m "l" nil
+      :m "L" nil
+      :m "u" 'evil-previous-visual-line
+      :m "e" 'evil-next-visual-line
+      :m "C-u" 'ok-move-up-15-lines
+      :m "C-e" 'ok-move-down-15-lines
+      :m "j" 'evil-forward-word-end
+      :m "J" 'evil-forward-WORD-end
+      :m "n" 'evil-backward-char
+      :m "h" 'evil-ex-search-next
+      :m "H" 'evil-ex-search-previous
+      :m "i" 'evil-forward-char
+      :m "å" 'ace-window
+      :m "ä" 'evil-window-next
+      :m "Ä" 'evil-window-prev
+      :m "C-q" 'evil-visual-block
+      :m "C-y" 'evil-jump-backward
+      :m "C-o" 'evil-jump-forward
+      :m "C-," 'evil-emacs-state
+      :v "u" nil
+      :v "l" -visual-inside-keymap
+      :v "i" nil
+      :v "L" 'evil-insert
+      :v "A" 'evil-append
       :prefix "SPC"
-      "dk" 'describe-key
-      "db" 'describe-bindings)
+      :nv "f" 'fill-paragraph)
 
 ;; Apparently C-x is a common prefix, and many modes use it.
 ;; Shadow all of them for now.
 (map! :map general-override-mode-map
       :n "C-x" 'evil-numbers/inc-at-pt)
-
-(map! :map evil-motion-state-map
-      "SPC" nil
-      "k" nil
-      "E" nil
-      "l" nil
-      "L" nil
-      "u" 'evil-previous-visual-line
-      "e" 'evil-next-visual-line
-      "C-u" 'ok-move-up-15-lines
-      "C-e" 'ok-move-down-15-lines
-      "j" 'evil-forward-word-end
-      "J" 'evil-forward-WORD-end
-      "n" 'evil-backward-char
-      "h" 'evil-ex-search-next
-      "H" 'evil-ex-search-previous
-      "i" 'evil-forward-char
-      "å" 'ace-window
-      "ä" 'evil-window-next
-      "Ä" 'evil-window-prev
-      "C-q" 'evil-visual-block
-      "C-y" 'evil-jump-backward
-      "C-o" 'evil-jump-forward
-      "C-," 'evil-emacs-state)
-
-(map! :map evil-visual-state-map
-      "§" 'evil-exit-visual-state
-      "u" nil
-      "l" -visual-inside-keymap
-      "i" nil
-      "L" 'evil-insert
-      "A" 'evil-append)
 
 (defun ok-switch-to-window (name)
   (select-window (get-buffer-window name)))
@@ -930,21 +922,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (map! :map doom-leader-buffer-map
       "b" 'switch-to-buffer
       "l" 'ok-list-buffers)
-
-(map! :map (evil-normal-state-map evil-visual-state-map)
-      "gh" 'ok-evil-webpaste
-      "gs" 'ok-evil-three-backticks-yank
-      "gy" 'ok-evil-reddit-yank
-      "go" '+evil:yank-unindented
-      :prefix "SPC"
-      "f" 'fill-paragraph)
-
-(map! :map evil-operator-state-map
-      "l" -operator-inside-keymap
-      "i" nil
-      "o" (cmd (forward-evil-symbol))
-      "e" 'evil-next-line
-      "u" 'evil-previous-line)
 
 (after! magit
   (ok-rebind-in-all-maps
