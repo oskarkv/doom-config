@@ -166,13 +166,14 @@ boolean is non-nil, also unbinds TAB in that mode."
   (webpaste-paste-region beg end))
 
 (evil-define-operator ok-evil-reddit-yank (beg end type register yank-handler)
-  "Yanks text and adds 4 spaces in front of every line. Works with evil."
+  "Yanks text and adds 4 spaces in front of every line. Works
+with evil."
   (evil-yank beg end type register yank-handler)
   (kill-new (replace-regexp-in-string "^" "    " (car kill-ring)) t))
 
 (defun ok-mode-to-language (m)
-  "Given a Emacs mode M, returns the language name in markdown that
-  should be used for code from the mode."
+  "Given an Emacs mode M, returns the language name in markdown
+that should be used for code from the mode."
   (let ((mode-alist '((emacs-lisp-mode . "lisp"))))
     (or (cdr (assoc m mode-alist))
         (ok-string-drop-at-end (str m) 5))))
@@ -180,8 +181,8 @@ boolean is non-nil, also unbinds TAB in that mode."
 (evil-define-operator ok-evil-three-backticks-yank
   (beg end type register yank-handler)
   "Yanks text and adds three backticks around it, as well as a
-  language after the first backticks, depending on the Emacs
-  mode. Works with evil."
+language after the first backticks, depending on the Emacs mode.
+Works with evil."
   (evil-yank beg end type register yank-handler)
   (kill-new (concat "```" (ok-mode-to-language major-mode) "\n"
                     (car kill-ring)
