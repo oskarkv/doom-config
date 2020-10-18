@@ -151,7 +151,7 @@ mode."
 represents."
   (let* ((split (split-string time-string ":"))
          (nums (mapcar #'string-to-number split)))
-    (+ (* 60 (first nums)) (second nums))))
+    (+ (* 60 (car nums)) (cadr nums))))
 
 (defun ok-time-sub (t1 t2)
   "Returns the difference in minutes between two HH:MM strings."
