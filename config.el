@@ -977,6 +977,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "Ä" 'evil-window-prev
       :n "u" 'previous-line
       :n "e" 'next-line
+      :v "u" 'evil-previous-visual-line
+      :v "e" 'evil-next-visual-line
       :n "t" 'git-rebase-edit
       :n "M-u" 'git-rebase-move-line-up
       :n "M-e" 'git-rebase-move-line-down
