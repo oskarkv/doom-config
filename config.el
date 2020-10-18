@@ -425,7 +425,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (add-hook! 'org-mode-hook
     (setq paragraph-separate "[ 	\f]*$"
           paragraph-start "\f\\|[ 	]*$")
-    (fci-mode -1))
+    (fci-mode -1)
+    ;; global-visual-line-mode isn't enough for org, apparently
+    (visual-line-mode 1))
   (setq-hook! 'org-mode-hook evil-auto-indent nil))
 
 ;;; States
