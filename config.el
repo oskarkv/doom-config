@@ -160,6 +160,53 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 ;;; Some operators
 
+(defmacro -ok-call-f (pattern replacement)
+  `(progn
+     (setq end (f beg end ,pattern ,replacement))))
+
+(cl-flet* ((f (beg end pattern replacement)
+              (let ((lines (count-lines beg end)))
+                (evil-ex-substitute
+                 beg end
+                 `(,pattern t t)
+                 `(replace-eval-replacement . ,replacement))
+                (setq end (progn
+                            (goto-char beg)
+                            (dotimes (i lines) (search-forward "\n"))
+                            (point)))
+                end))
+           (remove-some
+            (beg end)
+            (-ok-call-f " +," ",")
+            (-ok-call-f " +/ +" "/")
+            (-ok-call-f " +\\." ".")
+            (-ok-call-f "\( +" "(")
+            (-ok-call-f "\\[ +" "[")
+            (-ok-call-f " +\)" ")")
+            (-ok-call-f " +\\]" "]")
+            (-ok-call-f " +" " ")
+            end))
+  (evil-define-operator ok-remove-spaces (beg end)
+    :repeat nil
+    :move-point nil
+    (save-excursion
+      (setq end (remove-some beg end))
+      (dotimes (i 2)
+        (-ok-call-f "\\(\\w\\) +\\(\\w\\)" "\\1\\2"))
+      (-ok-call-f ",\\([^ ]\\)" ", \\1")
+      (-ok-call-f " +\(" "(")))
+  (evil-define-operator ok-remove-some-spaces (beg end)
+    :repeat nil
+    :move-point nil
+    (save-excursion
+      (remove-some beg end))))
+
+(defun ok-to-snum ()
+  (interactive)
+  (let ((n (number-at-point)))
+    (delete-forward-char (length (str n)))
+    (insert (str (s-repeat n "s(") "0" (s-repeat n ")")))))
+
 (evil-define-operator ok-evil-webpaste (beg end)
   :repeat nil
   :move-point nil
