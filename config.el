@@ -800,20 +800,15 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :i "C-<tab>" (cmd (insert "\t"))
       :r "§" 'evil-normal-state
       :nmvi "TAB" nil
-      "<f5>" 'helpful-key
-      "<f6>" 'counsel-descbinds
-      "<f7>" 'eval-expression
-      "C-e" 'next-line
       "C-i" 'end-of-line
       "C-n" 'beginning-of-line
       "C-s" 'save-buffer
-      "C-u" 'previous-line
       "C-ä" 'other-window
       "C-å" 'ace-window
       "M-c" 'evil-snipe-repeat-reverse
+      "M-v" 'evil-snipe-repeat
       "M-f" 'switch-to-prev-buffer
       "M-p" 'switch-to-next-buffer
-      "M-v" 'evil-snipe-repeat
       "M-w" 'er/expand-region
       :nv "gB" 'ok-remove-some-spaces
       :nv "gb" 'ok-remove-spaces
@@ -835,8 +830,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "H" nil
       :n "i" nil
       :n "I" nil
-      :n "zx" 'evil-delete-buffer
       :n "SPC" nil
+      :n "zx" 'evil-delete-buffer
       :n "k" 'undo
       :n "E" 'ok-evil-join
       :n "Å" 'newline-and-indent
