@@ -459,6 +459,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
  python-guess-indent nil
  python-indent-guess-indent-offset nil)
 
+(after! ace-window
+ (setq aw-scope 'global))
+
 (define-abbrev-table 'global-abbrev-table
   '(
     ("tex" "t.ex.")
