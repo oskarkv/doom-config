@@ -396,6 +396,44 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (setq fci-rule-width 5))
 
 (after! magit
+  (defun magit-diff-master ()
+    "Diff with master"
+    (interactive)
+    (apply #'magit-diff-range "master" (magit-diff-arguments)))
+
+  (transient-define-prefix magit-diff ()
+    "Show changes between different versions."
+    :man-page "git-diff"
+    :class 'magit-diff-prefix
+    ["Limit arguments"
+     (magit:--)
+     (magit-diff:--ignore-submodules)
+     ("-b" "Ignore whitespace changes"      ("-b" "--ignore-space-change"))
+     ("-w" "Ignore all whitespace"          ("-w" "--ignore-all-space"))
+     (5 "-D" "Omit preimage for deletes"    ("-D" "--irreversible-delete"))]
+    ["Context arguments"
+     (magit-diff:-U)
+     ("-W" "Show surrounding functions"     ("-W" "--function-context"))]
+    ["Tune arguments"
+     (magit-diff:--diff-algorithm)
+     (magit-diff:-M)
+     (magit-diff:-C)
+     ("-x" "Disallow external diff drivers" "--no-ext-diff")
+     ("-s" "Show stats"                     "--stat")
+     ("=g" "Show signature"                 "--show-signature")
+     (5 magit-diff:--color-moved)
+     (5 magit-diff:--color-moved-ws)]
+    ["Actions"
+     [("d" "Dwim"          magit-diff-dwim)
+      ("r" "Diff range"    magit-diff-range)
+      ("p" "Diff paths"    magit-diff-paths)]
+     [("u" "Diff unstaged" magit-diff-unstaged)
+      ("s" "Diff staged"   magit-diff-staged)
+      ("w" "Diff worktree" magit-diff-working-tree)]
+     [("c" "Show commit"   magit-show-commit)
+      ("t" "Show stash"    magit-stash-show)
+      ("m" "Diff with master" magit-diff-master)]])
+
   (setq magit-diff-refine-hunk nil)
   (setq magit-display-buffer-function #'magit-display-buffer-traditional))
 
