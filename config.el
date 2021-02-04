@@ -510,7 +510,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
         org-enforce-todo-checkbox-dependencies nil
         org-fontify-done-headline nil
         org-todo-keywords '((sequence
-                             "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)")))
+                             "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)"))
+        org-todo-keyword-faces '(("TODO" . "red") ("INPR" . "orange")
+                                 ("WAIT" . "orange") ("DONE" . "green")))
   (add-hook! 'org-mode-hook
     (setq paragraph-separate "[ 	\f]*$"
           paragraph-start "\f\\|[ 	]*$")
