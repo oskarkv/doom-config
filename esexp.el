@@ -563,6 +563,20 @@ is in."
           (goto-char (+ beg2 (- len2 len) (- old-point beg)))
         (goto-char (+ beg (- old-point beg2)))))))
 
+(defun ok-c-thing-raise ()
+  (interactive)
+  (save-excursion
+    (let ((p (point))
+          end)
+      (sp-backward-up-sexp)
+      (setq end (point))
+      ;; Don't delete when not in a paren
+      (when (not (= end p))
+        (backward-char)
+        (-let* (((beg) (ok-c-thing-bounds ok-python-separator-regex)))
+          (delete-region beg end)))))
+  (sp-raise-sexp))
+
 (defun ok-transpose-c-things (separator-regex dir)
   "Transposes C things."
   (let ((bounds (ok-c-thing-bounds separator-regex))
