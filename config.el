@@ -1014,6 +1014,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :desc "list buffers" "l" 'ok-list-buffers
       "e" 'eval-expression
       "k" 'org-capture
+      :desc "Seach proj. for symbol at point"
+      "#" '+default/search-project-for-symbol-at-point
+      "*" nil
       "X" nil
       ";" nil)
 
