@@ -1038,17 +1038,24 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
    "M-f" nil
    "M-p" nil))
 
+(add-hook! 'git-rebase-mode-hook
+  (map!
+   :map git-rebase-mode-map
+   :n "u" 'previous-line
+   :n "e" 'next-line
+   "M-u" 'git-rebase-move-line-up
+   "M-e" 'git-rebase-move-line-down
+   "a" 'git-rebase-edit
+   "d" 'git-rebase-kill-line
+   "p" 'git-rebase-pick
+   "q" 'with-editor-cancel
+   :n "k" 'git-rebase-undo))
+
 (map! :after magit
       :map magit-log-mode-map
       "u" 'previous-line
       "C-u" (cmd (previous-line 10))
       "C-e" (cmd (next-line 10))
-      :map git-rebase-mode-map
-      "a" 'git-rebase-edit
-      "c" 'git-rebase-kill-line
-      "p" 'git-rebase-pick
-      "q" 'with-editor-cancel
-      "k" 'git-rebase-undo
       :map (magit-mode-map
             git-rebase-mode-map
             magit-log-select-mode-map
