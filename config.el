@@ -1174,7 +1174,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "M-l" 'paredit-backward-up
       :n "M-q" 'paredit-backward-up
       :prefix "SPC"
-      :n "q" 'esexp-wrap-word-in-backticks
       :n "i" 'esexp-insert-at-end
       :n "n" 'esexp-insert-at-head
       :n "l" 'esexp-wrap-form-parens-beg
