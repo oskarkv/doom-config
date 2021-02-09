@@ -1083,6 +1083,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "H" 'evil-ex-search-previous
       "e" 'next-line
       "u" 'previous-line
+      :n "i" 'evil-forward-char
+      :n "n" 'evil-backward-char
       "C-u" 'magit-section-backward
       :nv "C-u" 'magit-section-backward
       "C-e" 'magit-section-forward
