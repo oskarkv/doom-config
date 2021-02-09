@@ -1049,10 +1049,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
         :n "o" 'Buffer-menu-other-window
         :n "f" 'Buffer-menu-switch-other-window))
 
-(map! :map doom-leader-file-map
-      :desc "Find file in project" "p" 'counsel-projectile-find-file)
-
 (map! :leader
+      ;; Apparently, one should bind this here, not in the file-map
+      :desc "Find file in project" "fp" 'counsel-projectile-find-file
       :desc "Open config" "v" (cmd (find-file "~/.doom.d/config.el"))
       :desc "webpaste buffer" "h" 'webpaste-paste-buffer
       :desc "list buffers" "l" 'ok-list-buffers
