@@ -702,7 +702,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 (after! python
   (add-hook! 'python-mode-hook
-    (setq indent-tabs-mode t)
     (setenv "PAGER" "cat"))
   ;; Don't format with LSP formatter
   (setq-hook! 'python-mode-hook +format-with-lsp nil))
