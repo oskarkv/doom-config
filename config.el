@@ -457,6 +457,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
  inhibit-startup-screen t
  tab-width 4
  python-guess-indent nil
+ python-fill-docstring-style 'pep-257-nn
  python-indent-guess-indent-offset nil)
 
 (after! ace-window
