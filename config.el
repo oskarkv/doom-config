@@ -1006,7 +1006,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
         :n "f" 'Buffer-menu-switch-other-window))
 
 (map! :map doom-leader-file-map
-      "p" 'counsel-projectile-find-file)
+      :desc "Find file in project" "p" 'counsel-projectile-find-file)
 
 (map! :leader
       :desc "Open config" "v" (cmd (find-file "~/.doom.d/config.el"))
@@ -1152,8 +1152,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :v "er" 'cider-eval-region
       :v "et" 'cider-eval-region)
 
-(map! :after (:or cider evil)
-      :map (prog-mode-map
+(map! :map (prog-mode-map
             cider-repl-mode-map)
       :n "(" 'esexp-backward-paren
       :n ")" 'esexp-forward-paren
