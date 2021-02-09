@@ -713,12 +713,43 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :map evil-inner-text-objects-map
       "l" 'ok-python-thing-text-object)
 
+(defmacro ok-projectile-run-in-root (&rest code)
+  `(projectile-with-default-dir
+       (projectile-ensure-project (projectile-project-root))
+     ,@code))
+
+(defun ok-in-quickbit-project ()
+  (ignore-errors
+    (s-contains-p "/quickbit/app-backend/project/" (projectile-project-info))))
+
+(defun ok-if-quickbit (fun &optional alternative)
+  (interactive)
+  (cond ((ok-in-quickbit-project) (funcall fun))
+        (alternative (funcall alternative))))
+
+(defun ok-python-black ()
+  (interactive)
+  (ok-if-quickbit
+   (fn
+     (ok-projectile-run-in-root (shell-command "make black"))
+     (evil-edit nil))))
+
 (defun ok-python-insert-pdb ()
   (interactive)
   (evil-open-below 1)
   (evil-normal-state)
   (insert "breakpoint()")
   (evil-indent (point-at-bol) (point-at-eol)))
+
+(defun ok-shell-command-in-root (command)
+  (ok-projectile-run-in-root
+   (apply #'start-process command (str "*" command "*")
+          (s-split-words command))))
+
+(defun ok-test-function (command)
+  (shell-command (str "jobbsetup pytest " command)))
+
+(setq elpy-test-compilation-function 'ok-test-function)
 
 (map! :after python
       :map (python-mode-map
