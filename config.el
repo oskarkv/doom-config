@@ -690,6 +690,11 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       (backward-char)
       (insert "`"))))
 
+(map! :after company
+      :map company-active-map
+      "C-e" 'company-select-next
+      "C-u" 'company-select-previous)
+
 (map! :map comint-mode-map
       "," nil
       "M-f" nil
