@@ -511,8 +511,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
         org-fontify-done-headline nil
         org-todo-keywords '((sequence
                              "TODO(t)" "INPR(p)" "WAIT(w)" "|" "DONE(d)"))
-        org-todo-keyword-faces '(("TODO" . "red") ("INPR" . "orange")
-                                 ("WAIT" . "orange") ("DONE" . "green")))
+        org-todo-keyword-faces '(("TODO" . "#f00") ("INPR" . "#fff")
+                                 ("WAIT" . "#33f") ("DONE" . "#0f0")))
   (add-hook! 'org-mode-hook
     (setq paragraph-separate "[ 	\f]*$"
           paragraph-start "\f\\|[ 	]*$")
