@@ -965,6 +965,14 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :v "L" 'evil-insert
       :v "A" 'evil-append
       :prefix "SPC"
+      :nv "gl" 'magit-log-buffer-file
+      :n "gb" 'magit-blame-addition
+      :n "ta" (cmd (shell-command "jobbsetup"))
+      :n "tf" (cmd (shell-command "jobbsetup pytest-failing"))
+      :n "tl" (cmd (shell-command "jobbsetup only linter"))
+      :n "tm" (cmd (shell-command "jobbsetup only mypy"))
+      :n "ts" (cmd (shell-command "jobbsetup only tests"))
+      :n "q" 'ok-wrap-word-in-backticks
       :nv "f" 'fill-paragraph)
 
 ;; Apparently C-x is a common prefix, and many modes use it.
