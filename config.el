@@ -310,7 +310,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       (eq buf (doom-fallback-buffer))
       (-some? (lambda (x) (s-starts-with? x (buffer-name buf)))
               (list
-               "*Python*"
+               "*Python"
                "*cider-repl"))))
 
 (setcdr (assoc 'buffer-predicate default-frame-alist)
