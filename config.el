@@ -713,6 +713,13 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :map evil-inner-text-objects-map
       "l" 'ok-python-thing-text-object)
 
+(defun ok-python-insert-pdb ()
+  (interactive)
+  (evil-open-below 1)
+  (evil-normal-state)
+  (insert "breakpoint()")
+  (evil-indent (point-at-bol) (point-at-eol)))
+
 (map! :after python
       :map (python-mode-map
             inferior-python-mode-map)
@@ -722,9 +729,14 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "C-M-n" (cmd (ok-python-transpose-big-thing -1))
       :n "M-I" (cmd (ok-python-transpose-big-thing 1 t))
       :n "M-N" (cmd (ok-python-transpose-big-thing -1 t))
+      :n "M-u" 'ok-c-thing-raise
       :prefix "SPC"
       :n "l" 'lsp
       :n "cf" '+format/buffer
+      :n "ed" 'ok-python-insert-pdb
+      :n "f" (cmd (let ((fill-column 70)) (python-fill-paragraph)))
+      :n "ps" 'projectile-run-eshell
+      :n "tk" (cmd (shell-command "pkill -f \"sleep 10000\""))
       :n "w" 'ok-wrap-python-thing
       :n "jj" 'run-python
       :n "eb" 'python-shell-send-buffer
@@ -732,6 +744,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "sw" 'lsp-find-definition
       :n "r" 'lsp-rename
       :n "et"  (cmd (python-shell-send-region (point-at-bol) (point-at-eol)))
+      :n "a" 'ok-wrap-python-thing-in-string
       :v "et" 'python-shell-send-region)
 
 (defun open-prolog-history ()
