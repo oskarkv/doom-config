@@ -64,4 +64,7 @@
 (package! lsp-jedi
   :recipe (:host github :repo "fredcamps/lsp-jedi"))
 
+(package! elpy
+  :recipe (:host github :repo "jorgenschaefer/elpy"))
+
 (add-load-path! ".")

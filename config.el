@@ -707,6 +707,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (add-to-list 'lsp-enabled-clients 'jedi))
 
 (after! python
+  (require 'elpy)
   (add-hook! 'python-mode-hook
     (setenv "PAGER" "cat")
     (require 'lsp-jedi)
@@ -757,7 +758,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (defun ok-test-function (command)
   (shell-command (str "jobbsetup pytest " command)))
 
-(setq elpy-test-compilation-function 'ok-test-function)
+(setq elpy-test-runner 'elpy-test-pytest-runner
+      elpy-test-compilation-function 'ok-test-function)
 
 (map! :after python
       :map (python-mode-map
@@ -776,6 +778,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "cf" '+format/buffer
       :n "ps" 'projectile-run-eshell
       :n "tk" (cmd (shell-command "pkill -f \"sleep 10000\""))
+      :n "tt" 'elpy-test-pytest-runner
       :n "sw" 'lsp-find-definition
       :n "sr" 'lsp-find-references
       :n "r" 'lsp-rename
