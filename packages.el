@@ -58,4 +58,10 @@
 
 (package! fill-column-indicator)
 
+;; (package! lsp-python-ms
+;;   :recipe (:host github :repo "emacs-lsp/lsp-python-ms"))
+
+(package! lsp-jedi
+  :recipe (:host github :repo "fredcamps/lsp-jedi"))
+
 (add-load-path! ".")

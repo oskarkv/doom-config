@@ -701,9 +701,17 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "M-f" nil
       "M-p" nil)
 
+
+(after! lsp-mode
+  (add-to-list 'lsp-disabled-clients 'pyls)
+  (add-to-list 'lsp-enabled-clients 'jedi))
+
 (after! python
   (add-hook! 'python-mode-hook
-    (setenv "PAGER" "cat"))
+    (setenv "PAGER" "cat")
+    (require 'lsp-jedi)
+    (lsp)
+    (lsp-ui-mode 0))
   ;; Don't format with LSP formatter
   (setq-hook! 'python-mode-hook +format-with-lsp nil))
 
@@ -762,21 +770,29 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "M-N" (cmd (ok-python-transpose-big-thing -1 t))
       :n "M-u" 'ok-c-thing-raise
       :prefix "SPC"
-      :n "l" 'lsp
-      :n "cf" '+format/buffer
-      :n "ed" 'ok-python-insert-pdb
+      :n "a" 'ok-wrap-python-thing-in-string
+      :n "w" 'ok-wrap-python-thing
       :n "f" (cmd (let ((fill-column 70)) (python-fill-paragraph)))
+      :n "cf" '+format/buffer
       :n "ps" 'projectile-run-eshell
       :n "tk" (cmd (shell-command "pkill -f \"sleep 10000\""))
-      :n "w" 'ok-wrap-python-thing
+      :n "sw" 'lsp-find-definition
+      :n "sr" 'lsp-find-references
+      :n "r" 'lsp-rename
+      :n "dd" 'lsp-describe-thing-at-point
+      :n "ca" 'lsp-execute-code-action
+      :n "cr" 'lsp-rename
       :n "jj" 'run-python
+      :n "ed" 'ok-python-insert-pdb
       :n "eb" 'python-shell-send-buffer
       :n "ef" 'python-shell-send-defun
-      :n "sw" 'lsp-find-definition
-      :n "r" 'lsp-rename
       :n "et"  (cmd (python-shell-send-region (point-at-bol) (point-at-eol)))
-      :n "a" 'ok-wrap-python-thing-in-string
       :v "et" 'python-shell-send-region)
+
+(map! :map minibuffer-local-map
+      "C-n" 'evil-backward-word-begin
+      "C-i" 'evil-forward-word-end
+      "M-n" 'doom/delete-backward-word)
 
 (defun open-prolog-history ()
   (interactive)
