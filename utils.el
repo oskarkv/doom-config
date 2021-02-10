@@ -192,4 +192,17 @@ is non-nil, then also \r and \n are considered whitespace."
   (while (-some-> (char-before) (ok-contains-whitespace? including-newlines))
     (backward-char)))
 
+(defun ok-save-buffers (buffers)
+    (dolist (b buffers)
+      (with-current-buffer b
+        (save-buffer))))
+
+(defun ok-save-buffers-matching (regex)
+  (let* ((buffers (cl-remove-if-not
+                   (lambda (buffer)
+                     (let ((name (buffer-file-name buffer)))
+                       (and name (s-matches? regex name))))
+                   (buffer-list))))
+    (ok-save-buffers buffers)))
+
 (provide 'utils)
