@@ -2,6 +2,12 @@
 (require 'dash)
 (require 'seq)
 
+(defmacro time (&rest body)
+  "Measure the time it takes to evaluate BODY."
+  `(let ((time (current-time)))
+     ,@body
+     (message "%.06f" (float-time (time-since time)))))
+
 (defmacro with-gensyms (syms &rest body)
   (declare (indent 1))
   `(let (,@(seq-map (lambda (sym) (list sym '(cl-gensym))) syms))
