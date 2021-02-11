@@ -12,6 +12,8 @@
 (setq user-full-name "Oskar Kvist"
       user-mail-address "oskar.kvist@gmail.com")
 
+(require 'undo-fu)
+(evil-set-undo-system 'undo-fu)
 ;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
 ;; are the three important ones:
 ;;
