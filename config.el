@@ -711,6 +711,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (after! python
   (require 'elpy)
   (add-hook! 'python-mode-hook
+    (setenv "PYTHONPATH" "/home/oskar/quickbit/app-backend/project/quickbit/")
     (setenv "PAGER" "cat")
     (require 'lsp-jedi)
     (lsp)
@@ -738,18 +739,31 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (cond ((ok-in-quickbit-project) (funcall fun))
         (alternative (funcall alternative))))
 
-(defun ok-python-black ()
-  (interactive)
+(defun ok-quickbit-venv-command (command &optional path)
   (ok-if-quickbit
    (fn
-     (ok-projectile-run-in-root (shell-command "make black"))
+     (ok-projectile-run-in-root
+      (shell-command
+       (str "cd /home/oskar/quickbit/app-backend/project/ && "
+            "source ../venv/bin/activate && "
+            command " "
+            (or path "quickbit"))))
      (evil-edit nil))))
 
-(defun ok-python-insert-pdb ()
+(defun ok-python-black (&optional path)
+  (interactive)
+  (ok-quickbit-venv-command
+   "python3 -m black --exclude migrations" path))
+
+(defun ok-python-isort (path)
+  (ok-quickbit-venv-command "isort" path))
+
+(defun ok-python-insert-breakpoint ()
   (interactive)
   (evil-open-below 1)
   (evil-normal-state)
   (insert "breakpoint()")
+  (save-buffer)
   (evil-indent (point-at-bol) (point-at-eol)))
 
 (defun ok-shell-command-in-root (command)
@@ -780,15 +794,18 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "cf" '+format/buffer
       :n "ps" 'projectile-run-eshell
       :n "tk" (cmd (shell-command "pkill -f \"sleep 10000\""))
+      :n "cf" (cmd (save-buffer) (ok-python-isort buffer-file-name)
+                (save-buffer) (ok-python-black))
       :n "tt" 'elpy-test-pytest-runner
       :n "sw" 'lsp-find-definition
       :n "sr" 'lsp-find-references
-      :n "r" 'lsp-rename
+      :n "r" (cmd (call-interactively #'lsp-rename)
+               (ok-save-buffers-matching "\\.py$"))
       :n "dd" 'lsp-describe-thing-at-point
       :n "ca" 'lsp-execute-code-action
       :n "cr" 'lsp-rename
       :n "jj" 'run-python
-      :n "ed" 'ok-python-insert-pdb
+      :n "ed" 'ok-python-insert-breakpoint
       :n "eb" 'python-shell-send-buffer
       :n "ef" 'python-shell-send-defun
       :n "et"  (cmd (python-shell-send-region (point-at-bol) (point-at-eol)))
