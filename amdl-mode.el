@@ -2,19 +2,13 @@
 
 (defvar amdl-mode-hook nil)
 
-(defvar amdl-mode-map
-  (let ((map (make-keymap)))
-    ;; (define-key map "\C-j" 'newline-and-indent)
-    map)
-  "Keymap for AMDL major mode")
-
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.amdl\\'" . amdl-mode))
 
 (defface amdl-normal-face '((t (:inherit 'default))) "")
-(defface amdl-annotation-face '((t (:inherit 'default :foreground "#0ef"))) "")
+(defface amdl-annotation-face '((t (:inherit 'default :foreground "#0ff"))) "")
 (defface amdl-operator-face '((t (:inherit 'default :foreground "#f0f"))) "")
-(defface amdl-number-face '((t (:inherit 'default :foreground "#66f"))) "")
+(defface amdl-number-face '((t (:inherit 'default :foreground "#07f"))) "")
 (defface amdl-def-face '((t (:inherit 'default :foreground "#9f0"))) "")
 (defface amdl-keyword-face '((t (:inherit 'default :foreground "#f10"))) "")
 (defface amdl-var-face '((t (:inherit 'default :foreground "#f70"))) "")
@@ -41,14 +35,14 @@
       ;; true false
       (,(concat "\\<" (regexp-opt '("true" "false") t) "\\>")
        (0 'amdl-number-face))
-      ;; numbers
-      (,(concat "\\<[0-9]+\\(?:\\.[0-9]+\\)?\\>")
-       (0 'amdl-number-face))
       ;; durations
       (,(concat "\\<[0-9]+[Mdhms]\\>")
        (0 'amdl-number-face))
+      ;; numbers
+      (,(concat "\\<[0-9]+\\(\\.[0-9]+\\)?")
+       (0 'amdl-number-face))
       ;; definition
-      (,(concat "^\\(\\sw+\\)\\.\\(\\sw+\\)\\(:\\)")
+      (,(concat "^\\(" (regexp-opt keywords) "\\)\\.\\(\\sw+\\)\\(:\\)")
        (1 'amdl-keyword-face)
        (2 'amdl-def-face)
        (3 'amdl-normal-face))
@@ -70,10 +64,13 @@
        (0 'amdl-operator-face))
       )))
 
+;;; Indentation
+
 (defvar amdl-comment-regexp "[ \t]*//")
 
-;; For comments
-(defun amdl-find-next-lines-indent ()
+(defvar def-line (concat (concat "[ \t]*" (regexp-opt keywords) "\\.\\sw+:")))
+
+(defun amdl-next-line-indent ()
   (save-excursion
     (while (looking-at amdl-comment-regexp)
       (forward-line 1))
@@ -82,30 +79,75 @@
       (ok-skip-whitespace-forward)
       (- (point) bol))))
 
-(defun amdl-find-paren-indent (start)
+(defun amdl-pos-indent (pos)
   (save-excursion
-    (goto-char start)
+    (goto-char pos)
     (1+ (current-column))))
 
-(defvar def-line (concat (concat "[ \t]*" (regexp-opt keywords) "\\.\\sw+:")))
+(defun amdl-pos-line-indent (pos)
+  (save-excursion
+    (goto-char pos)
+    (current-indentation)))
+
+(defun amdl-prev-line-end ()
+  (save-excursion
+    (next-line -1)
+    (end-of-line)
+    (1- (point))))
+
+(defun amdl-pos-ends-line? (pos)
+  (save-excursion
+    (goto-char pos)
+    (end-of-line)
+    (= (1+ pos) (point))))
+
+(defun amdl-prev-line-indent ()
+  (save-excursion
+    (next-line -1)
+    (current-indentation)))
+
+(defun amdl-pos-in-prev-line? (pos)
+  (save-excursion
+    (next-line -1)
+    (beginning-of-line)
+    (> pos (point))))
+
+(defun amdl-closing-paren-first? ()
+  (save-excursion
+    (beginning-of-line)
+    (re-search-forward "[^ \t]")
+    (seq-contains-p (list ?\) ?\] ?\}) (char-before))))
 
 (defun amdl-indent-line-amount ()
   (interactive)
   (save-excursion
     (beginning-of-line)
-    (cond
-     ;; comment
-     ((looking-at "[ \t]*//") (save-excursion
-                                (forward-line 1)
-                                (amdl-indent-line-amount)))
-     ;; annotation
-     ((looking-at "[ \t]*@") 0)
-     ;; definition
-     ((looking-at def-line) 0)
-     ;; body
-     (t (let ((start (second (syntax-ppss))))
-          (cond (start (amdl-find-paren-indent start))
-                (t 2)))))))
+    (let ((start (second (syntax-ppss))))
+      (cond
+       ;; comment
+       ((looking-at "[ \t]*//") (save-excursion
+                                  (forward-line 1)
+                                  (amdl-indent-line-amount)))
+       ;; annotation
+       ((looking-at "[ \t]*@") 0)
+       ;; definition
+       ((looking-at def-line) 0)
+       ;; first line after opening paren as last char
+       ((and start (amdl-pos-ends-line? start) (amdl-pos-in-prev-line? start))
+        (min (+ 2 (amdl-prev-line-indent))
+             (amdl-pos-indent start)))
+       ;; opening paren in prev line but not last
+       ((and start (amdl-pos-in-prev-line? start))
+        (amdl-pos-indent start))
+       ;; first line after def
+       ((save-excursion (next-line -1) (beginning-of-line) (looking-at def-line))
+        2)
+       ;; closing paren
+       ((amdl-closing-paren-first?)
+        (if (amdl-pos-ends-line? start)
+            (amdl-pos-line-indent start)
+          (1- (amdl-pos-indent start))))
+       (t (amdl-prev-line-indent))))))
 
 (defun amdl-indent-line ()
   (interactive)
@@ -120,18 +162,30 @@
     st)
   "Syntax table for amdl-mode")
 
-(defun amdl-mode ()
-  "Major mode for editing ARIC Model Definition Language files."
-  (interactive)
-  (kill-all-local-variables)
-  (set-syntax-table amdl-mode-syntax-table)
-  (use-local-map amdl-mode-map)
-  (setq font-lock-defaults
-        '(amdl-font-lock-keywords
-          nil nil))
-  (setq indent-line-function 'amdl-indent-line)
-  (setq major-mode 'amdl-mode)
-  (setq mode-name "AMDL")
-  (run-hooks 'amdl-mode-hook))
+(define-derived-mode amdl-mode c-mode "AMDL"
+  (setq-local indent-line-function 'amdl-indent-line)
+  (setq-local indent-region-function nil)
+  (setq-local font-lock-defaults '(amdl-font-lock-keywords nil nil)))
+
+(map! :map c-mode-base-map
+      "(" nil
+      ")" nil
+      "[" nil
+      "]" nil
+      "{" nil
+      "}" nil
+      ":" nil
+      "," nil
+      ";" nil
+      "/" nil)
+
+(map! :map amdl-mode-map
+      :prefix "SPC"
+      :n "f" (cmd
+               (let ((fill-column 70))
+                 (call-interactively #'fill-paragraph))))
+
+(after! amdl-mode
+  (add-hook! 'amdl-mode-hook (highlight-numbers-mode -1)))
 
 (provide 'amdl-mode)
