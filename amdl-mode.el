@@ -27,6 +27,12 @@
     `(
       (,(concat "\\<event\\>")
        (0 'amdl-var-face))
+      ;; definition
+      (,(concat "^\\(" (regexp-opt keywords) "\\)\\.\\(\\sw+\\)"
+                "\\(\\[.*?\\]\\)\\(:\\)")
+       (1 'amdl-keyword-face)
+       (2 'amdl-def-face)
+       (3 'amdl-normal-face))
       (,(concat "\\<" (regexp-opt keywords) "\\>")
        (0 'amdl-keyword-face))
       ;; annotations
@@ -41,11 +47,6 @@
       ;; numbers
       (,(concat "\\<[0-9]+\\(\\.[0-9]+\\)?")
        (0 'amdl-number-face))
-      ;; definition
-      (,(concat "^\\(" (regexp-opt keywords) "\\)\\.\\(\\sw+\\)\\(:\\)")
-       (1 'amdl-keyword-face)
-       (2 'amdl-def-face)
-       (3 'amdl-normal-face))
       ;; variables
       (,(concat (regexp-opt '("="
                               "+" "-" "*" "/"
@@ -68,7 +69,8 @@
 
 (defvar amdl-comment-regexp "[ \t]*//")
 
-(defvar def-line (concat (concat "[ \t]*" (regexp-opt keywords) "\\.\\sw+:")))
+(defvar def-line
+  (concat "[ \t]*" (regexp-opt keywords) "\\.\\sw+\\(\\[.*?\\]\\):"))
 
 (defun amdl-next-line-indent ()
   (save-excursion
@@ -122,7 +124,7 @@
   (interactive)
   (save-excursion
     (beginning-of-line)
-    (let ((start (second (syntax-ppss))))
+    (let ((start (cadr (syntax-ppss))))
       (cond
        ;; comment
        ((looking-at "[ \t]*//") (save-excursion
