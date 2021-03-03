@@ -120,11 +120,19 @@
     (re-search-forward "[^ \t]")
     (seq-contains-p (list ?\) ?\] ?\}) (char-before))))
 
+(defun amdl-opening-parens-last-line ()
+  (save-excursion
+    (next-line -1)
+    (beginning-of-line)
+    (length (nth 9 (syntax-ppss)))))
+
 (defun amdl-indent-line-amount ()
   (interactive)
   (save-excursion
     (beginning-of-line)
-    (let ((start (cadr (syntax-ppss))))
+    (let* ((state (syntax-ppss))
+           (start (cadr state))
+           (opens (length (nth 9 state))))
       (cond
        ;; comment
        ((looking-at "[ \t]*//") (save-excursion
@@ -149,6 +157,8 @@
         (if (amdl-pos-ends-line? start)
             (amdl-pos-line-indent start)
           (1- (amdl-pos-indent start))))
+       ((< opens (amdl-opening-parens-last-line))
+        (+ 2 opens))
        (t (amdl-prev-line-indent))))))
 
 (defun amdl-indent-line ()
