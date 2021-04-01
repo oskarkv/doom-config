@@ -5,13 +5,13 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.amdl\\'" . amdl-mode))
 
-(defface amdl-normal-face '((t (:inherit 'default))) "")
-(defface amdl-annotation-face '((t (:inherit 'default :foreground "#0ff"))) "")
-(defface amdl-operator-face '((t (:inherit 'default :foreground "#f0f"))) "")
-(defface amdl-number-face '((t (:inherit 'default :foreground "#07f"))) "")
-(defface amdl-def-face '((t (:inherit 'default :foreground "#9f0"))) "")
-(defface amdl-keyword-face '((t (:inherit 'default :foreground "#f10"))) "")
-(defface amdl-var-face '((t (:inherit 'default :foreground "#f70"))) "")
+(defface amdl-normal-face '((t :inherit default)) "")
+(defface amdl-annotation-face '((t :foreground "#0ff")) "")
+(defface amdl-operator-face '((t :foreground "#f0f")) "")
+(defface amdl-number-face '((t :foreground "#07f")) "")
+(defface amdl-def-face '((t :foreground "#9f0")) "")
+(defface amdl-keyword-face '((t :foreground "#f10")) "")
+(defface amdl-var-face '((t :foreground "#f70")) "")
 
 (defvar keywords '("rules"
                    "state"
@@ -25,16 +25,16 @@
 (defvar amdl-font-lock-keywords
   (eval-when-compile
     `(
-      (,(concat "\\<event\\>")
-       (0 'amdl-var-face))
       ;; definition
       (,(concat "^\\(" (regexp-opt keywords) "\\)\\.\\(\\sw+\\)"
-                "\\(\\[.*?\\]\\)\\(:\\)")
+                "\\(?:\\[[^\s\n]+\\]\\)?" "\\(:\\)")
        (1 'amdl-keyword-face)
        (2 'amdl-def-face)
        (3 'amdl-normal-face))
       (,(concat "\\<" (regexp-opt keywords) "\\>")
        (0 'amdl-keyword-face))
+      (,(concat "\\<event\\>")
+       (0 'amdl-var-face))
       ;; annotations
       (,(concat "@\\sw+")
        (0 'amdl-annotation-face))
@@ -70,7 +70,7 @@
 (defvar amdl-comment-regexp "[ \t]*//")
 
 (defvar def-line
-  (concat "[ \t]*" (regexp-opt keywords) "\\.\\sw+\\(\\[.*?\\]\\):"))
+  (concat "[ \t]*" (regexp-opt keywords) "\\.\\sw+\\(\\[.*?\\]\\)?:"))
 
 (defun amdl-next-line-indent ()
   (save-excursion
@@ -131,6 +131,7 @@
   (save-excursion
     (beginning-of-line)
     (let* ((state (syntax-ppss))
+           ;; start of innermost opening paren
            (start (cadr state))
            (opens (length (nth 9 state))))
       (cond
@@ -158,7 +159,7 @@
             (amdl-pos-line-indent start)
           (1- (amdl-pos-indent start))))
        ((< opens (amdl-opening-parens-last-line))
-        (+ 2 opens))
+        (if (> (amdl-prev-line-indent) 0) (+ 2 opens) opens))
        (t (amdl-prev-line-indent))))))
 
 (defun amdl-indent-line ()
@@ -174,22 +175,22 @@
     st)
   "Syntax table for amdl-mode")
 
-(define-derived-mode amdl-mode c-mode "AMDL"
+(define-derived-mode amdl-mode java-mode "AMDL"
   (setq-local indent-line-function 'amdl-indent-line)
   (setq-local indent-region-function nil)
   (setq-local font-lock-defaults '(amdl-font-lock-keywords nil nil)))
 
-(map! :map c-mode-base-map
-      "(" nil
-      ")" nil
-      "[" nil
-      "]" nil
-      "{" nil
-      "}" nil
-      ":" nil
-      "," nil
-      ";" nil
-      "/" nil)
+;; (map! :map c-mode-base-map
+;;       "(" nil
+;;       ")" nil
+;;       "[" nil
+;;       "]" nil
+;;       "{" nil
+;;       "}" nil
+;;       ":" nil
+;;       "," nil
+;;       ";" nil
+;;       "/" nil)
 
 (map! :map amdl-mode-map
       :prefix "SPC"
