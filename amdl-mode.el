@@ -215,6 +215,9 @@
   "Syntax table for amdl-mode")
 
 (define-derived-mode amdl-mode java-mode "AMDL"
+  (add-hook! 'after-save-hook
+             #'delete-trailing-whitespace)
+  (setq-local dabbrev-case-fold-search nil)
   (setq-local indent-line-function 'amdl-indent-line)
   (setq-local indent-region-function nil)
   (setq-local font-lock-defaults '(amdl-font-lock-keywords nil nil)))
