@@ -57,7 +57,7 @@
       ;; numbers
       (,(concat "\\<[0-9]+\\(\\.[0-9]+\\)?")
        (0 'amdl-number-face))
-      ;; variables
+      ;; operators
       (,(concat (regexp-opt '("="
                               "+" "-" "*" "/"
                               ".."
@@ -80,7 +80,7 @@
 (defvar amdl-comment-regexp "[ \t]*//")
 
 (defvar def-line
-  (concat "[ \t]*" (regexp-opt keywords) "\\.\\sw+\\(\\[.*?\\]\\)?:"))
+  (concat "[ \t]*" (regexp-opt keywords) ".*:$"))
 
 (defun amdl-next-line-indent ()
   (save-excursion
@@ -122,7 +122,7 @@
   (save-excursion
     (next-line -1)
     (beginning-of-line)
-    (> pos (point))))
+    (>= pos (point))))
 
 (defun amdl-closing-paren-first? ()
   (save-excursion
@@ -136,6 +136,29 @@
     (beginning-of-line)
     (length (nth 9 (syntax-ppss)))))
 
+(defun amdl-looking-at-def-line? ()
+  (or (looking-at def-line) (looking-at "[ \t]*#[a-z]")))
+
+(defun amdl-in-def? (def-string)
+  (save-excursion
+    (beginning-of-line)
+    (when (not (looking-at (str "[ \t]*#" def-string)))
+      (end-of-line)
+      (when-let ((def (save-excursion
+                        (search-backward (str "#" def-string) nil t)))
+                 (end (or (save-excursion
+                            (search-backward (str "#end_" def-string) nil t))
+                          0)))
+        (> def end)))))
+
+(defun amdl-indent-if-body (indent)
+  (if (or (amdl-in-def? "defmacro") (amdl-in-def? "defm"))
+      (+ 2 indent)
+    indent))
+
+(defun amdl-indent-if-body-and-0 (indent)
+  (if (= 0 indent) (amdl-indent-if-body 0) indent))
+
 (defun amdl-indent-line-amount ()
   (interactive)
   (save-excursion
@@ -148,11 +171,12 @@
        ;; comment
        ((looking-at "[ \t]*//") (save-excursion
                                   (forward-line 1)
-                                  (amdl-indent-line-amount)))
+                                  (amdl-indent-if-body-and-0
+                                   (amdl-indent-line-amount))))
        ;; annotation
-       ((looking-at "[ \t]*@") 0)
+       ((looking-at "[ \t]*@") (amdl-indent-if-body 0))
        ;; definition
-       ((looking-at def-line) 0)
+       ((amdl-looking-at-def-line?) (amdl-indent-if-body 0))
        ;; first line after opening paren as last char
        ((and start (amdl-pos-ends-line? start) (amdl-pos-in-prev-line? start))
         (min (+ 2 (amdl-prev-line-indent))
@@ -161,19 +185,24 @@
        ((and start (amdl-pos-in-prev-line? start))
         (amdl-pos-indent start))
        ;; first line after def
-       ((save-excursion (next-line -1) (beginning-of-line) (looking-at def-line))
-        2)
+       ((save-excursion (next-line -1)
+                        (while (progn (beginning-of-line)
+                                      (looking-at "[ \t]*//"))
+                          (next-line -1))
+                        (beginning-of-line)
+                        (looking-at def-line))
+        (amdl-indent-if-body 2))
        ;; closing paren
        ((amdl-closing-paren-first?)
         (if (amdl-pos-ends-line? start)
             (amdl-pos-line-indent start)
           (1- (amdl-pos-indent start))))
        ((< opens (amdl-opening-parens-last-line))
-        (if (> (amdl-prev-line-indent) 0) (+ 2 opens) opens))
-       (t (amdl-prev-line-indent))))))
+        (amdl-indent-if-body
+         (if (> (amdl-prev-line-indent) 0) (+ 2 opens) opens)))
+       (t (amdl-indent-if-body-and-0 (amdl-prev-line-indent)))))))
 
 (defun amdl-indent-line ()
-  (interactive)
   (indent-line-to (amdl-indent-line-amount)))
 
 (defvar amdl-mode-syntax-table
