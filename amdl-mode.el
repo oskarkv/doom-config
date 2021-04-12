@@ -12,6 +12,7 @@
 (defface amdl-def-face '((t :foreground "#9f0")) "")
 (defface amdl-keyword-face '((t :foreground "#f10")) "")
 (defface amdl-var-face '((t :foreground "#f70")) "")
+(defface amdl-preprocessor-directive-face '((t :foreground "#FC0")) "")
 
 (defvar keywords '("rules"
                    "state"
@@ -25,6 +26,15 @@
 (defvar amdl-font-lock-keywords
   (eval-when-compile
     `(
+      ;; preprocessor directive
+      (,(concat "#\\w+")
+       (0 'amdl-preprocessor-directive-face))
+      (,(concat "\\$([_a-zA-Z][_a-zA-Z0-9]*)")
+       (0 'amdl-preprocessor-directive-face))
+      (,(concat "\\<[_A-Z][_A-Z0-9]*\\>")
+       (0 'amdl-preprocessor-directive-face))
+      (,(concat "\\$[_a-zA-Z][_a-zA-Z0-9]*")
+       (0 'amdl-preprocessor-directive-face))
       ;; definition
       (,(concat "^\\(" (regexp-opt keywords) "\\)\\.\\(\\sw+\\)"
                 "\\(?:\\[[^\s\n]+\\]\\)?" "\\(:\\)")
