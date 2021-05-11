@@ -12,7 +12,8 @@
 (defface amdl-def-face '((t :foreground "#9f0")) "")
 (defface amdl-keyword-face '((t :foreground "#f10")) "")
 (defface amdl-var-face '((t :foreground "#f70")) "")
-(defface amdl-preprocessor-directive-face '((t :foreground "#FC0")) "")
+(defface amdl-preprocessor-thing-face '((t :foreground "#FC0")) "")
+(defface amdl-preprocessor-directive-face '((t :foreground "#090")) "")
 
 (defvar keywords '("rules"
                    "state"
@@ -30,21 +31,21 @@
       (,(concat "#\\w+")
        (0 'amdl-preprocessor-directive-face))
       (,(concat "\\$([_a-zA-Z][_a-zA-Z0-9]*)")
-       (0 'amdl-preprocessor-directive-face))
+       (0 'amdl-preprocessor-thing-face))
       (,(concat "\\<[_A-Z][_A-Z0-9]*\\>")
-       (0 'amdl-preprocessor-directive-face))
+       (0 'amdl-preprocessor-thing-face))
       (,(concat "\\$[_a-zA-Z][_a-zA-Z0-9]*")
-       (0 'amdl-preprocessor-directive-face))
+       (0 'amdl-preprocessor-thing-face))
       ;; definition
-      (,(concat "^\\(" (regexp-opt keywords) "\\)\\.\\(\\sw+\\)"
+      (,(concat "[ \t]*\\(" (regexp-opt keywords) "\\)\\.\\(\\sw+\\)"
                 "\\(?:\\[[^\s\n]+\\]\\)?" "\\(:\\)")
        (1 'amdl-keyword-face)
        (2 'amdl-def-face)
        (3 'amdl-normal-face))
       (,(concat "\\<" (regexp-opt keywords) "\\>")
        (0 'amdl-keyword-face))
-      (,(concat "\\<event\\>")
-       (0 'amdl-var-face))
+      (,(concat "\\<\\(event\\)\\.")
+       (1 'amdl-var-face))
       ;; annotations
       (,(concat "@\\sw+")
        (0 'amdl-annotation-face))
@@ -80,7 +81,8 @@
 (defvar amdl-comment-regexp "[ \t]*//")
 
 (defvar def-line
-  (concat "[ \t]*" (regexp-opt keywords) ".*:$"))
+  (concat "[ \t]*" (regexp-opt keywords)
+          "\\.[[:alnum:]()\\$]+\\(\\[.*?\\]\\)?:$"))
 
 (defun amdl-next-line-indent ()
   (save-excursion
@@ -169,14 +171,15 @@
            (opens (length (nth 9 state))))
       (cond
        ;; comment
-       ((looking-at "[ \t]*//") (save-excursion
-                                  (forward-line 1)
-                                  (amdl-indent-if-body-and-0
-                                   (amdl-indent-line-amount))))
+       ((and (= 0 opens) (looking-at "[ \t]*//"))
+        (save-excursion
+          (forward-line 1)
+          (amdl-indent-if-body-and-0
+           (amdl-indent-line-amount))))
        ;; annotation
-       ((looking-at "[ \t]*@") (amdl-indent-if-body 0))
+       ((and (= 0 opens) (looking-at "[ \t]*@")) (amdl-indent-if-body 0))
        ;; definition
-       ((amdl-looking-at-def-line?) (amdl-indent-if-body 0))
+       ((and (= 0 opens) (amdl-looking-at-def-line?)) (amdl-indent-if-body 0))
        ;; first line after opening paren as last char
        ((and start (amdl-pos-ends-line? start) (amdl-pos-in-prev-line? start))
         (min (+ 2 (amdl-prev-line-indent))
@@ -218,21 +221,22 @@
   (add-hook! 'after-save-hook
              #'delete-trailing-whitespace)
   (setq-local dabbrev-case-fold-search nil)
+  (setq-local paragraph-start "\f\\|[ 	]*$")
   (setq-local indent-line-function 'amdl-indent-line)
   (setq-local indent-region-function nil)
   (setq-local font-lock-defaults '(amdl-font-lock-keywords nil nil)))
 
-;; (map! :map c-mode-base-map
-;;       "(" nil
-;;       ")" nil
-;;       "[" nil
-;;       "]" nil
-;;       "{" nil
-;;       "}" nil
-;;       ":" nil
-;;       "," nil
-;;       ";" nil
-;;       "/" nil)
+(map! :map java-mode-map
+      "(" nil
+      ")" nil
+      "[" nil
+      "]" nil
+      "{" nil
+      "}" nil
+      ":" nil
+      "," nil
+      ";" nil
+      "/" nil)
 
 (map! :map amdl-mode-map
       :prefix "SPC"

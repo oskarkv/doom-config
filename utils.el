@@ -205,4 +205,7 @@ is non-nil, then also \r and \n are considered whitespace."
                    (buffer-list))))
     (ok-save-buffers buffers)))
 
+(defun ok-switch-to-window (name)
+  (select-window (get-buffer-window name)))
+
 (provide 'utils)

@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: org-export-latex-english
+# key: /eng
+# --
+#+LANGUAGE: english
+#+OPTIONS: H:3 num:${1:nil} toc:${2:nil} author:${3:nil} date:${4:t}
+#+LATEX_HEADER: \addtolength{\parskip}{\baselineskip}
+#+LATEX_HEADER: \setlength{\parindent}{0 em}
+#+LATEX_HEADER: \usepackage[english]{babel}
+#+LATEX_HEADER: \setlength{\emergencystretch}{3em}  % prevent overfull lines
+#+LATEX_HEADER: \usepackage[raggedright]{titlesec}
+#+TITLE: ${5:`(file-name-base)`}
+#+AUTHOR: ${6:Oskar Kvist}

@@ -56,7 +56,15 @@
 (package! webpaste
   :recipe (:host github :repo "etu/webpaste.el"))
 
+(package! bnf-mode
+  :recipe (:host github :repo "sergeyklay/bnf-mode"))
+
 (package! fill-column-indicator)
+
+(package! undo-tree)
+
+(package! python-black
+  :recipe (:host github :repo "wbolster/emacs-python-black"))
 
 ;; (package! lsp-python-ms
 ;;   :recipe (:host github :repo "emacs-lsp/lsp-python-ms"))
@@ -66,5 +74,11 @@
 
 (package! elpy
   :recipe (:host github :repo "jorgenschaefer/elpy"))
+
+(package! hy-mode
+  :recipe (:host github :repo "hylang/hy-mode"))
+
+(package! fcitx
+  :recipe (:host github :repo "cute-jumper/fcitx.el"))
 
 (add-load-path! ".")

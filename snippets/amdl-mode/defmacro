@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: defmacro
+# key: defmacro
+# --
+#defmacro ${1:name}($2)
+  $3
+#end_defmacro

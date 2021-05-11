@@ -7,13 +7,17 @@
 (require 'cl-indent)
 (require 'dash)
 (require 'ediprolog)
+(require 'amdl-mode)
 
+(require 'undo-tree)
+(global-undo-tree-mode)
+
+(setq  org-odt-preferred-output-format "docx")
 ;; Name and email address
 (setq user-full-name "Oskar Kvist"
       user-mail-address "oskar.kvist@gmail.com")
 
-(require 'undo-fu)
-(evil-set-undo-system 'undo-fu)
+(evil-set-undo-system 'undo-tree)
 ;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
 ;; are the three important ones:
 ;;
@@ -126,6 +130,8 @@ boolean is non-nil, also unbinds TAB in that mode."
   '(font-lock-doc-face :foreground "#8888aa")
   '(hl-fill-column-face :background "#773333")
   '(highlight-numbers-number :foreground "#d419ff" :weight normal)
+  '(lsp-face-highlight-textual :background "#202020" :foreground "#fff"
+                               :weight bold)
   '(org-level-1 :inherit default :foreground "#33ff33")
   '(org-level-2 :inherit default :foreground "#FFb030")
   '(org-level-3 :inherit default :foreground "#FF44FF")
@@ -322,16 +328,16 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 ;; (setq-default doom-unreal-buffer-functions
 ;; '(minibufferp doom-special-buffer-p doom-non-file-visiting-buffer-p))
 
-(defadvice message (after message-tail activate)
-  "Goto point max after a message."
-  (with-current-buffer "*Messages*"
-    (goto-char (point-max))
-    (walk-windows
-     (lambda (window)
-       (if (string-equal (buffer-name (window-buffer window)) "*Messages*")
-           (set-window-point window (point-max))))
-     nil
-     t)))
+;; (defadvice message (after message-tail activate)
+;;   "Goto point max after a message."
+;;   (with-current-buffer "*Messages*"
+;;     (goto-char (point-max))
+;;     (walk-windows
+;;      (lambda (window)
+;;        (if (string-equal (buffer-name (window-buffer window)) "*Messages*")
+;;            (set-window-point window (point-max))))
+;;      nil
+;;      t)))
 
 (defadvice eval-region (after eval-region-message activate)
   (message "evaled region"))
@@ -504,7 +510,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (add-to-list 'default-frame-alist '(width . 91))
 
 (after! org
-  (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
+  ;; (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
   (setq org-clock-clocked-in-display nil
         org-M-RET-may-split-line nil
         org-export-with-smart-quotes nil
@@ -534,6 +540,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 ;;; Misc
 
+(add-hook 'amdl-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'org-mode-hook #'rainbow-delimiters-mode-disable)
 (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode)
@@ -656,13 +663,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
         (clojure-fill-paragraph))
     (clojure-fill-paragraph)))
 
-(defun ok-hy-eval-toplevel ()
-  (interactive)
-  (save-excursion
-    (-let* (((b e) (esexp-true-toplevel-positions)))
-      (goto-char (1- e))
-      (hy-shell-eval-current-form))))
-
 (defun ok-rebind-in-all-maps* (start end exclude-list to from)
   (mapatoms (lambda (sym)
               (if (and (boundp sym)
@@ -693,16 +693,31 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       (backward-char)
       (insert "`"))))
 
+(add-hook! 'lsp-mode-hook (lsp-ui-mode 0))
+
+(map! :map lsp-signature-mode-map
+      :n "M-p" nil
+      "M-p" nil)
+
+(after! yasnippet
+  (map! :map yas-minor-mode-map
+        :i [tab] yas-maybe-expand)
+  (add-hook 'yas-minor-mode-hook
+            (fn (yas-activate-extra-mode 'fundamental-mode))))
+
+
 (map! :e "C-," 'evil-exit-emacs-state
       :o "l" -operator-inside-keymap
       :o "i" nil
       :o "o" (cmd (forward-evil-symbol))
       :o "e" 'evil-next-line
       :o "u" 'evil-previous-line
-      ;; Makes tab not call yas-expand
       :ir "ESC" 'doom/escape
       :ir "<escape>" 'doom/escape
+      ;; Makes tab not call yas-expanda
       :i [tab] 'complete-symbol
+      ;; :i [tab] 'yas-maybe-expand
+      ;; :i [tab] 'complete-symbol
       :i "§" 'evil-normal-state
       :v "§" 'evil-exit-visual-state
       :i "C-e" 'doom/delete-backward-word
@@ -792,6 +807,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "q" 'ok-wrap-word-in-backticks
       :nv "f" 'fill-paragraph)
 
+(map! :map makefile-mode-map
+      "M-p" nil)
+
 (map! :after company
       :map company-active-map
       "C-e" 'company-select-next
@@ -802,15 +820,72 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "M-f" nil
       "M-p" nil)
 
+(defun ok-hy-eval-toplevel ()
+  (interactive)
+  (save-excursion
+    (-let* (((b e) (esexp-true-toplevel-positions)))
+      (goto-char (1- e))
+      (hy-shell-eval-current-form))))
+
+(map! :after hy-mode
+      :map hy-mode-map
+      :prefix "SPC"
+      :n "ef" 'hy-shell-eval-current-form
+      :n "eb" 'hy-shell-eval-buffer
+      :n "et" 'ok-hy-eval-toplevel
+      :n "dd" 'hy-describe-thing-at-point
+      :n "jj" 'run-hy)
+
+(setq hy-shell--interpreter-args
+      '("--spy"))
 
 (after! lsp-mode
   (add-to-list 'lsp-disabled-clients 'pyls)
   (add-to-list 'lsp-enabled-clients 'jedi))
 
+(after! sly
+  (advice-add 'sly-show-description
+              :after (fn (ok-switch-to-window "*sly-description*"))))
+
+;; (defmacro ok-sly-switch-window-after (command)
+;;   `(cmd (call-interactively #',command)
+;;      (call-interactively (cmd (ok-switch-to-window "*sly-description*")))))
+;;      ;; (run-at-time 0.1 nil #'ok-switch-to-window "*sly-description*")))
+
+
+(map! :after sly
+      :map sly-mode-map
+      :prefix "SPC"
+      :n "et" 'sly-eval-defun
+      :v "er" 'sly-eval-region
+      :n "eb" 'sly-eval-buffer
+      :n "ct" 'sly-compile-defun
+      :n "cb" 'sly-compile-and-load-file
+      :n "sw" 'sly-edit-definition
+      :n "dd" 'sly-documentation
+      :n "df" 'sly-describe-function
+      :n "ds" 'sly-describe-symbol
+      :n "dh" 'sly-hyperspec-lookup
+      :n "dm" 'hyperspec-lookup-reader-macro
+      :n "do" 'hyperspec-lookup-format
+      :n "aa" 'sly-apropos
+      :n "sr" 'sly-who-calls
+      ;; :n "ww" 'sly-calls-who
+      :n "mm" 'sly-macroexpand-1
+      :n "ma" 'sly-macroexpand-all
+      :n "ej" 'sly
+      :n "rr" (cmd (other-window 1) (call-interactively #'sly-mrepl))
+      :map sly-editing-mode-map
+      :n "M-p" nil)
+
 (after! python
   (require 'elpy)
   (add-hook! 'python-mode-hook
-    (setenv "PYTHONPATH" "/home/oskar/quickbit/app-backend/project/quickbit/")
+    (let ((root (projectile-project-root)))
+      (setenv "PYTHONPATH" (if (and root (s-matches? "quickbit" root))
+                               (str root "quickbit/")
+                             root)))
+    ;; (setenv "PYTHONPATH" "/home/oskar/quickbit/app-backend/project/quickbit/")
     (setenv "PAGER" "cat")
     (require 'lsp-jedi)
     (lsp)
@@ -1067,9 +1142,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (map! :map general-override-mode-map
       :n "C-x" 'evil-numbers/inc-at-pt)
 
-(defun ok-switch-to-window (name)
-  (select-window (get-buffer-window name)))
-
 (defun ok-list-buffers ()
   (interactive)
   (list-buffers)
@@ -1187,6 +1259,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :nv "X" 'magit-unstage-all
       "X" 'magit-unstage-all
       :nv "C-d" 'magit-delete-thing
+      :n "gz" 'magit-jump-to-stashes
       :n "z" 'magit-stash)
 
 (map! :after cider
@@ -1218,8 +1291,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "jb" 'cider-jack-in-clj&cljs
       :n "jj" 'cider-jack-in
       :n "js" 'cider-jack-in-cljs
-      :n "ll" 'cider-toggle-trace-ns
-      :n "lv" 'cider-toggle-trace-var
       :n "m" 'esexp-cider-macroexpand
       :n "ra" 'clojure-unwind-all
       :n "rb" 'clojure-thread-all-but-last
@@ -1346,35 +1417,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       'normal macrostep-keymap
     "q" (cmd (macrostep-collapse-all) (fci-mode 1)))
 
-  ;; THIS MIGHT BE WRONG, DUNNO THE NAME OF THE PACKAGE
-  (map! :after slime
-   :map slime-mode-map
-    :prefix "SPC"
-    :n "et" 'slime-eval-defun
-    :v "er" 'slime-eval-region
-    :n "eb" 'slime-eval-buffer
-    :n "ct" 'slime-compile-defun
-    :n "cb" 'slime-compile-and-load-file
-    :n "sw" 'slime-edit-definition
-    :n "dd" 'slime-describe-function
-    :n "ds" 'slime-describe-symbol
-    :n "aa" 'slime-apropos
-    :n "dh" 'slime-hyperspec-lookup
-    :n "dm" 'hyperspec-lookup-reader-macro
-    :n "df" 'hyperspec-lookup-format
-    :n "wc" 'slime-who-calls
-    :n "ww" 'slime-calls-who
-    :n "mm" 'slime-macroexpand-1
-    :n "ma" 'slime-macroexpand-all
-    :n "ej" 'slime
-    :n "rr" (cmd (other-window 1) (slime-repl)))
 
-  (map! :after hy-mode
-      :map hy-mode-map
-    :prefix "SPC"
-    :n "ef" 'hy-shell-eval-current-form
-    :n "en" 'hy-shell-eval-buffer
-    :n "et" 'ok-hy-eval-toplevel)
+
+
 
   ;;; Racket
 
@@ -1435,3 +1480,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
   (setq display-buffer-alist
         '(("\\*Backtrace\\*" . ((display-buffer-min))))))
+
+(defun reload-amdl ()
+  (interactive)
+  (ignore-errors (unload-feature 'amdl-mode))
+  (require 'amdl-mode)
+  (amdl-mode))
