@@ -24,11 +24,15 @@
                    "lists"
                    "acglists"))
 
+(defvar amdl-definition-keywords '("rules" "state" "values" "var"))
+
 (defvar amdl-font-lock-keywords
   (eval-when-compile
     `(
       ;; preprocessor directive
       (,(concat "#\\w+")
+       (0 'amdl-preprocessor-directive-face))
+      (,(concat "#}$")
        (0 'amdl-preprocessor-directive-face))
       (,(concat "\\$([_a-zA-Z][_a-zA-Z0-9]*)")
        (0 'amdl-preprocessor-thing-face))
@@ -80,7 +84,7 @@
 
 (defvar amdl-comment-regexp "[ \t]*//")
 
-(defvar def-line
+(defvar amdl-def-line
   (concat "[ \t]*" (regexp-opt keywords)
           "\\.[[:alnum:]()\\$]+\\(\\[.*?\\]\\)?:$"))
 
@@ -92,6 +96,16 @@
     (let ((bol (point)))
       (ok-skip-whitespace-forward)
       (- (point) bol))))
+(defvar amdl-def-line
+  (concat "^[ \t]*" (regexp-opt amdl-definition-keywords)
+          "\\.[[:alnum:]()\\$]+\\(\\[.*?\\]\\)?:$"))
+
+(defvar amdl-dec-line
+  (rx bol (* whitespace)
+      (or (and "#" (any "a-z"))
+          "#}"
+          "~~~"
+          (and "@" (any "a-z")))))
 
 (defun amdl-pos-indent (pos)
   (save-excursion
@@ -108,6 +122,20 @@
     (next-line -1)
     (end-of-line)
     (1- (point))))
+
+(defun amdl-defmacro-opening? (pos)
+  (save-excursion
+    (and
+     (progn (goto-char pos) (s-ends-with? ") {" (ok-line-as-string)))
+     (not (s-starts-with? "#defmacro" (ok-line-as-string)))
+     (progn (next-line -1) (s-starts-with? "#defmacro" (ok-line-as-string))))))
+
+(defun amdl-pos-line-indent (pos)
+  (save-excursion
+    (goto-char pos)
+    (if (amdl-defmacro-opening? pos)
+        (progn (next-line -1) (current-indentation))
+      (current-indentation))))
 
 (defun amdl-pos-ends-line? (pos)
   (save-excursion
@@ -160,53 +188,109 @@
 
 (defun amdl-indent-if-body-and-0 (indent)
   (if (= 0 indent) (amdl-indent-if-body 0) indent))
+(defun amdl-def-closing? ()
+  (save-excursion
+    (beginning-of-line)
+    (looking-at "\s*#\}$")))
+
+(defun amdl-under-amdl-def? ()
+  (save-excursion
+    (beginning-of-line)
+    (if (or (looking-at amdl-def-line) (looking-at amdl-dec-line))
+        nil
+      (let ((start (cadr (syntax-ppss))))
+        (let* ((hit (save-excursion (re-search-backward amdl-def-line nil t)))
+               (else (or (re-search-backward amdl-dec-line hit t) 0)))
+          (when hit
+            (goto-char hit)
+            (end-of-line))
+          (cond ((and hit (not start)) (> hit else))
+                ((or (not hit) (< hit else)) nil)
+                (t (> (point) start))))))))
 
 (defun amdl-indent-line-amount ()
   (interactive)
   (save-excursion
     (beginning-of-line)
+    ;; Om jag får fel med inhibit-modification-hooks, så kanske det är fel på
+    ;; detta, d.v.s. jag måste anropa syntax-pps-flush-cache
     (let* ((state (syntax-ppss))
            ;; start of innermost opening paren
            (start (cadr state))
            (opens (length (nth 9 state))))
       (cond
+       ;;; Git confilct, maybe use this instead of code below
        ;; comment
-       ((and (= 0 opens) (looking-at "[ \t]*//"))
+       ;; ((and (= 0 opens) (looking-at "[ \t]*//"))
+       ;;  (save-excursion
+       ;;    (forward-line 1)
+       ;;    (amdl-indent-if-body-and-0
+       ;;     (amdl-indent-line-amount))))
+       ;; ;; annotation
+       ;; ((and (= 0 opens) (looking-at "[ \t]*@")) (amdl-indent-if-body 0))
+       ;; ;; definition
+       ;; ((and (= 0 opens) (amdl-looking-at-def-line?)) (amdl-indent-if-body 0))
+       ;; ;; first line after opening paren as last char
+       ;; ((and start (amdl-pos-ends-line? start) (amdl-pos-in-prev-line? start))
+       ;;  (min (+ 2 (amdl-prev-line-indent))
+       ;;       (amdl-pos-indent start)))
+       ;; ;; opening paren in prev line but not last
+       ;; ((and start (amdl-pos-in-prev-line? start))
+       ;;  (amdl-pos-indent start))
+       ;; ;; first line after def
+       ;; ((save-excursion (next-line -1)
+       ;;                  (while (progn (beginning-of-line)
+       ;;                                (looking-at "[ \t]*//"))
+       ;;                    (next-line -1))
+       ;;                  (beginning-of-line)
+       ;;                  (looking-at def-line))
+       ;;  (amdl-indent-if-body 2))
+       ;; ;; closing paren
+       ;; ((amdl-closing-paren-first?)
+       ;;  (if (amdl-pos-ends-line? start)
+       ;;      (amdl-pos-line-indent start)
+       ;;    (1- (amdl-pos-indent start))))
+       ;; ((< opens (amdl-opening-parens-last-line))
+       ;;  (amdl-indent-if-body
+       ;;   (if (> (amdl-prev-line-indent) 0) (+ 2 opens) opens)))
+       ;; (t (amdl-indent-if-body-and-0 (amdl-prev-line-indent)))))))
+       ((looking-at "[ \t]*//")
         (save-excursion
-          (forward-line 1)
-          (amdl-indent-if-body-and-0
-           (amdl-indent-line-amount))))
-       ;; annotation
-       ((and (= 0 opens) (looking-at "[ \t]*@")) (amdl-indent-if-body 0))
-       ;; definition
-       ((and (= 0 opens) (amdl-looking-at-def-line?)) (amdl-indent-if-body 0))
-       ;; first line after opening paren as last char
-       ((and start (amdl-pos-ends-line? start) (amdl-pos-in-prev-line? start))
-        (min (+ 2 (amdl-prev-line-indent))
-             (amdl-pos-indent start)))
-       ;; opening paren in prev line but not last
-       ((and start (amdl-pos-in-prev-line? start))
-        (amdl-pos-indent start))
-       ;; first line after def
-       ((save-excursion (next-line -1)
-                        (while (progn (beginning-of-line)
-                                      (looking-at "[ \t]*//"))
-                          (next-line -1))
-                        (beginning-of-line)
-                        (looking-at def-line))
-        (amdl-indent-if-body 2))
-       ;; closing paren
+          (while (or (ok-blank-line?)
+                     (looking-at "[ \t]*//"))
+            (forward-line 1))
+          (amdl-indent-line-amount)))
+       ;; line is #}
+       ((amdl-def-closing?)
+        (amdl-pos-line-indent start))
+       ;; closing paren first in line
        ((amdl-closing-paren-first?)
         (if (amdl-pos-ends-line? start)
             (amdl-pos-line-indent start)
-          (1- (amdl-pos-indent start))))
-       ((< opens (amdl-opening-parens-last-line))
-        (amdl-indent-if-body
-         (if (> (amdl-prev-line-indent) 0) (+ 2 opens) opens)))
-       (t (amdl-indent-if-body-and-0 (amdl-prev-line-indent)))))))
+          (- (amdl-pos-indent start) 1)))
+       ;; directly under amdl definition
+       ((amdl-under-amdl-def?)
+        (save-excursion
+          (re-search-backward amdl-def-line)
+          (+ 2 (amdl-pos-line-indent (point)))))
+       ;; opening parent last in line
+       ((and start (amdl-pos-ends-line? start))
+        (+ 2 (amdl-pos-line-indent start)))
+       ;; opening paren not last in line
+       (start
+        (amdl-pos-indent start))
+       (t 0)))))
 
 (defun amdl-indent-line ()
   (indent-line-to (amdl-indent-line-amount)))
+
+
+;; Starta level efter indent, 2 spaces = en level.
+;; En #defmacro eller #defm ökar level, end_ minskar
+;; ok-blank-line?
+;; FIXME inte klar hehe
+(defun amdl-indent-region (beg end)
+  (let ((level 0))))
 
 (defvar amdl-mode-syntax-table
   (let ((st (make-syntax-table)))

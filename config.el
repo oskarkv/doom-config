@@ -72,12 +72,12 @@
 (remove-hook 'doom-first-buffer-hook #'smartparens-global-mode)
 
 ;;; Fix TAB shadowing C-i
-(when (daemonp)
-  (add-to-list 'load-path "~/.doom.d")
-  (require 'edit-server)
-  (edit-server-start)
-  (add-hook 'edit-server-start-hook 'evil-insert-state)
-  (add-hook 'edit-server-start-hook (fn (auto-fill-mode -1))))
+;; (when (daemonp)
+;;   (add-to-list 'load-path "~/.doom.d")
+;;   (require 'edit-server)
+;;   (edit-server-start)
+;;   (add-hook 'edit-server-start-hook 'evil-insert-state)
+;;   (add-hook 'edit-server-start-hook (fn (auto-fill-mode -1))))
 
 (defun ok-bind-tab-to-TAB (keymap)
   "Bind <tab> (regular tab) to what TAB (C-i) was bound to in KEYMAP,
@@ -132,7 +132,7 @@ boolean is non-nil, also unbinds TAB in that mode."
   '(highlight-numbers-number :foreground "#d419ff" :weight normal)
   '(lsp-face-highlight-textual :background "#202020" :foreground "#fff"
                                :weight bold)
-  '(org-level-1 :inherit default :foreground "#33ff33")
+  '(org-level-1 :inherit default :foreground "#33dd33")
   '(org-level-2 :inherit default :foreground "#FFb030")
   '(org-level-3 :inherit default :foreground "#FF44FF")
   '(org-level-4 :inherit default :foreground "#00FFFF")
@@ -239,7 +239,8 @@ that should be used for code from the mode."
 language after the first backticks, depending on the Emacs mode.
 Works with evil."
   (evil-yank beg end type register yank-handler)
-  (kill-new (concat "```" (ok-mode-to-language major-mode) "\n"
+  (kill-new (concat "```" "\n"
+  ;; (kill-new (concat "```" (ok-mode-to-language major-mode) "\n"
                     (car kill-ring)
                     "```")
             t))
@@ -355,15 +356,15 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
             cider-mode
             python-mode))
 
-(setq rcirc-server-alist
-      '(("irc.freenode.net"
-         :channels ("#rcirc" "#emacs" "#evil-mode")))
-      rcirc-default-nick "tufflax"
-      rcirc-authinfo
-      (list (seq-concatenate
-             'list
-             '("freenode" nickserv "tufflax")
-             (list (ok-get-string-from-file "~/.doom.d/.freenode-pass")))))
+;; (setq rcirc-server-alist
+;;       '(("irc.freenode.net"
+;;          :channels ("#rcirc" "#emacs" "#evil-mode")))
+;;       rcirc-default-nick "tufflax"
+;;       rcirc-authinfo
+;;       (list (seq-concatenate
+;;              'list
+;;              '("freenode" nickserv "tufflax")
+;;              (list (ok-get-string-from-file "~/.doom.d/.freenode-pass")))))
 
 (setq webpaste-provider-priority
       '("dpaste.com" "gist.github.com" "paste.mozilla.org" "dpaste.org"
@@ -594,6 +595,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (cond->$ 1)
     (cond->>$ 1)
     (condf 1)
+    (condp* 2)
     (defs 0)
     (deftype- '(2 nil nil (:defn)))
     (do-every-ms 2)
@@ -705,7 +707,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (add-hook 'yas-minor-mode-hook
             (fn (yas-activate-extra-mode 'fundamental-mode))))
 
-
 (map! :e "C-," 'evil-exit-emacs-state
       :o "l" -operator-inside-keymap
       :o "i" nil
@@ -799,11 +800,11 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :prefix "SPC"
       :nv "gl" 'magit-log-buffer-file
       :n "gb" 'magit-blame-addition
-      :n "ta" (cmd (shell-command "jobbsetup"))
-      :n "tf" (cmd (shell-command "jobbsetup pytest-failing"))
-      :n "tl" (cmd (shell-command "jobbsetup only linter"))
-      :n "tm" (cmd (shell-command "jobbsetup only mypy"))
-      :n "ts" (cmd (shell-command "jobbsetup only tests"))
+      :n "ta" (cmd (shell-command (str "jobbsetup " (projectile-project-root))))
+      :n "tf" (cmd (shell-command (str "jobbsetup " (projectile-project-root) " pytest-failing")))
+      :n "tl" (cmd (shell-command (str "jobbsetup " (projectile-project-root) " only linter")))
+      :n "tm" (cmd (shell-command (str "jobbsetup " (projectile-project-root) " only mypy")))
+      :n "ts" (cmd (shell-command (str "jobbsetup " (projectile-project-root) " only tests")))
       :n "q" 'ok-wrap-word-in-backticks
       :nv "f" 'fill-paragraph)
 
@@ -879,7 +880,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "M-p" nil)
 
 (after! python
+  (require 'dap-python)
   (require 'elpy)
+  (setq dap-python-debugger 'debugpy)
   (add-hook! 'python-mode-hook
     (let ((root (projectile-project-root)))
       (setenv "PYTHONPATH" (if (and root (s-matches? "quickbit" root))
@@ -889,6 +892,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (setenv "PAGER" "cat")
     (require 'lsp-jedi)
     (lsp)
+    (setq-local dap-python-executable (with-venv (executable-find "python")))
     (lsp-ui-mode 0))
   ;; Don't format with LSP formatter
   (setq-hook! 'python-mode-hook +format-with-lsp nil))
@@ -908,21 +912,35 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (ignore-errors
     (s-contains-p "/quickbit/app-backend/project/" (projectile-project-info))))
 
+(defun ok-in-merchant-project ()
+  (ignore-errors
+    (s-contains-p "/quickbit/merchant-backend/" (projectile-project-info))))
+
 (defun ok-if-quickbit (fun &optional alternative)
   (interactive)
   (cond ((ok-in-quickbit-project) (funcall fun))
         (alternative (funcall alternative))))
 
+(defun ok-if-merchant (fun &optional alternative)
+  (interactive)
+  (cond ((ok-in-merchant-project) (funcall fun))
+        (alternative (funcall alternative))))
+
 (defun ok-quickbit-venv-command (command &optional path)
-  (ok-if-quickbit
-   (fn
-     (ok-projectile-run-in-root
-      (shell-command
-       (str "cd /home/oskar/quickbit/app-backend/project/ && "
-            "source ../venv/bin/activate && "
-            command " "
-            (or path "quickbit"))))
-     (evil-edit nil))))
+  (cond ((ok-in-merchant-project)
+         (ok-projectile-run-in-root
+          (shell-command
+           (str "cd /home/oskar/quickbit/merchant-backend && "
+                "source venv/bin/activate && "
+                command " "
+                (or path "merchant")))))
+        ((ok-in-quickbit-project)
+         (ok-projectile-run-in-root
+          (shell-command
+           (str "cd /home/oskar/quickbit/app-backend/project/ && "
+                "source ../venv/bin/activate && "
+                command " "
+                (or path "quickbit")))))))
 
 (defun ok-python-black (&optional path)
   (interactive)
@@ -936,7 +954,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (interactive)
   (evil-open-below 1)
   (evil-normal-state)
-  (insert "breakpoint()")
+  ;; (insert "breakpoint()")
+  (insert "import pdb; pdb.set_trace()")
   (save-buffer)
   (evil-indent (point-at-bol) (point-at-eol)))
 
@@ -946,10 +965,15 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
           (s-split-words command))))
 
 (defun ok-test-function (command)
-  (shell-command (str "jobbsetup pytest " command)))
+  (print command)
+  (shell-command (str "jobbsetup " (projectile-project-root) " pytest " command)))
 
 (setq elpy-test-runner 'elpy-test-pytest-runner
       elpy-test-compilation-function 'ok-test-function)
+
+(map! :map latex-mode-map
+      :prefix "SPC"
+      :n "et" (cmd (shell-command "make")))
 
 (map! :after python
       :map (python-mode-map
@@ -964,12 +988,14 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :prefix "SPC"
       :n "a" 'ok-wrap-python-thing-in-string
       :n "w" 'ok-wrap-python-thing
-      :n "f" (cmd (let ((fill-column 70)) (python-fill-paragraph)))
-      :n "cf" '+format/buffer
+      :n "f" (cmd (let ((fill-column 78)) (python-fill-paragraph)))
+      ;; :n "cf" '+format/buffer
       :n "ps" 'projectile-run-eshell
       :n "tk" (cmd (shell-command "pkill -f \"sleep 10000\""))
-      :n "cf" (cmd (save-buffer) (ok-python-isort buffer-file-name)
-                (save-buffer) (ok-python-black))
+      :n "cf" (cmd (save-buffer) (ok-python-isort ".")
+                (save-buffer) (ok-python-black)
+                ;; Load the buffer from file, like with :e
+                (evil-edit nil))
       :n "tt" 'elpy-test-pytest-runner
       :n "sw" 'lsp-find-definition
       :n "sr" 'lsp-find-references
@@ -980,6 +1006,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "cr" 'lsp-rename
       :n "jj" 'run-python
       :n "ed" 'ok-python-insert-breakpoint
+      ;; :n "ed" (cmd (call-interactively #'dap-breakpoint-add)
+      ;;           (call-interactively #'dap-debug))
       :n "eb" 'python-shell-send-buffer
       :n "ef" 'python-shell-send-defun
       :n "et"  (cmd (python-shell-send-region (point-at-bol) (point-at-eol)))
@@ -1056,6 +1084,10 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "h" 'open-prolog-history
       :n "d" 'ok-delete-ediprolog-consult)
 
+(map! :after markdown-mode
+      :map markdown-mode-map
+      "M-p" nil)
+
 (map! :after org
       :map org-mode-map
       ;; motion state
@@ -1075,6 +1107,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "M-e" 'org-metadown
       :n "C-n" 'org-shiftleft
       :n "C-i" 'org-shiftright
+      :i [tab] 'org-cycle
       :prefix "SPC"
       :n "<tab>" (cmd (org-cycle '(64)))
       :n "v" (cmd (org-insert-todo-heading-respect-content) (evil-append 1))
@@ -1096,7 +1129,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :v "t" 'org-table-create-or-convert-from-region
       :map org-src-mode-map
       :n "ce" 'org-edit-src-exit
-      :n "cc" 'org-edit-src-abort)
+      :n "cc" 'org-edit-src-abort
+      )
 
 (map! :after evil-org
       :map evil-org-mode-map
@@ -1115,6 +1149,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 (map! :after ivy
       :map ivy-minibuffer-map
+      "<C-backspace>" nil
+      "M-DEL" nil
       "C-u" 'ivy-previous-line
       "C-e" 'ivy-next-line
       "C-S-e" 'ivy-scroll-up-command
@@ -1210,6 +1246,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
    :n "k" 'git-rebase-undo))
 
 (map! :after magit
+      :map magit-blob-mode-map
+      "n" nil
       :map magit-log-mode-map
       "u" 'previous-line
       "C-u" (cmd (previous-line 10))
@@ -1218,6 +1256,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
             git-rebase-mode-map
             magit-log-select-mode-map
             magit-log-mode-map)
+      "," doom-leader-map
       "å" 'ace-window
       "ä" 'evil-window-next
       "Ä" 'evil-window-prev
@@ -1228,7 +1267,10 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "t" 'git-rebase-edit
       :n "M-u" 'git-rebase-move-line-up
       :n "M-e" 'git-rebase-move-line-down
+      :map magit-blame-mode-map
+      :n "<return>" 'magit-show-commit
       :map (magit-status-mode-map magit-mode-map)
+      "<tab>" 'magit-section-toggle
       "§" 'keyboard-quit
       "<f2>" 'magit-refresh-all
       "gg" 'evil-goto-first-line
@@ -1266,6 +1308,10 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :map (cider-repl-mode-map cider-stacktrace-mode-map)
       "M-p" nil
       "M-f" nil)
+
+(map! :map dired-mode-map
+      :n "e" 'next-line
+      :n "u" 'previous-line)
 
 (map! :after (:or clojure-mode cider)
       :map (clojure-mode-map cider-repl-mode-map)
@@ -1309,6 +1355,18 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :v "er" 'cider-eval-region
       :v "et" 'cider-eval-region)
 
+(defvar my-smerge-mode-map (make-sparse-keymap))
+
+(map! :map my-smerge-mode-map
+      "u" 'smerge-keep-upper
+      "e" 'smerge-keep-lower
+      "a" 'smerge-keep-all
+      "n" 'smerge-next
+      "p" 'smerge-prev
+      "d" 'smerge-ediff
+      "r" 'smerge-refine)
+
+
 (map! :map (prog-mode-map
             cider-repl-mode-map)
       :n "(" 'esexp-backward-paren
@@ -1330,6 +1388,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "M-l" 'paredit-backward-up
       :n "M-q" 'paredit-backward-up
       :prefix "SPC"
+      :n "u" my-smerge-mode-map
       :n "i" 'esexp-insert-at-end
       :n "n" 'esexp-insert-at-head
       :n "l" 'esexp-wrap-form-parens-beg

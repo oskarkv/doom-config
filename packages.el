@@ -81,4 +81,10 @@
 (package! fcitx
   :recipe (:host github :repo "cute-jumper/fcitx.el"))
 
+(package! with-venv
+  :recipe (:host github :repo "10sr/with-venv-el"))
+
+(package! xr
+  :recipe (:host github :repo "mattiase/xr"))
+
 (add-load-path! ".")

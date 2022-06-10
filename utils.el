@@ -33,30 +33,33 @@
 (defalias 'some-> '-some->)
 (defalias 'some->> '-some->>)
 
+(defun ok-line-as-string ()
+  (s-trim (thing-at-point 'line t)))
+
 (defmacro cond-> (expr &rest clauses)
-  (assert (evenp (length clauses))
-          t "cond-> requires an odd number of args")
+  ;; (assert (evenp (length clauses))
+  ;;         t "cond-> requires an odd number of args")
   (let* ((g (gensym))
          (steps (seq-map (-lambda ((test step))
                            `(if ,test (-> ,g ,step) ,g))
                          (seq-partition clauses 2))))
     `(let* ((,g ,expr)
             ,@(seq-partition (-interleave (-repeat (length clauses) g)
-                                         steps)
-                            2))
+                                          steps)
+                             2))
        ,g)))
 
 (defmacro cond->> (expr &rest clauses)
-  (assert (evenp (length clauses))
-          t "cond->> requires an odd number of args")
+  ;; (assert (evenp (length clauses))
+  ;;         t "cond->> requires an odd number of args")
   (let* ((g (gensym))
          (steps (seq-map (-lambda ((test step))
                            `(if ,test (->> ,g ,step) ,g))
                          (seq-partition clauses 2))))
     `(let* ((,g ,expr)
             ,@(seq-partition (-interleave (-repeat (length clauses) g)
-                                         steps)
-                            2))
+                                          steps)
+                             2))
        ,g)))
 
 (defun ok-blank-line? (&optional point)
@@ -133,8 +136,8 @@ non-nil, the clause is a match, and the result-expr is returned."
     `(let ((,p (function ,pred))
            (,e ,expr))
        (cond ,@(seq-map
-                 (-lambda ((test result))
-                   (list (list 'funcall p test e) result))
+                (-lambda ((test result))
+                  (list (list 'funcall p test e) result))
                 clauses)))))
 
 (defun ok-hours-and-mins (mins)
@@ -148,9 +151,9 @@ non-nil, the clause is a match, and the result-expr is returned."
   "Given a mode name, make Emacs start that mode in Emacs mode instead of Evil
 mode."
   `(add-hook (intern-soft (concat (symbol-name ,mode-var) "-hook"))
-             (cmd (if ,mode-var
-                      (evil-emacs-state)
-                    (evil-exit-emacs-state)))))
+    (cmd (if ,mode-var
+             (evil-emacs-state)
+           (evil-exit-emacs-state)))))
 
 (defun ok-parse-time (time-string)
   "Given an HH:MM string, returns the total minutes that TIME-STRING
@@ -193,9 +196,9 @@ is non-nil, then also \r and \n are considered whitespace."
     (backward-char)))
 
 (defun ok-save-buffers (buffers)
-    (dolist (b buffers)
-      (with-current-buffer b
-        (save-buffer))))
+  (dolist (b buffers)
+    (with-current-buffer b
+      (save-buffer))))
 
 (defun ok-save-buffers-matching (regex)
   (let* ((buffers (cl-remove-if-not
