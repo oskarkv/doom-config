@@ -248,9 +248,10 @@ that should be used for code from the mode."
   "Yanks text and adds three backticks around it, as well as a
 language after the first backticks, depending on the Emacs mode.
 Works with evil."
+  :move-point nil
+  :repeat nil
   (evil-yank beg end type register yank-handler)
   (kill-new (concat "```" "\n"
-  ;; (kill-new (concat "```" (ok-mode-to-language major-mode) "\n"
                     (car kill-ring)
                     "```")
             t))
