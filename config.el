@@ -905,18 +905,28 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :map sly-editing-mode-map
       :n "M-p" nil)
 
+
+(defun ok-set-jedi-extra-paths ()
+  (let ((project-root (projectile-project-root)))
+    (cond ((s-contains? "merchant-backend" project-root)
+           (setq lsp-jedi-workspace-extra-paths
+                 (vector (concat (projectile-project-root) "merchant/core")
+                         (concat (projectile-project-root) "merchant/api_gateway")))))))
+
 (after! python
   (require 'dap-python)
   (require 'elpy)
   (setq dap-python-debugger 'debugpy)
   (add-hook! 'python-mode-hook
     (let ((root (projectile-project-root)))
+      ;; (setenv "DJANGO_SETTINGS_MODULE" "quickbit.settings.test")
       (setenv "PYTHONPATH" (if (and root (s-matches? "quickbit" root))
                                (str root "quickbit/")
                              root)))
     ;; (setenv "PYTHONPATH" "/home/oskar/quickbit/app-backend/project/quickbit/")
     (setenv "PAGER" "cat")
     (require 'lsp-jedi)
+    (ok-set-jedi-extra-paths)
     (lsp)
     (setq-local dap-python-executable (with-venv (executable-find "python")))
     (lsp-ui-mode 0))
