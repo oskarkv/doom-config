@@ -420,23 +420,4 @@ before point."
                             info)))
         (current-buffer)))))
 
-(defun doom-init-ui-h ()
-  "Initialize Doom's user interface by applying all its advice and hooks."
-  (run-hook-wrapped 'doom-init-ui-hook #'doom-try-run-hook)
-
-  (add-hook 'kill-buffer-query-functions #'doom-protect-fallback-buffer-h)
-  (add-hook 'after-change-major-mode-hook #'doom-highlight-non-default-indentation-h 'append)
-
-  ;; Initialize custom switch-{buffer,window,frame} hooks:
-  ;; + `doom-switch-buffer-hook'
-  ;; + `doom-switch-window-hook'
-  ;; + `doom-switch-frame-hook'
-  (add-hook 'buffer-list-update-hook #'doom-run-switch-window-hooks-h)
-  (add-hook 'focus-in-hook #'doom-run-switch-frame-hooks-h)
-  ;; MY CHANGE: Don't advice switch buffer commands
-  ;; (dolist (fn '(switch-to-next-buffer switch-to-prev-buffer))
-  ;;   (advice-add fn :around #'doom-run-switch-to-next-prev-buffer-hooks-a))
-  (dolist (fn '(switch-to-buffer display-buffer))
-    (advice-add fn :around #'doom-run-switch-buffer-hooks-a)))
-
 (provide 'patches)
