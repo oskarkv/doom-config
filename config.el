@@ -19,6 +19,8 @@
 ;; binding keys your best bet is to bind them both. Same for TAB and <tab> (and
 ;; C-i) [tab] = "<tab>" and is used when I press tab.
 
+(setq undo-tree-history-directory-alist '(("." . "~/.undo-tree/")))
+
 (setq  org-odt-preferred-output-format "docx")
 ;; Name and email address
 (setq user-full-name "Oskar Kvist"
