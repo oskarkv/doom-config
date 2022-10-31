@@ -7,9 +7,8 @@
 (require 's)
 (require 'cl-indent)
 (require 'dash)
-(require 'ediprolog)
 (require 'amdl-mode)
-
+(require 'dap-swi-prolog)
 (require 'undo-tree)
 (global-undo-tree-mode)
 
@@ -1143,18 +1142,76 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (setq ediprolog-system 'swi
         ediprolog-program "/usr/bin/prolog"))
 
-(map! :after ediprolog
+(defun ok-fix-art-of-prolog-paste ()
+  (interactive)
+  (evil-execute-macro
+   1
+   (kmacro-lambda-form [?v ?a ?p
+                           ?: ?s ?/ ?  ?/ return
+                           ?g ?v ?: ?s ?/ ?I ?/ ?| ?/ return
+                           ?g ?v ?: ?s ?/ ?! ?/ ?| ?/ return
+                           ?g ?v ?: ?s ?/ ?- ?/ ?: ?- return
+                           ?g ?v ?=] 0 "%d")))
+
+;; (map! :after prolog
+;;       :map prolog-inferior-mode-map
+;;       :i "C-SPC" (cmd (insert ";") (comint-send-input)))
+;;       :map prolog-mode-map
+;;       :prefix "SPC"
+;;       :n "t" 'ediprolog-toggle-trace
+;;       :n "o" 'ediprolog-toplevel
+;;       :n "c" 'ediprolog-consult
+;;       :n "k" 'ediprolog-kill-process
+;;       :n "r" 'ediprolog-remove-interactions
+;;       :n "s" 'ok-to-snum
+;;       :n "et" 'ediprolog-eval-query
+;;       :n "ed" 'ediprolog-debug-query
+;;       :n "eb" 'ediprolog-consult
+;;       :n "h" 'open-prolog-history
+;;       :n "a" 'ok-fix-art-of-prolog-paste
+;;       :n "d" 'ok-delete-ediprolog-consult)
+
+(defun ok-prolog-predicate-at-point ()
+  (interactive)
+  (save-excursion
+    (let* ((beg (progn (evil-backward-WORD-begin) (point)))
+           (end (progn (evil-jump-item) (point)))
+           (open (progn (evil-jump-item) (point)))
+           (name (buffer-substring-no-properties beg open))
+           (args (buffer-substring-no-properties open (1+ end))))
+      (str name "/" (length (read args))))))
+
+(defun ok-prolog-send-string (s)
+  (let ((s (str s "\n")))
+    ;; Inserts it for the user to see.
+    (prolog-process-insert-string (get-process "prolog") s)
+    ;; Actually sends it.
+    (process-send-string "prolog" s)))
+
+(defun ok-prolog-apropos ()
+  (interactive)
+  (ok-prolog-send-string (str "apropos(" (read-string "Search for: ") ").")))
+
+(defun ok-prolog-help ()
+  (interactive)
+  (ok-prolog-send-string (str "help(" (read-string "Help for: ") ").")))
+
+(map! :after prolog
+      :map prolog-inferior-mode-map
+      :i "C-SPC" (cmd (ok-prolog-send-string ";"))
+      :n "C-f" (cmd (process-send-string "prolog" " \n"))
       :map prolog-mode-map
       :prefix "SPC"
-      :n "t" 'ediprolog-toggle-trace
-      :n "c" 'ediprolog-consult
-      :n "k" 'ediprolog-kill-process
-      :n "r" 'ediprolog-remove-interactions
-      :n "s" 'ok-to-snum
-      :n "et" 'ediprolog-eval-query
-      :n "ed" 'ediprolog-debug-query
-      :n "h" 'open-prolog-history
-      :n "d" 'ok-delete-ediprolog-consult)
+      :n "jj" 'run-prolog
+      :n "ds" (cmd (ok-prolog-send-string
+                    (str "spy(" (ok-prolog-predicate-at-point) ").")))
+      :n "dn" (cmd (ok-prolog-send-string "nospyall."))
+      :n "eb" 'prolog-consult-buffer
+      :map (prolog-inferior-mode-map prolog-mode-map)
+      :n "dt" 'prolog-trace-on
+      :n "do" 'prolog-trace-off
+      :n "dd" 'ok-prolog-help
+      :n "da" 'ok-prolog-apropos)
 
 (map! :after markdown-mode
       :map markdown-mode-map
