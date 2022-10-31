@@ -86,5 +86,3 @@
 
 (package! xr
   :recipe (:host github :repo "mattiase/xr"))
-
-(add-load-path! ".")
