@@ -844,6 +844,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "M-f" nil
       "M-p" nil)
 
+(map! :map help-mode-map
+      :n "i" nil)
+
 (defun ok-hy-eval-toplevel ()
   (interactive)
   (save-excursion
