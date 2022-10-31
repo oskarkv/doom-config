@@ -131,7 +131,8 @@ boolean is non-nil, also unbinds TAB in that mode."
   ;; mode-line
   ;; clojure-interop-method-face
   ;; clojure-pink-face
-  ;; clojure-keyword-face
+  '(clojure-keyword-face :foreground "#89f")
+  '(font-lock-function-name-face :foreground "#b6ef3e")
   ;; font-lock-keyword-face
   ;; racket-selfeval-face
   '(show-paren-match :background "#333355" :foreground nil)
