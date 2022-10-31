@@ -630,6 +630,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (if-lets 1)
     (ignore-exception 0)
     (macrolet '(1 (:defn)))
+    (templatelet '(1 (:defn)))
     (once-only 1)
     (recursive-path 2)
     (some-> :defn)
