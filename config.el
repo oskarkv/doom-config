@@ -1277,7 +1277,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :nv "TAB" nil)
 
 (map! :after ivy
-      :map ivy-minibuffer-map
+      :map (ivy-minibuffer-map ivy-switch-buffer-map)
       "<C-backspace>" nil
       "M-DEL" nil
       "C-u" 'ivy-previous-line
@@ -1285,7 +1285,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "C-S-e" 'ivy-scroll-up-command
       "C-S-u" 'ivy-scroll-down-command
       "RET" 'ivy-alt-done
-      "C-RET" 'ivy-done
+      "<return>" 'ivy-alt-done
+      "C-<return>" 'ivy-immediate-done
+      "C-RET" 'ivy-immediate-done
       "!" (cmd (insert "\\!")))
 
 (map! :map key-translation-map
