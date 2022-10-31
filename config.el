@@ -140,7 +140,7 @@ boolean is non-nil, also unbinds TAB in that mode."
   '(hl-fill-column-face :background "#773333")
   '(highlight-numbers-number :foreground "#d419ff" :weight normal)
   '(lsp-face-highlight-textual :background "#202020" :foreground "#fff"
-                               :weight bold)
+    :weight bold)
   '(org-level-1 :inherit default :foreground "#33dd33")
   '(org-level-2 :inherit default :foreground "#FFb030")
   '(org-level-3 :inherit default :foreground "#FF44FF")
@@ -363,12 +363,12 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 ;; Disable using cljfmt on save and getting error about it
 (setq +format-on-save-enabled-modes
       '(not emacs-lisp-mode
-            sql-mode
-            tex-mode
-            latex-mode
-            clojure-mode
-            cider-mode
-            python-mode))
+        sql-mode
+        tex-mode
+        latex-mode
+        clojure-mode
+        cider-mode
+        python-mode))
 
 ;; (setq rcirc-server-alist
 ;;       '(("irc.freenode.net"
@@ -490,7 +490,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
  python-indent-guess-indent-offset nil)
 
 (after! ace-window
- (setq aw-scope 'global))
+  (setq aw-scope 'global))
 
 (define-abbrev-table 'global-abbrev-table
   '(
@@ -527,7 +527,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (setq evil-snipe-scope 'buffer)
 (setq evil-snipe-repeat-scope 'buffer)
 
- ;; Start frame X columns wide
+;; Start frame X columns wide
 (add-to-list 'default-frame-alist '(width . 91))
 
 (after! org
@@ -723,10 +723,10 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "M-p" nil)
 
 (after! yasnippet
- (map! :map yas-minor-mode-map
-       :i [tab] yas-maybe-expand)
- (add-hook 'yas-minor-mode-hook
-           (fn (yas-activate-extra-mode 'fundamental-mode))))
+  (map! :map yas-minor-mode-map
+        :i [tab] yas-maybe-expand)
+  (add-hook 'yas-minor-mode-hook
+            (fn (yas-activate-extra-mode 'fundamental-mode))))
 
 (map! :e "C-," 'evil-exit-emacs-state
       :o "l" -operator-inside-keymap
@@ -1497,7 +1497,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "d" 'smerge-ediff
       "r" 'smerge-refine)
 
-
 (map! :map (prog-mode-map
             cider-repl-mode-map)
       :n "(" 'esexp-backward-paren
@@ -1611,7 +1610,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 
 
-  ;;; Racket
+ ;;; Racket
 
   (general-evil-define-key
       'normal '(racket-mode-map
@@ -1640,7 +1639,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
    ;; If there is more than one, they won't work right.
    '(cider-cljs-lein-repl
      "(do (require 'cljs.repl.node)
-          (cider.piggieback/cljs-repl (cljs.repl.node/repl-env)))"))
+         (cider.piggieback/cljs-repl (cljs.repl.node/repl-env)))"))
   )
 
 (section-comment "Crap from old config"
