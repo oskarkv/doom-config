@@ -761,9 +761,10 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :nv "gb" 'ok-remove-spaces
       :nv "gh" 'ok-evil-webpaste
       :nv "go" '+evil:yank-unindented
+      ;; Makes gs work with a motion command afterwards
       :m "gs" nil
-      :nv "gs" 'ok-evil-three-backticks-yank
-      :nv "gy" 'ok-evil-reddit-yank
+      :nvm "gs" 'ok-evil-three-backticks-yank
+      :nvm "gy" 'ok-evil-reddit-yank
       :n "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
       :n "C-n" nil
       :n "u" nil
