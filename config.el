@@ -327,14 +327,18 @@ Works with evil."
   "To be used as the default frame buffer-predicate parameter. Returns nil if
 BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (or (doom-real-buffer-p buf)
-      (eq buf (doom-fallback-buffer))
+      ;; Makes *scratch* a buffer to switch to
+      ;; (eq buf (doom-fallback-buffer))
       (-some? (lambda (x) (s-starts-with? x (buffer-name buf)))
               (list
                "*Python"
                "*cider-repl"))))
 
-(setcdr (assoc 'buffer-predicate default-frame-alist)
-        'ok-buffer-frame-predicate)
+(defun ok-set-buffer-frame-predicate (&rest args)
+  (setcdr (assoc 'buffer-predicate default-frame-alist)
+          'ok-buffer-frame-predicate))
+
+(advice-add 'doom-init-ui-h :after #'ok-set-buffer-frame-predicate)
 
 ;; To be able to switch to all buffers, empty this list.
 ;; (setq-default doom-unreal-buffer-functions
