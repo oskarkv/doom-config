@@ -13,6 +13,12 @@
 (require 'undo-tree)
 (global-undo-tree-mode)
 
+;; RET vs <return>:
+;; Emacs considers RET (\n) and <return> as distinct events. GUI Emacs emits
+;; <return> and falls back on RET. Terminal Emacs only emits RET. So when
+;; binding keys your best bet is to bind them both. Same for TAB and <tab> (and
+;; C-i) [tab] = "<tab>" and is used when I press tab.
+
 (setq  org-odt-preferred-output-format "docx")
 ;; Name and email address
 (setq user-full-name "Oskar Kvist"
