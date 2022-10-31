@@ -957,11 +957,20 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 (defun ok-in-quickbit-project ()
   (ignore-errors
-    (s-contains-p "/quickbit/app-backend/project/" (projectile-project-info))))
+    (s-contains-p "/quickbit/app-backend/" (projectile-project-info))))
 
 (defun ok-in-merchant-project ()
   (ignore-errors
     (s-contains-p "/quickbit/merchant-backend/" (projectile-project-info))))
+
+(defun ok-in-qb-utils-project ()
+  (ignore-errors
+    (s-contains-p "/quickbit/qb-python-utils/" (projectile-project-info))))
+
+(defun ok-in-backoffice-project ()
+  (ignore-errors
+    (s-contains-p "/quickbit/backoffice-core-backend/"
+                  (projectile-project-info))))
 
 (defun ok-if-quickbit (fun &optional alternative)
   (interactive)
@@ -977,17 +986,31 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (cond ((ok-in-merchant-project)
          (ok-projectile-run-in-root
           (shell-command
-           (str "cd /home/oskar/quickbit/merchant-backend && "
+           (str "cd /home/oskar/quickbit/merchant-backend/ && "
                 "source venv/bin/activate && "
                 command " "
                 (or path "merchant")))))
         ((ok-in-quickbit-project)
          (ok-projectile-run-in-root
           (shell-command
-           (str "cd /home/oskar/quickbit/app-backend/project/ && "
-                "source ../venv/bin/activate && "
+           (str "cd /home/oskar/quickbit/app-backend/ && "
+                "source venv/bin/activate && "
                 command " "
-                (or path "quickbit")))))))
+                (or path "quickbit")))))
+        ((ok-in-qb-utils-project)
+         (ok-projectile-run-in-root
+          (shell-command
+           (str "cd /home/oskar/quickbit/qb-python-utils/ && "
+                "source venv/bin/activate && "
+                command " "
+                (or path "quickbit_utils")))))
+        ((ok-in-backoffice-project)
+         (ok-projectile-run-in-root
+          (shell-command
+           (str "cd /home/oskar/quickbit/backoffice-core-backend/ && "
+                "source venv/bin/activate && "
+                command " "
+                (or path "backoffice")))))))
 
 (defun ok-python-black (&optional path)
   (interactive)
@@ -1034,13 +1057,14 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "M-u" 'ok-c-thing-raise
       :prefix "SPC"
       :n "pp" 'ok-python-import-pprint
+      :n "m" '+make/run
       :n "a" 'ok-wrap-python-thing-in-string
       :n "w" 'ok-wrap-python-thing
       :n "f" (cmd (let ((fill-column 78)) (python-fill-paragraph)))
-      ;; :n "cf" '+format/buffer
       :n "ps" 'projectile-run-eshell
       :n "tk" (cmd (shell-command "pkill -f \"sleep 10000\""))
-      :n "cf" (cmd (save-buffer) (ok-python-isort ".")
+      ;; :n "cf" '+format/buffer
+      :n "cf" (cmd (save-buffer) (ok-python-isort buffer-file-name)
                 (save-buffer) (ok-python-black)
                 ;; Load the buffer from file, like with :e
                 (evil-edit nil))
