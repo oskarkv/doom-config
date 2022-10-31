@@ -425,6 +425,11 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (interactive)
     (apply #'magit-diff-range "master" (magit-diff-arguments)))
 
+  (defun magit-diff-dev ()
+    "Diff with dev"
+    (interactive)
+    (apply #'magit-diff-range "dev" (magit-diff-arguments)))
+
   (transient-define-prefix magit-diff ()
     "Show changes between different versions."
     :man-page "git-diff"
@@ -456,7 +461,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       ("w" "Diff worktree" magit-diff-working-tree)]
      [("c" "Show commit"   magit-show-commit)
       ("t" "Show stash"    magit-stash-show)
-      ("m" "Diff with master" magit-diff-master)]])
+      ("m" "Diff with master" magit-diff-master)
+      ("v" "Diff with dev" magit-diff-dev)]])
 
   (setq magit-diff-refine-hunk nil)
   (setq magit-display-buffer-function #'magit-display-buffer-traditional))
