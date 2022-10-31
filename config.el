@@ -939,6 +939,17 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :map evil-inner-text-objects-map
       "l" 'ok-python-thing-text-object)
 
+(defun ok-python-import-pprint ()
+  (interactive)
+  (evil-with-single-undo
+    (save-excursion
+      (evil-goto-first-line)
+      (while (evil-in-comment-p)
+        (evil-next-line))
+      (evil-open-above 1)
+      (evil-normal-state)
+      (insert "from quickbit_utils.misc import pprint"))))
+
 (defmacro ok-projectile-run-in-root (&rest code)
   `(projectile-with-default-dir
        (projectile-ensure-project (projectile-project-root))
@@ -1022,6 +1033,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "M-N" (cmd (ok-python-transpose-big-thing -1 t))
       :n "M-u" 'ok-c-thing-raise
       :prefix "SPC"
+      :n "pp" 'ok-python-import-pprint
       :n "a" 'ok-wrap-python-thing-in-string
       :n "w" 'ok-wrap-python-thing
       :n "f" (cmd (let ((fill-column 78)) (python-fill-paragraph)))
