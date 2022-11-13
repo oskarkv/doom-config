@@ -618,6 +618,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (condp* 2)
     (defs 0)
     (deftype- '(2 nil nil (:defn)))
+    (defnav '(:defn nil nil :defn))
     (do-every-ms 2)
     (do1 0)
     (docstring-fix 0)
