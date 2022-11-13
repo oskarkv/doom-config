@@ -728,7 +728,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (add-hook 'yas-minor-mode-hook
             (fn (yas-activate-extra-mode 'fundamental-mode))))
 
-(map! :e "C-," 'evil-exit-emacs-state
+(map! :i "C-§" (cmd (insert "§"))
+      :e "C-," 'evil-exit-emacs-state
       :o "l" -operator-inside-keymap
       :o "i" nil
       :o "o" (cmd (forward-evil-symbol))
