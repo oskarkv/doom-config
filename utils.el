@@ -211,4 +211,18 @@ is non-nil, then also \r and \n are considered whitespace."
 (defun ok-switch-to-window (name)
   (select-window (get-buffer-window name)))
 
+(defmacro ok-projectile-run-in-root (&rest code)
+  `(projectile-with-default-dir
+       (projectile-ensure-project (projectile-project-root))
+     ,@code))
+
+(defun ok-project-path-contains? (string)
+  (ignore-errors
+    (s-contains-p string (projectile-project-root))))
+
+(defun ok-shell-command-in-root (command)
+  (ok-projectile-run-in-root
+   (apply #'start-process command (str "*" command "*")
+          (s-split-words command))))
+
 (provide 'utils)

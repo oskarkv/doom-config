@@ -10,6 +10,7 @@
 (require 'amdl-mode)
 (require 'dap-swi-prolog)
 (require 'undo-tree)
+(require 'quickbit)
 (global-undo-tree-mode)
 
 ;; RET vs <return>:
@@ -906,14 +907,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :map sly-editing-mode-map
       :n "M-p" nil)
 
-
-(defun ok-set-jedi-extra-paths ()
-  (let ((project-root (projectile-project-root)))
-    (cond ((s-contains? "merchant-backend" project-root)
-           (setq lsp-jedi-workspace-extra-paths
-                 (vector (concat (projectile-project-root) "merchant/core")
-                         (concat (projectile-project-root) "merchant/api_gateway")))))))
-
 (after! python
   (require 'dap-python)
   (require 'elpy)
@@ -940,87 +933,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :map evil-inner-text-objects-map
       "l" 'ok-python-thing-text-object)
 
-(defun ok-python-import-pprint ()
-  (interactive)
-  (evil-with-single-undo
-    (save-excursion
-      (evil-goto-first-line)
-      (while (evil-in-comment-p)
-        (evil-next-line))
-      (evil-open-above 1)
-      (evil-normal-state)
-      (insert "from quickbit_utils.misc import pprint"))))
-
-(defmacro ok-projectile-run-in-root (&rest code)
-  `(projectile-with-default-dir
-       (projectile-ensure-project (projectile-project-root))
-     ,@code))
-
-(defun ok-in-quickbit-project ()
-  (ignore-errors
-    (s-contains-p "/quickbit/app-backend/" (projectile-project-info))))
-
-(defun ok-in-merchant-project ()
-  (ignore-errors
-    (s-contains-p "/quickbit/merchant-backend/" (projectile-project-info))))
-
-(defun ok-in-qb-utils-project ()
-  (ignore-errors
-    (s-contains-p "/quickbit/qb-python-utils/" (projectile-project-info))))
-
-(defun ok-in-backoffice-project ()
-  (ignore-errors
-    (s-contains-p "/quickbit/backoffice-core-backend/"
-                  (projectile-project-info))))
-
-(defun ok-if-quickbit (fun &optional alternative)
-  (interactive)
-  (cond ((ok-in-quickbit-project) (funcall fun))
-        (alternative (funcall alternative))))
-
-(defun ok-if-merchant (fun &optional alternative)
-  (interactive)
-  (cond ((ok-in-merchant-project) (funcall fun))
-        (alternative (funcall alternative))))
-
-(defun ok-quickbit-venv-command (command &optional path)
-  (cond ((ok-in-merchant-project)
-         (ok-projectile-run-in-root
-          (shell-command
-           (str "cd /home/oskar/quickbit/merchant-backend/ && "
-                "source venv/bin/activate && "
-                command " "
-                (or path "merchant")))))
-        ((ok-in-quickbit-project)
-         (ok-projectile-run-in-root
-          (shell-command
-           (str "cd /home/oskar/quickbit/app-backend/ && "
-                "source venv/bin/activate && "
-                command " "
-                (or path "quickbit")))))
-        ((ok-in-qb-utils-project)
-         (ok-projectile-run-in-root
-          (shell-command
-           (str "cd /home/oskar/quickbit/qb-python-utils/ && "
-                "source venv/bin/activate && "
-                command " "
-                (or path "quickbit_utils")))))
-        ((ok-in-backoffice-project)
-         (ok-projectile-run-in-root
-          (shell-command
-           (str "cd /home/oskar/quickbit/backoffice-core-backend/ && "
-                "source venv/bin/activate && "
-                command " "
-                (or path "backoffice")))))))
-
-(defun ok-python-black (&optional path)
-  (interactive)
-  (ok-quickbit-venv-command
-   "python3 -m black --exclude migrations" path))
-
-(defun ok-python-isort (path)
-  (ok-quickbit-venv-command "isort" path))
-
 (defun ok-python-insert-breakpoint ()
   (interactive)
   (evil-open-below 1)
@@ -1029,15 +941,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (insert "import pdb; pdb.set_trace()")
   (save-buffer)
   (evil-indent (point-at-bol) (point-at-eol)))
-
-(defun ok-shell-command-in-root (command)
-  (ok-projectile-run-in-root
-   (apply #'start-process command (str "*" command "*")
-          (s-split-words command))))
-
-(defun ok-test-function (command)
-  (print command)
-  (shell-command (str "jobbsetup " (projectile-project-root) " pytest " command)))
 
 (setq elpy-test-runner 'elpy-test-pytest-runner
       elpy-test-compilation-function 'ok-test-function)
