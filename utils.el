@@ -149,6 +149,16 @@ non-nil, the clause is a match, and the result-expr is returned."
          (mins (str (mod mins 60))))
     (concat hours ":" (if (< (length mins) 2) "0" "") mins)))
 
+(defun ok-num-to-cricles (n)
+  (let* ((n (string-to-number n))
+         (f (floor n)))
+    (str (s-repeat f "●")
+         (condp <= (- n f)
+           (0.449 "◕")
+           (0.299 "◑")
+           (0.149 "◔")
+           (0 "")))))
+
 ;; (HAVE NOT TESTED YET (the intern-soft part))
 (defmacro ok-emacs-mode-in-mode (mode-var)
   "Given a mode name, make Emacs start that mode in Emacs mode instead of Evil
