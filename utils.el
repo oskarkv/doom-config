@@ -2,6 +2,9 @@
 (require 'dash)
 (require 'seq)
 
+(defun println (&rest args)
+  (print (s-join " " (mapcar #'str args))))
+
 (defmacro time (&rest body)
   "Measure the time it takes to evaluate BODY."
   `(let ((time (current-time)))
