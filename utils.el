@@ -178,6 +178,9 @@ mode."
              (evil-emacs-state)
            (evil-exit-emacs-state)))))
 
+(defun ok-symbol (&rest args)
+  (intern (apply #'concat (mapcar #'str args))))
+
 (defun ok-parse-time (time-string)
   "Given an HH:MM string, returns the total minutes that TIME-STRING
 represents."
