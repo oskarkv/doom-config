@@ -5,6 +5,13 @@
 (defun println (&rest args)
   (print (s-join " " (mapcar #'str args))))
 
+(defun printit (&rest xs)
+  (apply #'println xs)
+  (car (last xs)))
+
+(defmacro pm (form)
+  `(printit ',form "=" ,form))
+
 (defmacro time (&rest body)
   "Measure the time it takes to evaluate BODY."
   `(let ((time (current-time)))
