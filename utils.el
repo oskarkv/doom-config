@@ -32,6 +32,9 @@
 (defun neg? (n)
   (< n 0))
 
+(defun zero? (n)
+  (= 0 n))
+
 (defalias 'as-> '-as->)
 (defalias 'some-> '-some->)
 (defalias 'some->> '-some->>)
