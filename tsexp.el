@@ -4,7 +4,9 @@
 
 (defvar tsexp-atom-at-point-goes-up-to
   '(list_splat_pattern
+    list_splat
     dictionary_splat_pattern
+    dictionary_splat
     typed_parameter))
 
 (defvar tsexp-invisible-nodes
@@ -42,36 +44,40 @@
 (defun tsexp-up-if-not-named (node)
   (if (tsexp-named? node) node (tsc-get-parent node)))
 
+(defun tsexp-count-named-siblings (node)
+  (tsc-count-named-children (tsc-get-parent node)))
+
 (defun tsexp-invisible-node-with-one-child? (node)
   (and (tsexp-node-in? node tsexp-invisible-nodes)
-       (= (tsexp-count-named-siblings node) 1)))
+       (= (tsc-count-named-children node) 1)))
 
 (defun tsexp-skip-to-last-invisible-node (node)
   (while (tsexp-invisible-node-with-one-child? (tsc-get-parent node))
     (setq node (tsc-get-parent node)))
   node)
 
+(defun tsexp-up-to-atom (node)
+  (if (tsexp-node-in? (tsc-get-parent node) tsexp-atom-at-point-goes-up-to)
+      (tsc-get-parent node)
+    node))
+
 (defun tsexp-atom-at-point ()
   (tsexp-skip-to-last-invisible-node
-   (tsexp-up-if-not-named
+   (tsexp-up-to-atom
     (tree-sitter-node-at-point))))
 
-(defun tsexp-count-named-siblings (node)
-  (tsc-count-named-children (tsc-get-parent node)))
+(defun tsexp-is-container? (node)
+  (tsexp-node-in? node tsexp-containers))
 
 ;; (defun tsexp-is-container? (node)
-;;   (or (tsexp-node-in? node tsexp-containers)
-;;       (> (tsexp-count-named-siblings node) 1)))
-
-(defun tsexp-is-container? (node)
-  (> (tsc-count-children (tree-sitter-node-at-pos)) 1))
+;;   (> (tsc-count-children node) 1))
 
 (defun tsexp-parent-container (node &optional levels)
   (dotimes (i (or levels 1))
     (setq node (tsc-get-parent node))
     (while (not (tsexp-is-container? node))
       (setq node (tsc-get-parent node))))
-  node)
+  (tsexp-skip-to-last-invisible-node node))
 
 (defun tsexp-container-at-point (&optinonal levels)
   (tsexp-parent-container (tsexp-atom-at-point) levels))
@@ -116,3 +122,40 @@ is in."
     (insert remains)
     ;; fix point position
     (goto-char (+ (- old-point beg) big-beg))))
+
+(defmacro tsexp-def-get-sibling-fn (word)
+`(defun ,(ok-symbol "tsexp-get-" word "-sibling") (node)
+  (let ((sib (,(ok-symbol "tsc-get-" word "-named-sibling") node)))
+    (if sib
+        sib
+      (let ((parent (tsc-get-parent node)))
+        (if (tsexp-node-is? parent 'binary_operator)
+            (,(ok-symbol "tsexp-get-" word "-sibling") parent)))))))
+
+(tsexp-def-get-sibling-fn next) ; tsexp-get-next-sibling
+(tsexp-def-get-sibling-fn prev) ; tsexp-get-prev-sibling
+
+(defmacro tsexp-def-transpose-fn (next dir)
+  `(defun ,(ok-symbol 'tsexp-transpose- dir) (node)
+     (when-let ((sib (,(ok-symbol 'tsexp-get- next '-sibling) node)))
+       (tsexp-swap-text
+        (tsexp-node-bounds node)
+        (tsexp-node-bounds sib)))))
+
+(tsexp-def-transpose-fn next forward) ; tsexp-transpose-forward
+(tsexp-def-transpose-fn prev backward) ; tsexp-transpose-backward
+
+(defmacro tsexp-def-transpose-cmd (name levels dir)
+  `(defun ,(ok-symbol 'tsexp-transpose- name '- dir) ()
+     (interactive)
+     (,(ok-symbol 'tsexp-transpose- dir)
+      (tsexp-parent-container (tsexp-atom-at-point) ,levels))))
+
+(tsexp-def-transpose-cmd atom 0 forward)
+(tsexp-def-transpose-cmd atom 0 backward)
+(tsexp-def-transpose-cmd container 1 forward)
+(tsexp-def-transpose-cmd container 1 backward)
+(tsexp-def-transpose-cmd ccontainer 2 forward)
+(tsexp-def-transpose-cmd ccontainer 2 backward)
+
+(provide 'tsexp)
