@@ -2,6 +2,12 @@
 (require 'dash)
 (require 'seq)
 
+(defun range (start &optional end step)
+  (unless end
+    (setq end start
+      start 0))
+  (number-sequence start (1- end) step))
+
 (defun println (&rest args)
   (print (s-join " " (mapcar #'str args))))
 
@@ -45,6 +51,7 @@
 (defalias 'as-> '-as->)
 (defalias 'some-> '-some->)
 (defalias 'some->> '-some->>)
+(defalias 'case 'cl-case)
 
 (defun ok-line-as-string ()
   (s-trim (thing-at-point 'line t)))
@@ -159,14 +166,15 @@ non-nil, the clause is a match, and the result-expr is returned."
          (mins (str (mod mins 60))))
     (concat hours ":" (if (< (length mins) 2) "0" "") mins)))
 
-(defun ok-num-to-cricles (n)
-  (let* ((n (string-to-number n))
-         (f (floor n)))
+(defun ok-num-to-circles (n)
+  (let* ((n (string-to-number (s-replace ":" "." n)))
+         (f (floor n))
+         (d (/ (* (- n f) 10) 6)))
     (str (s-repeat f "●")
-         (condp <= (- n f)
-           (0.449 "◕")
-           (0.299 "◑")
-           (0.149 "◔")
+         (condp <= d
+           (0.749 "◕")
+           (0.499 "◑")
+           (0.249 "◔")
            (0 "")))))
 
 ;; (HAVE NOT TESTED YET (the intern-soft part))
