@@ -47,7 +47,6 @@
       (insert "from quickbit_utils.misc import pprint"))))
 
 (defun ok-test-function (command)
-  (print command)
   (shell-command (str "jobbsetup " (projectile-project-root) " pytest " command)))
 
 (defun ok-set-jedi-extra-paths ()
