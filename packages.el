@@ -63,6 +63,9 @@
 
 (package! undo-tree)
 
+(package! tree-sitter)
+(package! tree-sitter-langs)
+
 (package! python-black
   :recipe (:host github :repo "wbolster/emacs-python-black"))
 
