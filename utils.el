@@ -57,8 +57,8 @@
   `(let ((,result ,expr))
      (cond ,@(mapcar (-lambda ((a b))
                        (if (listp a)
-                           (list `(cl-member ,result ,a :test #'equal) b)
-                           (list `(equal ,result ,a) b)))
+                           (list `(cl-member ,result ',a :test #'equal) b)
+                           (list `(equal ,result ',a) b)))
                      cases)))))
 
 (defun ok-line-as-string ()
