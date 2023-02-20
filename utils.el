@@ -51,7 +51,15 @@
 (defalias 'as-> '-as->)
 (defalias 'some-> '-some->)
 (defalias 'some->> '-some->>)
-(defalias 'case 'cl-case)
+
+(defmacro case (expr &rest cases)
+  (with-gensyms (result)
+  `(let ((,result ,expr))
+     (cond ,@(mapcar (-lambda ((a b))
+                       (if (listp a)
+                           (list `(cl-member ,result ,a :test #'equal) b)
+                           (list `(equal ,result ,a) b)))
+                     cases)))))
 
 (defun ok-line-as-string ()
   (s-trim (thing-at-point 'line t)))

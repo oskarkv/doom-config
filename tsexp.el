@@ -145,7 +145,9 @@
     (setq node (tsexp-get-parent node))
     (while (and node (not (tsexp-is-container? node)))
       (setq node (tsexp-get-parent node))))
-  (tsexp-skip-to-last-invisible-node node))
+  (if (pos? levels)
+      (tsexp-skip-to-last-invisible-node node)
+    node))
 
 (defun tsexp-container-at-point (&optinonal levels)
   (tsexp-parent-container (tsexp-atom-at-point) levels))
@@ -233,7 +235,7 @@ tsexp-get-node-or-child on the result."
    (tsexp-parent-container (tsexp-atom-at-point) 0) 1))
 
 (defmacro tsexp-def-transpose-cmd (name dir)
-  (let ((levels (case name
+  (let ((levels (cl-case name
                   ('atom 0)
                   ('container 1)
                   ('ccontainer 2)))
@@ -250,25 +252,64 @@ tsexp-get-node-or-child on the result."
 (tsexp-def-transpose-cmd ccontainer forward)
 (tsexp-def-transpose-cmd ccontainer backward)
 
-(defun tsexp-raise-atom ()
-  (interactive)
-  (let ((node (tsexp-atom-at-point)))
-  (tsexp-raise-text
-   (tsexp-node-bounds node)
-   (tsexp-node-bounds (tsexp-parent-container node)))))
+(defmacro tsexp-def-raise-cmd (name level)
+  `(defun ,(ok-symbol 'tsexp-raise- name) ()
+     (interactive)
+     (let ((node (tsexp-atom-at-point)))
+       (tsexp-raise-text
+        (tsexp-node-bounds (tsexp-parent-container node ,level))
+        (tsexp-node-bounds (tsexp-parent-container node ,(1+ level)))))))
 
-(defun tsexp-raise-container ()
-  (interactive)
-  (let ((node (tsexp-atom-at-point)))
-  (tsexp-raise-text
-   (tsexp-node-bounds (tsexp-parent-container node))
-   (tsexp-node-bounds (tsexp-parent-container node 2)))))
+(tsexp-def-raise-cmd atom 0)
+(tsexp-def-raise-cmd container 1)
+(tsexp-def-raise-cmd ccontainer 2)
 
-(defun tsexp-raise-ccontainer ()
-  (interactive)
-  (let ((node (tsexp-atom-at-point)))
-  (tsexp-raise-text
-   (tsexp-node-bounds (tsexp-parent-container node 2))
-   (tsexp-node-bounds (tsexp-parent-container node 3)))))
+(defun tsexp-wrap-text (bounds what place)
+  (-let* ((open what)
+          (close (case open
+                       ("\"" "\"")
+                       ("(" ")")
+                       ("[" "]")
+                       ("{" "}")))
+          ((beg end) bounds))
+    (goto-char end)
+    (insert close)
+    (goto-char beg)
+    (insert open)
+    (goto-char
+     (if (equal 'beg place) (+ beg (if (equal open "(") 0 1)) (1+ end)))
+    (evil-insert-state)))
+
+(defmacro tsexp-def-wrap-cmd (level opening place)
+  (let ((to-wrap (case level
+                       (0 'element)
+                       (1 'form)))
+        (in-what (case opening
+                       ("\"" 'string)
+                       ("(" 'parens)
+                       ("[" 'brackets)
+                       ("{" 'braces))))
+    `(defun ,(ok-symbol 'tsexp-wrap- to-wrap '- in-what '- place) ()
+       (interactive)
+       (tsexp-wrap-text (tsexp-node-bounds
+                         (tsexp-parent-container (tsexp-atom-at-point) ,level))
+                        ,opening ',place))))
+
+(tsexp-def-wrap-cmd 0 "\"" beg)
+(tsexp-def-wrap-cmd 0 "(" beg)
+(tsexp-def-wrap-cmd 0 "[" beg)
+(tsexp-def-wrap-cmd 0 "{" beg)
+(tsexp-def-wrap-cmd 1 "\"" beg)
+(tsexp-def-wrap-cmd 1 "(" beg)
+(tsexp-def-wrap-cmd 1 "[" beg)
+(tsexp-def-wrap-cmd 1 "{" beg)
+(tsexp-def-wrap-cmd 0 "\"" end)
+(tsexp-def-wrap-cmd 0 "(" end)
+(tsexp-def-wrap-cmd 0 "[" end)
+(tsexp-def-wrap-cmd 0 "{" end)
+(tsexp-def-wrap-cmd 1 "\"" end)
+(tsexp-def-wrap-cmd 1 "(" end)
+(tsexp-def-wrap-cmd 1 "[" end)
+(tsexp-def-wrap-cmd 1 "{" end)
 
 (provide 'tsexp)

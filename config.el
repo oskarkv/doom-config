@@ -952,19 +952,34 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (map! :after python
       :map (python-mode-map
             inferior-python-mode-map)
-      :n "M-i" (cmd (ok-python-transpose-thing 1))
-      :n "M-n" (cmd (ok-python-transpose-thing -1))
-      :n "C-M-i" (cmd (ok-python-transpose-big-thing 1))
-      :n "C-M-n" (cmd (ok-python-transpose-big-thing -1))
-      :n "M-I" (cmd (ok-python-transpose-big-thing 1 t))
-      :n "M-N" (cmd (ok-python-transpose-big-thing -1 t))
-      :n "M-u" 'ok-c-thing-raise
+      :n "SPC v" 'tsexp-test
+      :n "M-i" 'tsexp-transpose-atom-forward
+      :n "M-n" 'tsexp-transpose-atom-backward
+      :n "C-M-i" 'tsexp-transpose-container-forward
+      :n "C-M-n" 'tsexp-transpose-container-backward
+      :n "M-I" 'tsexp-transpose-ccontainer-forward
+      :n "M-N" 'tsexp-transpose-ccontainer-backward
+      :n "M-u" 'tsexp-raise-atom
+      :n "C-M-u" 'tsexp-raise-container
+      :n "M-U" 'tsexp-raise-ccontainer
       :prefix "SPC"
       :n "pp" 'ok-python-import-pprint
       :n "m" '+make/run
-      :n "a" 'ok-wrap-python-thing-in-string
-      :n "w" 'ok-wrap-python-thing
-      :n "f" (cmd (let ((fill-column 78)) (python-fill-paragraph)))
+      :n "a" 'tsexp-wrap-element-string-beg
+      :n "A" 'tsexp-wrap-element-string-beg
+      :n "l" 'tsexp-wrap-form-parens-beg
+      :n "L" 'tsexp-wrap-form-parens-end
+      :n "w" 'tsexp-wrap-element-parens-beg
+      :n "W" 'tsexp-wrap-element-parens-end
+      :n "e[" 'tsexp-wrap-element-brackets-beg
+      :n "e]" 'tsexp-wrap-element-brackets-end
+      :n "e{" 'tsexp-wrap-element-braces-beg
+      :n "e}" 'tsexp-wrap-element-braces-end
+      :n "[" 'tsexp-wrap-form-brackets-beg
+      :n "]" 'tsexp-wrap-form-brackets-end
+      :n "{" 'tsexp-wrap-form-braces-beg
+      :n "}" 'tsexp-wrap-form-braces-end
+      :n "f" 'python-fill-paragraph
       :n "ps" 'projectile-run-eshell
       :n "tk" (cmd (shell-command "pkill -f \"sleep 10000\""))
       ;; :n "cf" '+format/buffer
