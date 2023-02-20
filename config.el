@@ -921,6 +921,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     ;; (setenv "PYTHONPATH" "/home/oskar/quickbit/app-backend/project/quickbit/")
     (setenv "PAGER" "cat")
     (require 'lsp-jedi)
+    (tree-sitter-mode)
     (ok-set-jedi-extra-paths)
     (lsp)
     (setq-local dap-python-executable (with-venv (executable-find "python")))
