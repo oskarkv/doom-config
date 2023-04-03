@@ -26,7 +26,11 @@
 (defun esexp-select-paren (open close point &optional end-point)
   "Return the positions (beg end ...) of the closest pair of OPEN and CLOSE
 delimiters that encloses POINT."
-  (evil-select-paren open close point (or end-point point) 'inclusive 1 t))
+  (let ((r (evil-select-paren
+            open close point (or end-point point) 'inclusive 1 t)))
+    ;; Check if we are inside the pair, otherwise return nil.
+    (when (< (car r) point)
+      r)))
 
 ;; This function seems buggy if expand-past-newlines is t,
 ;; but it's not used for now. Use
