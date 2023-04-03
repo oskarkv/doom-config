@@ -19,12 +19,17 @@
         (server-edit)
       (kill-buffer nil))))
 
+;; Changed unstage from u to x
 (after! magit
 ;;;###autoload (autoload 'magit-dispatch "magit" nil t)
-  (define-transient-command magit-dispatch ()
+  (transient-define-prefix magit-dispatch ()
     "Invoke a Magit command from a list of available commands."
+    :info-manual "(magit)Top"
     ["Transient and dwim commands"
+     ;; → bound in magit-mode-map or magit-section-mode-map
+     ;; ↓ bound below
      [("A" "Apply"          magit-cherry-pick)
+      ;; a                  ↓
       ("b" "Branch"         magit-branch)
       ("B" "Bisect"         magit-bisect)
       ("c" "Commit"         magit-commit)
@@ -32,28 +37,51 @@
       ("d" "Diff"           magit-diff)
       ("D" "Diff (change)"  magit-diff-refresh)
       ("e" "Ediff (dwim)"   magit-ediff-dwim)
-      ("E" "Ediff"          magit-ediff)]
-     [("f" "Fetch"          magit-fetch)
+      ("E" "Ediff"          magit-ediff)
+      ("f" "Fetch"          magit-fetch)
       ("F" "Pull"           magit-pull)
+      ;; g                  ↓
+      ;; G                → magit-refresh-all
+      ("h" "Help"           magit-info)
+      ("H" "Section info"   magit-describe-section :if-derived magit-mode)]
+     [("i" "Ignore"         magit-gitignore)
+      ("I" "Init"           magit-init)
+      ("j" "Jump to section"magit-status-jump  :if-mode     magit-status-mode)
+      ("j" "Display status" magit-status-quick :if-not-mode magit-status-mode)
+      ("J" "Display buffer" magit-display-repository-buffer)
+      ;; k                  ↓
+      ;; K                → magit-file-untrack
       ("l" "Log"            magit-log)
       ("L" "Log (change)"   magit-log-refresh)
       ("m" "Merge"          magit-merge)
       ("M" "Remote"         magit-remote)
+      ;; n                → magit-section-forward
+      ;; N       reserved → forge-dispatch
       ("o" "Submodule"      magit-submodule)
-      ("O" "Subtree"        magit-subtree)]
-     [("P" "Push"           magit-push)
-      ("r" "Rebase"         magit-rebase)
+      ("O" "Subtree"        magit-subtree)
+      ;; p                → magit-section-backward
+      ("P" "Push"           magit-push)
+      ;; q                → magit-mode-bury-buffer
+      ("Q" "Command"        magit-git-command)]
+     [("r" "Rebase"         magit-rebase)
+      ;; R                → magit-file-rename
+      ;; s                  ↓
+      ;; S                  ↓
       ("t" "Tag"            magit-tag)
       ("T" "Note"           magit-notes)
+      ;; u                  ↓
+      ;; U                  ↓
+      ;; v                  ↓
       ("V" "Revert"         magit-revert)
       ("w" "Apply patches"  magit-am)
       ("W" "Format patches" magit-patch)
-      ("X" "Reset"          magit-reset)]
-     [("y" "Show Refs"      magit-show-refs)
+      ;; x                → magit-reset-quickly
+      ("X" "Reset"          magit-reset)
+      ("y" "Show Refs"      magit-show-refs)
       ("Y" "Cherries"       magit-cherry)
       ("z" "Stash"          magit-stash)
-      ("!" "Run"            magit-run)
-      ("%" "Worktree"       magit-worktree)]]
+      ("Z" "Worktree"       magit-worktree)
+      ("!" "Run"            magit-run)]]
     ["Applying changes"
      :if-derived magit-mode
      [("a" "Apply"          magit-apply)
@@ -65,10 +93,12 @@
       ("X" "Unstage all"    magit-unstage-all)]]
     ["Essential commands"
      :if-derived magit-mode
-     ("g" "       refresh current buffer"   magit-refresh)
-     ("<tab>" "   toggle section at point"  magit-section-toggle)
-     ("<return>" "visit thing at point"     magit-visit-thing)
-     ("C-h m" "   show all key bindings"    describe-mode)]))
+     [("g" "       refresh current buffer"   magit-refresh)
+      ("q" "       bury current buffer"      magit-mode-bury-buffer)
+      ("<tab>" "   toggle section at point"  magit-section-toggle)
+      ("<return>" "visit thing at point"     magit-visit-thing)]
+     [("C-x m"    "show all key bindings"    describe-mode)
+      ("C-x i"    "show Info manual"         magit-info)]]))
 
 (after! clojure-mode
   ;; CHANGE: Indent docstrings relative to their parent forms
