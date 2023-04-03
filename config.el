@@ -882,7 +882,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 ;;      (call-interactively (cmd (ok-switch-to-window "*sly-description*")))))
 ;;      ;; (run-at-time 0.1 nil #'ok-switch-to-window "*sly-description*")))
 
-
 (map! :after sly
       :map sly-mode-map
       :prefix "SPC"
@@ -1173,7 +1172,10 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "m" 'org-refile
       :n "f" 'org-fill-paragraph
       :n "o" 'org-open-at-point
-      :n "l" 'org-insert-link
+      :n "l" (cmd
+               (setq current-prefix-arg '(4)) ; C-u
+               (call-interactively 'org-insert-link))
+      :n "u" 'org-insert-link
       :n "e" 'org-edit-special
       :n "i" '(lambda (s) (interactive "sCustom ID: ")
                 (org-set-property "CUSTOM_ID" s))
@@ -1182,6 +1184,11 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "ce" 'org-edit-src-exit
       :n "cc" 'org-edit-src-abort
       )
+
+(defun ok-make-link-description (link desc)
+  (seq-elt (seq-reverse (s-split "[/:.]" link)) 1))
+
+(setq org-link-make-description-function #'ok-make-link-description)
 
 (map! :after evil-org
       :map evil-org-mode-map
