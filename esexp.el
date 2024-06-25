@@ -328,7 +328,9 @@ leading whitespace)."
   (ignore-errors
     (-let* (((beg) (esexp-form-positions t)))
       (goto-char beg)
-      (paredit-raise-sexp))))
+      ;; (when (= (char-after) ?#) (forward-char))
+      ;; (forward-char)
+      (sp-raise-sexp))))
 
 (defun esexp--transpose-sexps-no-error (&optional arg)
   (interactive "p")

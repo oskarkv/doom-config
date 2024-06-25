@@ -235,7 +235,7 @@ tsexp-get-node-or-child on the result."
    (tsexp-parent-container (tsexp-atom-at-point) 0) 1))
 
 (defmacro tsexp-def-transpose-cmd (name dir)
-  (let ((levels (cl-case name
+  (let ((levels (case name
                   ('atom 0)
                   ('container 1)
                   ('ccontainer 2)))

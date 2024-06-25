@@ -226,6 +226,84 @@ boolean is non-nil, also unbinds TAB in that mode."
     (delete-forward-char (length (str n)))
     (insert (str (s-repeat n "s(") "0" (s-repeat n ")")))))
 
+
+(setq webpaste-providers-alist
+  '(("ix.io"
+     :uri "http://ix.io/"
+     :post-field "f:1"
+     :lang-uri-separator "/"
+     :lang-overrides ((emacs-lisp-mode . "elisp")
+                      (nix-mode . "nix"))
+     :success-lambda webpaste--providers-success-returned-string)
+
+    ("paste.rs"
+     :uri "https://paste.rs"
+     :post-field nil
+     :success-lambda webpaste--providers-success-returned-string)
+
+    ("dpaste.com"
+     :uri "http://dpaste.com/api/v2/"
+     :post-data (("title" . "")
+                 ("poster" . "")
+                 ("expiry_days" . 10))
+     :post-field "content"
+     :post-lang-field-name "syntax"
+     :lang-overrides ((emacs-lisp-mode . "clojure"))
+     :success-lambda webpaste--providers-success-location-header)
+
+    ("dpaste.org"
+     :uri "https://dpaste.org/api/"
+     :post-data (("expires" . 864000))
+     :post-field "content"
+     :post-lang-field-name "lexer"
+     :lang-overrides ((emacs-lisp-mode . "clojure"))
+     :success-lambda webpaste--providers-success-returned-string)
+
+    ("paste.mozilla.org"
+      :uri "https://paste.mozilla.org/api/"
+      :post-data (("expires" . 864000))
+      :post-field "content"
+      :post-lang-field-name "lexer"
+      :lang-overrides ((emacs-lisp-mode . "clojure"))
+      :success-lambda webpaste--providers-success-returned-string)
+
+    ("paste.ubuntu.com"
+     :uri "https://paste.ubuntu.com/"
+     :post-data (("poster" . "webpaste"))  ;; the poster is required
+     :post-field "content"
+     :post-lang-field-name "syntax"
+     :lang-overrides ((emacs-lisp-mode . "emacs"))
+     :success-lambda webpaste--providers-success-response-url)
+
+    ("gist.github.com"
+     :uri "https://api.github.com/gists"
+     :post-field nil
+     :post-field-lambda (lambda ()
+                          (cl-function
+                           (lambda (&key text &allow-other-keys)
+                             (let ((filename (if (buffer-file-name)
+                                                 (file-name-nondirectory (buffer-file-name))
+                                               "file.txt")))
+                               (json-encode `(("description" . "Pasted from Emacs with webpaste.el")
+                                              ("public" . "false")
+                                              ("files" .
+                                               ((,filename .
+                                                           (("content" . ,text)))))))))))
+     :success-lambda (lambda ()
+                       (cl-function
+                        (lambda (&key data &allow-other-keys)
+                          (when data
+                            (webpaste--return-url
+                             (cdr (assoc 'html_url (json-read-from-string data)))))))))
+
+    ("bpa.st"
+     :uri "https://bpa.st/api/v1/paste"
+     :post-data (("expiry" . "10day"))
+     :post-field-lambda webpaste--providers-pinnwand-request
+     :lang-overrides ((emacs-lisp-mode . "emacs"))
+     :success-lambda webpaste--providers-pinnwand-success)))
+
+
 (evil-define-operator ok-evil-webpaste (beg end)
   :repeat nil
   :move-point nil
@@ -243,6 +321,27 @@ that should be used for code from the mode."
   (let ((mode-alist '((emacs-lisp-mode . "lisp"))))
     (or (cdr (assoc m mode-alist))
         (ok-string-drop-at-end (str m) 5))))
+
+
+(evil-define-operator lwjgl-to-clj
+  (beg end type register yank-handler)
+  (println beg end)
+  (evil-delete beg end type register yank-handler)
+  (->> (car kill-ring)
+       (s-replace "_" "-")
+       (s-replace-regexp "/GL-" "")
+       (s-replace-regexp "/gl" "")
+       (s-replace "GL33" "gl/")
+       insert)
+  (goto-char beg)
+  (toggle-case-fold-search)
+  (while (re-search-forward "gl/" end t)
+    (forward-char)
+    (when (s-lowercase? (char-to-string (char-after)))
+      (-let (((beg end) (evil-inner-word)))
+        (evil-delete beg end)
+        (insert (s-dashed-words (car kill-ring))))))
+  (toggle-case-fold-search))
 
 (evil-define-operator ok-evil-three-backticks-yank
   (beg end type register yank-handler)
@@ -424,7 +523,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (defun magit-diff-master ()
     "Diff with master"
     (interactive)
-    (apply #'magit-diff-range "master" (magit-diff-arguments)))
+    (apply #'magit-diff-range "main" (magit-diff-arguments)))
 
   (defun magit-diff-dev ()
     "Diff with dev"
@@ -496,7 +595,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 (define-abbrev-table 'global-abbrev-table
   '(
-    ("tex" "t.ex.")
+    ;; ("tex" "t.ex.")
     ("dvs" "d.v.s.")
     ("osv" "o.s.v.")
     ("pga" "p.g.a.")
@@ -506,8 +605,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 ;; Define modes for file extensions.
 (add-to-list 'auto-mode-alist '("\\.joke\\'" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . js-jsx-mode))
 (add-to-list 'auto-mode-alist '("\\.pl\\'" . prolog-mode))
-
 ;; Don't ask before quitting
 (setq confirm-kill-emacs nil)
 
@@ -551,7 +650,36 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (fci-mode -1)
     ;; global-visual-line-mode isn't enough for org, apparently
     (visual-line-mode 1))
-  (setq-hook! 'org-mode-hook evil-auto-indent nil))
+
+  (setq-hook! 'org-mode-hook evil-auto-indent nil)
+
+  (setq org-latex-default-packages-alist
+        '(("AUTO" "inputenc" t
+           ("pdflatex"))
+          ("T1" "fontenc" t
+           ("pdflatex"))
+          ("" "graphicx" t)
+          ("" "longtable" nil)
+          ("" "wrapfig" nil)
+          ("" "rotating" nil)
+          ("normalem" "ulem" t)
+          ("" "amsmath" t)
+          ("" "amssymb" t)
+          ("" "capt-of" nil)
+          ("colorlinks=true" "hyperref" nil))))
+
+(after! ox-latex
+  (add-to-list 'org-latex-classes
+               `("myclass"
+                 ,(str "\\documentclass[11pt]{article}\n"
+                       "\\addtolength{\\parskip}{\\baselineskip}\n"
+                       "\\setlength{\\parindent}{0 em}")
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  (setq org-latex-default-class "myclass"))
 
 ;;; States
 
@@ -570,8 +698,19 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (add-hook 'text-mode-hook #'rainbow-delimiters-mode-disable)
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
-(add-hook! 'text-mode-hook (setq fill-column 60))
+(add-hook! 'text-mode-hook (setq fill-column 64))
 (add-hook! 'term-mode-hook (yas-minor-mode -1) (setq yas-dont-activate t))
+
+(add-hook! 'text-mode-hook #'olivetti-mode)
+(add-hook! 'text-mode-hook #'auto-fill-mode)
+(add-hook! 'text-mode-hook (setq olivetti-body-width (+ fill-column 12)))
+(add-hook! 'html-mode-hook (setq fill-column 80))
+;; (add-hook! 'org-mode-hook #'olivetti-mode)
+;; (add-hook! 'org-mode-hook #'auto-fill-mode)
+;; (add-hook! 'org-mode-hook (setq olivetti-body-width (+ fill-column 12)))
+;; (add-hook! 'markdown-mode-hook #'olivetti-mode)
+;; (add-hook! 'markdown-mode-hook #'auto-fill-mode)
+;; (add-hook! 'markdown-mode-hook (setq olivetti-body-width (+ fill-column 12)))
 
 ;;; Babashka and Joker
 
@@ -684,10 +823,14 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (defun ok-clojure-fill-paragraph ()
   (interactive)
   (if (ok-before-doctring-p)
-      (save-excursion
+      (progn
         (re-search-forward "[^\s-]")
         (clojure-fill-paragraph))
-    (clojure-fill-paragraph)))
+    (if (or (clojure--in-comment-p)
+            (progn (goto-char (bol)) (looking-at-p "\s*;")))
+        (let ((fill-column 72))
+          (clojure-fill-paragraph))
+      (clojure-fill-paragraph))))
 
 (defun ok-rebind-in-all-maps* (start end exclude-list to from)
   (mapatoms (lambda (sym)
@@ -711,7 +854,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (defun ok-wrap-word-in-backticks ()
   (interactive)
   (save-excursion
-    (let* ((sep "[][(){}[:space:]\n\r.,\"]"))
+    (let* ((sep "[][(){}[:space:]\n\r,\"]"))
       (re-search-backward sep)
       (forward-char)
       (insert "`")
@@ -727,7 +870,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 (after! yasnippet
   (map! :map yas-minor-mode-map
-        :i [tab] yas-maybe-expand)
+        :i "s-<tab>" yas-maybe-expand
+        )
   (add-hook 'yas-minor-mode-hook
             (fn (yas-activate-extra-mode 'fundamental-mode))))
 
@@ -740,10 +884,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :o "u" 'evil-previous-line
       :ir "ESC" 'doom/escape
       :ir "<escape>" 'doom/escape
-      ;; Makes tab not call yas-expanda
       :i [tab] 'complete-symbol
-      ;; :i [tab] 'yas-maybe-expand
-      ;; :i [tab] 'complete-symbol
       :i "§" 'evil-normal-state
       :v "§" 'evil-exit-visual-state
       :i "C-e" 'doom/delete-backward-word
@@ -761,12 +902,18 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       "M-p" 'switch-to-next-buffer
       "M-w" 'er/expand-region
       :nv "gB" 'ok-remove-some-spaces
-      :nv "gb" 'ok-remove-spaces
+      :nv "gb" 'ok-yank-without-filling
       :nv "gh" 'ok-evil-webpaste
       :nv "go" '+evil:yank-unindented
       ;; Makes gs work with a motion command afterwards
-      :m "gs" nil
-      :nvm "gs" 'ok-evil-three-backticks-yank
+      :nvm "gs" nil
+      ;; OLD: Last I checked, gs didn't work with motion afterwards without the m
+      ;; below. But I remember something else being wrong with m, but not
+      ;; exactly what.
+      ;;
+      ;; NEW: It didn't work to do gse (down 2 lines) with m, but it worked
+      ;; after remvoing m.
+      :nv "gs" 'ok-evil-three-backticks-yank
       :nvm "gy" 'ok-evil-reddit-yank
       :n "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
       :n "C-n" nil
@@ -826,13 +973,16 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :prefix "SPC"
       :nv "gl" 'magit-log-buffer-file
       :n "gb" 'magit-blame-addition
-      :n "ta" (cmd (shell-command (str "jobbsetup " (projectile-project-root))))
-      :n "tf" (cmd (shell-command (str "jobbsetup " (projectile-project-root) " pytest-failing")))
-      :n "tl" (cmd (shell-command (str "jobbsetup " (projectile-project-root) " only linter")))
-      :n "tm" (cmd (shell-command (str "jobbsetup " (projectile-project-root) " only mypy")))
-      :n "ts" (cmd (shell-command (str "jobbsetup " (projectile-project-root) " only tests")))
+      :n "ta" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root))))
+      :n "tf" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root) " pytest-failing")))
+      :n "tl" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root) " only linter")))
+      :n "tm" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root) " only mypy")))
+      :n "ts" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root) " only tests")))
       :n "q" 'ok-wrap-word-in-backticks
       :nv "f" 'fill-paragraph)
+
+(map! :map cider-popup-buffer-mode-map
+      :n "q" 'cider-popup-buffer-quit)
 
 (map! :map makefile-mode-map
       "M-p" nil)
@@ -1138,6 +1288,33 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :map markdown-mode-map
       "M-p" nil)
 
+(defun ok-org-fix-blank-lines ()
+  (interactive)
+  (goto-char 1)
+  (while (re-search-forward "^\*+\s" nil t)
+    (goto-char (match-beginning 0))
+    (insert "\n")
+    (forward-char)
+    (goto-char (1+ (eol)))
+    (insert "\n"))
+  (goto-char 1)
+  (while (re-search-forward "#\\+BEGIN_SRC" nil t)
+    (goto-char (match-beginning 0))
+    (insert "\n")
+    (re-search-forward "#\\+END_SRC" nil t)
+    (forward-char)
+    (insert "\n"))
+  (replace-regexp-in-region "\n\n\n+" "\n\n" 1)
+  (goto-char 1)
+  (while (looking-at-p "$")
+    (kill-whole-line)))
+
+(defun ok-org-clean-buffer ()
+  (interactive)
+  (save-excursion
+    (ok-org-fill-buffer-excluding-code-blocks)
+    (ok-org-fix-blank-lines)))
+
 (map! :after org
       :map org-mode-map
       ;; motion state
@@ -1172,6 +1349,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "m" 'org-refile
       :n "f" 'org-fill-paragraph
       :n "o" 'org-open-at-point
+      :n "F" 'ok-org-clean-buffer
       :n "l" (cmd
                (setq current-prefix-arg '(4)) ; C-u
                (call-interactively 'org-insert-link))
@@ -1193,7 +1371,8 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (map! :after evil-org
       :map evil-org-mode-map
       :i "C-h" nil
-      :i "<return>" 'org-return
+      ;; :i "<return>" 'org-return
+      :i "<return>" 'newline-and-indent
       :vo "ie" nil
       :vo "iE" nil
       :vo "ir" nil
@@ -1232,6 +1411,18 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (goto-char beg)
     (dotimes (_ count)
       (join-line 1))))
+
+(evil-define-operator ok-yank-without-filling (beg end type register yank-handler)
+  :type line
+  :repeat nil
+  :move-point nil
+  (evil-yank beg end type register yank-handler)
+  (kill-new (->> (car kill-ring)
+                 (replace-regexp-in-string "\n\n" "#@#@#@")
+                 (replace-regexp-in-string "\n" " ")
+                 (replace-regexp-in-string "#@#@#@" "\n\n")
+                 s-trim)
+            t))
 
 ;; Apparently C-x is a common prefix, and many modes use it.
 ;; Shadow all of them for now.
@@ -1292,6 +1483,15 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
    "M-f" nil
    "M-p" nil))
 
+(defun magit-add-current-branch-to-kill-ring ()
+  "Show the current branch in the echo-area and add it to the `kill-ring'."
+  (interactive)
+  (let ((branch (magit-get-current-branch)))
+    (if branch
+        (progn (kill-new branch)
+               (message "%s" branch))
+      (user-error "There is not current branch"))))
+
 (add-hook! 'git-rebase-mode-hook
   (map!
    :map git-rebase-mode-map
@@ -1304,6 +1504,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
    "p" 'git-rebase-pick
    "q" 'with-editor-cancel
    :n "k" 'git-rebase-undo))
+
+(map! :map doom-leader-map
+      "g M-y" 'magit-add-current-branch-to-kill-ring)
 
 (map! :after magit
       :map magit-blob-mode-map
@@ -1371,7 +1574,28 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 (map! :map dired-mode-map
       :n "e" 'next-line
-      :n "u" 'previous-line)
+      :n "u" 'previous-line
+      :n "q" nil)
+
+(defun opengl-lookup ()
+  (interactive)
+  (let* ((sym (str (symbol-at-point)))
+         (split (s-split "/" sym))
+         (name (car (if (= 2 (length split))
+                        (cdr split)
+                      split))))
+    (->> name
+         ok-kebab-to-camel-case
+         ((lambda (x) (if (not (s-starts-with? "gl" x))
+                          (str "gl" (s-upcase-first-letter x))
+                        x)))
+         ((lambda (x) (if (s-starts-with? "glUniform" x)
+                          "glUniform"
+                        x)))
+         ;; (str "https://www.google.com/search?q=site%3Adocs.gl%2Fgl3+")
+         (str "https://docs.gl/gl3/")
+         browse-url)))
+
 
 (map! :after (:or clojure-mode cider)
       :map (clojure-mode-map cider-repl-mode-map)
@@ -1385,13 +1609,14 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "db" 'cider-browse-ns
       :n "dc" 'cider-javadoc
       :n "dd" 'cider-doc
-      :n "dg" 'cider-grimoire
-      :n "dw" 'cider-grimoire-web
+      :n "dg" (cmd cider-grimoire)
+      :n "dw" 'opengl-lookup
       :n "eb" 'cider-load-buffer
       :n "ed" 'cider-debug-defun-at-point
       :n "ef" 'ok-cider-eval-form
       :n "en" 'cider-eval-ns-form
       :n "et" 'cider-eval-defun-at-point
+      :n "er" (cmd (ok-cider-eval "(do (require '[clojure.tools.namespace.repl :refer [refresh]]) (refresh))"))
       :n "gn" 'cider-find-ns
       :n "gr" 'cider-find-resource
       :n "jb" 'cider-jack-in-clj&cljs
@@ -1403,7 +1628,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :n "rc" 'cider-repl-clear-buffer
       :n "rf" 'clojure-thread-first-all
       :n "rl" 'clojure-thread-last-all
-      :n "rnr" (cmd (cider-switch-to-repl-buffer t))
+      :n "rnr" (cmd (cider-switch-to-repl-buffer t) (sleep-for 0 100) (cider-set-repl-type 'cljs))
       :n "rns" 'cider-repl-set-ns
       :n "rr" 'cider-switch-to-repl-buffer
       :n "rt" 'clojure-thread

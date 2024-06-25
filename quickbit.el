@@ -4,9 +4,9 @@
 (defmacro qb--shell-command-in-root (pre-command-string dir)
   `(ok-projectile-run-in-root
     (shell-command
-     (str ,pre-command-string
+     (printit (str ,pre-command-string
           ,'command " "
-          (or ,'path ,dir)))))
+          (or ,'path ,dir))))))
 
 (defmacro qb--if-in-path-do-command (path dir)
   `(if (ok-project-path-contains? ,path)
@@ -19,18 +19,22 @@
       (ok-projectile-run-in-root
        (shell-command
         (str command " " (or path "kyc")))))
-  (qb--if-in-path-do-command "/quickbit/merchant-backend/" "merchant")
-  (qb--if-in-path-do-command "/quickbit/app-backend/" "quickbit")
-  (qb--if-in-path-do-command "/quickbit/qb-python-utils/" "quickbit_utils")
+  (qb--if-in-path-do-command "/quickbit/merchant-service/" "merchant")
+  (qb--if-in-path-do-command "/quickbit/monorepo/app-backend/" "quickbit")
+  (qb--if-in-path-do-command "/quickbit/qb-python-utils/" "src tests")
+  (qb--if-in-path-do-command "/quickbit/qb-backoffice-backend/" "backoffice")
+  (qb--if-in-path-do-command "/quickbit/merchant-backoffice-backend/" "backoffice")
+  (qb--if-in-path-do-command "/quickbit/qb-pay-backend/" "qb_pay")
   (qb--if-in-path-do-command "/quickbit/backoffice-core-backend/" "backoffice"))
 
 (defun ok-python-black (&optional path)
+  (println "path is" path)
   (interactive)
-  (if (ok-project-path-contains? "/quickbit/kyc/")
-      (ok-quickbit-venv-command
-       "poetry run black kyc tests")
-    (ok-quickbit-venv-command
-     "python3 -m black --exclude migrations" path)))
+  (cond
+   ((ok-project-path-contains? "/quickbit/kyc/")
+    (ok-quickbit-venv-command "poetry run black kyc tests"))
+   (t
+    (ok-quickbit-venv-command "python3 -m black --exclude migrations" path))))
 
 (defun ok-python-isort (path)
   (ok-quickbit-venv-command "isort" path))

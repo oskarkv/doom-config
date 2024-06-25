@@ -238,13 +238,14 @@
               ;; TODO dedupe the code for matching of keywords, type-hints and unmatched symbols
 
               ;; keywords: {:oneword/ve/yCom|pLex.stu-ff 0}
-              (,(concat "\\(:\\{1,2\\}\\)\\(" clojure--sym-regexp "?\\)\\(/\\)\\(" clojure--sym-regexp "\\)")
+              ;; :a/1 is not possible, but :1/a and :1 are.
+              (,(concat "\\(:\\{1,2\\}\\)\\(" clojure--keyword-sym-regexp "?\\)\\(/\\)\\(" clojure--keyword-sym-regexp "\\)")
                (1 'clojure-keyword-face)
                (2 font-lock-type-face)
                ;; (2 'clojure-keyword-face)
                (3 'default)
                (4 'clojure-keyword-face))
-              (,(concat "\\(:\\{1,2\\}\\)\\(" clojure--sym-regexp "\\)")
+              (,(concat "\\(:\\{1,2\\}\\)\\(" clojure--keyword-sym-regexp "\\)")
                (1 'clojure-keyword-face)
                (2 'clojure-keyword-face))
 

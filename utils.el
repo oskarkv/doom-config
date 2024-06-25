@@ -267,4 +267,30 @@ is non-nil, then also \r and \n are considered whitespace."
    (apply #'start-process command (str "*" command "*")
           (s-split-words command))))
 
+(defun ok-kebab-to-camel-case (string)
+  (s-replace-regexp "-[^\s]" (lambda (x) (s-upcase (s-right 1 x))) string))
+
+
+(defun s-upcase-first-letter (s)
+  "Convert S first character to upper case."
+  (declare (side-effect-free t))
+  (concat (upcase (substring s 0 1)) (substring s 1)))
+
+(defun ok-org-fill-buffer-excluding-code-blocks ()
+  "Fill the buffer, excluding code blocks."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (let (start end)
+      (setq start (point))
+      (while (re-search-forward "#\\+BEGIN_SRC" nil t)
+        (goto-char (bol))
+        (setq end (1- (point)))
+        (evil-visual-select start end)
+        (org-fill-paragraph nil t)
+        (when (re-search-forward "#\\+END_SRC" nil t)
+          (setq start (1+ (point)))))
+      (evil-visual-select start (point-max))
+      (org-fill-paragraph nil t))))
+
 (provide 'utils)

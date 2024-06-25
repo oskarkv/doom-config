@@ -89,3 +89,15 @@
 
 (package! xr
   :recipe (:host github :repo "mattiase/xr"))
+
+(package! olivetti-mode
+  :recipe (:host github :repo "rnkn/olivetti"))
+
+
+(package! ox-reveal
+  :recipe (:host github :repo "hexmode/ox-reveal"))
+
+;; (package! epresent
+;;   :recipe (:host github :repo "eschulte/epresent"))
+
+(package! eglot)
