@@ -8,10 +8,8 @@
 (require 's)
 (require 'cl-indent)
 (require 'dash)
-(require 'amdl-mode)
 (require 'dap-swi-prolog)
 (require 'undo-tree)
-(require 'quickbit)
 (global-undo-tree-mode)
 
 ;; RET vs <return>:
@@ -691,7 +689,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 ;;; Misc
 
-(add-hook 'amdl-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 (add-hook 'org-mode-hook #'rainbow-delimiters-mode-disable)
 (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode)
@@ -973,11 +970,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :prefix "SPC"
       :nv "gl" 'magit-log-buffer-file
       :n "gb" 'magit-blame-addition
-      :n "ta" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root))))
-      :n "tf" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root) " pytest-failing")))
-      :n "tl" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root) " only linter")))
-      :n "tm" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root) " only mypy")))
-      :n "ts" (cmd (projectile-run-shell-command-in-root (str "jobbsetup " (projectile-project-root) " only tests")))
       :n "q" 'ok-wrap-word-in-backticks
       :nv "f" 'fill-paragraph)
 
@@ -1062,12 +1054,6 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (require 'elpy)
   (setq dap-python-debugger 'debugpy)
   (add-hook! 'python-mode-hook
-    (let ((root (projectile-project-root)))
-      ;; (setenv "DJANGO_SETTINGS_MODULE" "quickbit.settings.test")
-      (setenv "PYTHONPATH" (if (and root (s-matches? "quickbit" root))
-                               (str root "quickbit/")
-                             root)))
-    ;; (setenv "PYTHONPATH" "/home/oskar/quickbit/app-backend/project/quickbit/")
     (setenv "PAGER" "cat")
     (require 'lsp-jedi)
     (tree-sitter-mode)
@@ -1823,9 +1809,3 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
   (setq display-buffer-alist
         '(("\\*Backtrace\\*" . ((display-buffer-min))))))
-
-(defun reload-amdl ()
-  (interactive)
-  (ignore-errors (unload-feature 'amdl-mode))
-  (require 'amdl-mode)
-  (amdl-mode))
