@@ -1608,6 +1608,32 @@ indented."
          (str "https://docs.gl/gl3/")
          browse-url)))
 
+;; (defun ok-clojure-refresh ()
+;;   (interactive)
+;;   (-> "(do (require 'refresh) (refresh/better-refresh))" ok-cider-eval))
+
+(defun ok-clojure-refresh ()
+  (interactive)
+  (let* ((root (projectile-project-root))
+         (files (directory-files-recursively root ".*clj$"))
+         (files (-filter (lambda (x) (s-contains? "/src/" x)) files))
+         (files (mapcar (lambda (name) (cadr (s-split "/src/" name))) files))
+         (files (mapcar (lambda (name) (s-replace-all '(("/" . ".") (".clj" . "") ("_" . "-")) name))
+                        files)))
+    (-> (str "(do "
+             "(require '[clojure.tools.namespace.repl :refer [refresh]])"
+             "(require '[oskarkv.utils :as u])"
+             ;; "(doseq [sym (keys (ns-publics (find-ns 'oskarkv.utils)))
+             ;;          nams '" files "]"
+             ;; "  (u/ignore-exception"
+             ;; "    (ns-unmap (find-ns name) sym)))"
+             "(doseq [sym (keys (ns-publics (find-ns 'game.utils)))
+                      nams '" files "]"
+             "  (u/ignore-exception"
+             "    (ns-unmap (find-ns name) sym)))"
+             "(refresh))")
+        ok-cider-eval)
+    ))
 
 (map! :after (:or clojure-mode cider)
       :map (clojure-mode-map cider-repl-mode-map)
@@ -1628,7 +1654,7 @@ indented."
       :n "ef" 'ok-cider-eval-form
       :n "en" 'cider-eval-ns-form
       :n "et" 'cider-eval-defun-at-point
-      :n "er" (cmd (ok-cider-eval "(do (require '[clojure.tools.namespace.repl :refer [refresh]]) (refresh))"))
+      :n "er" 'ok-clojure-refresh
       :n "gn" 'cider-find-ns
       :n "gr" 'cider-find-resource
       :n "jb" 'cider-jack-in-clj&cljs
