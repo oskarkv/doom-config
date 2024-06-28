@@ -817,17 +817,31 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (re-search-forward "[^\s-]")
     (clojure-in-docstring-p)))
 
+
+(defun ok-clojure-docstring-indent ()
+  "Returns how many columns more than the usual 2 the docstring at point is
+indented."
+  (save-excursion
+    (paredit-backward-up)
+    (- (point) (bol) 2)))
+
 (defun ok-clojure-fill-paragraph ()
   (interactive)
   (if (ok-before-doctring-p)
-      (progn
+      (let ((clojure-docstring-fill-column (- clojure-docstring-fill-column
+                                              (ok-clojure-docstring-indent))))
         (re-search-forward "[^\s-]")
         (clojure-fill-paragraph))
     (if (or (clojure--in-comment-p)
             (progn (goto-char (bol)) (looking-at-p "\s*;")))
-        (let ((fill-column 72))
+        (let ((fill-column clojure-docstring-fill-column))
           (clojure-fill-paragraph))
-      (clojure-fill-paragraph))))
+      (clojure-fill-paragraph)))
+  (save-excursion
+    (paredit-backward-up)
+    (when (> (- (point) (bol)) 2)
+      (forward-char)
+      (evil-execute-macro 1 "=as"))))
 
 (defun ok-rebind-in-all-maps* (start end exclude-list to from)
   (mapatoms (lambda (sym)
