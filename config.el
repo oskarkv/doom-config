@@ -912,6 +912,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       ;; after remvoing m.
       :nv "gs" 'ok-evil-three-backticks-yank
       :nvm "gy" 'ok-evil-reddit-yank
+      :nvm "gq" 'ok-org-quote-block
       :n "§" (cmd (evil-ex-nohighlight) (evil-force-normal-state))
       :n "C-n" nil
       :n "u" nil
@@ -1368,7 +1369,9 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
       :vo "lE" #'evil-org-inner-element
       :vo "lr" #'evil-org-inner-greater-element
       :vo "lR" #'evil-org-inner-subtree
-      :nv "TAB" nil)
+      :nv "TAB" nil
+      :prefix "SPC"
+      :nvm "c" 'ok-org-quote-block)
 
 (map! :after ivy
       :map (ivy-minibuffer-map ivy-switch-buffer-map)
@@ -1397,6 +1400,15 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (goto-char beg)
     (dotimes (_ count)
       (join-line 1))))
+
+(evil-define-operator ok-org-quote-block (beg end type register yank-handler)
+  :type line
+  :repeat nil
+  :move-point nil
+  (goto-char end)
+  (insert "#+END_QUOTE")
+  (goto-char beg)
+  (insert "#+BEGIN_QUOTE\n"))
 
 (evil-define-operator ok-yank-without-filling (beg end type register yank-handler)
   :type line
