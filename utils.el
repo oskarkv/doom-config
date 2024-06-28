@@ -9,7 +9,9 @@
   (number-sequence start (1- end) step))
 
 (defun println (&rest args)
-  (print (s-join " " (mapcar #'str args))))
+  (let ((x (s-join " " (mapcar #'str args))))
+    (print x)
+    x))
 
 (defun printit (&rest xs)
   (apply #'println xs)
