@@ -10,6 +10,7 @@
 (require 'dash)
 (require 'dap-swi-prolog)
 (require 'undo-tree)
+(require 'fill-as-markdown)
 (global-undo-tree-mode)
 
 ;; RET vs <return>:
@@ -817,31 +818,37 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (re-search-forward "[^\s-]")
     (clojure-in-docstring-p)))
 
-
 (defun ok-clojure-docstring-indent ()
   "Returns how many columns more than the usual 2 the docstring at point is
 indented."
   (save-excursion
     (paredit-backward-up)
-    (- (point) (bol) 2)))
+    (- (point) (bol))))
+
+(defun ok-clojure-comment-indent ()
+  (save-excursion
+    (evil-execute-macro 1 "^")
+    ;; -3 to adjust for the
+    (- (point) (bol))))
 
 (defun ok-clojure-fill-paragraph ()
   (interactive)
-  (if (ok-before-doctring-p)
-      (let ((clojure-docstring-fill-column (- clojure-docstring-fill-column
-                                              (ok-clojure-docstring-indent))))
-        (re-search-forward "[^\s-]")
-        (clojure-fill-paragraph))
-    (if (or (clojure--in-comment-p)
-            (progn (goto-char (bol)) (looking-at-p "\s*;")))
-        (let ((fill-column clojure-docstring-fill-column))
-          (clojure-fill-paragraph))
-      (clojure-fill-paragraph)))
   (save-excursion
-    (paredit-backward-up)
-    (when (> (- (point) (bol)) 2)
-      (forward-char)
-      (evil-execute-macro 1 "=as"))))
+    (if (ok-before-doctring-p)
+        (let ((fill-column (- clojure-docstring-fill-column
+                              (ok-clojure-docstring-indent) 1)))
+          (re-search-forward "[^\s-]")
+          (ok-fill-docstring-as-markdown))
+      (if (or (clojure--in-comment-p)
+              (progn (goto-char (bol)) (looking-at-p "\s*;")))
+          (let ((fill-column (- clojure-docstring-fill-column
+                                (ok-clojure-comment-indent) 3)))
+            (ok-fill-comment-as-markdown))
+        (clojure-fill-paragraph)))
+    (when (ignore-errors (paredit-backward-up))
+      (when (> (- (point) (bol)) 2)
+        (forward-char)
+        (evil-execute-macro 1 "=as")))))
 
 (defun ok-rebind-in-all-maps* (start end exclude-list to from)
   (mapatoms (lambda (sym)
