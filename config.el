@@ -416,6 +416,26 @@ Works with evil."
   :repeat nil
   (evil-execute-macro count (evil-get-register ?q)))
 
+(defun ok-clean-ns (&rest args)
+  (interactive)
+  (let ((utils? (save-excursion
+                  (goto-char (point-min))
+                  (or
+                   (re-search-forward "game.utils :refer :all" nil t)
+                   (re-search-forward ":use game.utils" nil t)
+                   (re-search-forward "oskarkv.utils :refer :all" nil t)
+                   (re-search-forward ":use oskarkv.utils" nil t)))))
+    (cljr--ensure-op-supported "clean-ns")
+    (cider-eval-ns-form)
+    (cljr--clean-ns nil nil)
+    (when utils?
+      (save-excursion
+        (goto-char (point-min))
+        (re-search-forward ":require" nil t)
+        (insert "[game.utils :refer :all]"))
+      (cljr--clean-ns nil t))))
+
+
 ;;; Settings
 
 ;; Buffer stuff, sigh...
@@ -506,10 +526,11 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
                        cljr--all-helpers))
 
   (map! :map ok-clj-refactor-map
-        :prefix "SPC"
-        "nn" (cmd (cljr--clean-ns nil :no-prune)))
+        "nn" (cmd (cljr--clean-ns nil :no-prune))
+        "cn" 'ok-clean-ns)
 
-  (advice-add 'cljr--clean-ns :after #'clean-ns-more))
+  ;; (advice-add 'cljr--clean-ns :after #'clean-ns-more)
+  )
 
 (add-hook! '(text-mode-hook prog-mode-hook conf-mode-hook)
            #'fci-mode)
