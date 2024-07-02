@@ -1012,6 +1012,7 @@ indented."
       :v "L" 'evil-insert
       :v "A" 'evil-append
       :prefix "SPC"
+      :n "v" 'browse-url-at-point
       :nv "gl" 'magit-log-buffer-file
       :n "gb" 'magit-blame-addition
       :n "q" 'ok-wrap-word-in-backticks
