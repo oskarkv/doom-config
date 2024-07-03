@@ -296,6 +296,22 @@
                0 'clojure-number-face)
               ("[~@'`#]" 0 'clojure-quote-face))))))
 
+(defun get-indentation (line)
+  (- (length line) (length (s-trim-left line))))
+
+(defun ok--indent-everything-like-second-line (string)
+  (let ((lines (s-split "\n" string))
+        prefix)
+    (if (> (length lines) 1)
+        (progn
+          (setq prefix (get-indentation (cadr lines)))
+          (s-join "\n" (cons
+                        (car lines)
+                        (mapcar (lambda (line)
+                                  (substring line prefix))
+                                (cdr lines)))))
+      string)))
+
 (after! cider
   ;; CHANGE: Fix (def v (a-fn ...)) not font locking a-fn
   (defun cider--parse-and-apply-locals (end &optional outer-locals)
@@ -347,8 +363,7 @@ before point."
                       (split-string str "\n")))
            (args    (when-let* ((str (nrepl-dict-get info "arglists-str")))
                       (split-string str "\n")))
-           (doc     (replace-regexp-in-string
-                     "^ *" "  "
+           (doc     (ok--indent-everything-like-second-line
                      (or (nrepl-dict-get info "doc")
                          "Not documented.")))
            (url     (nrepl-dict-get info "url"))
