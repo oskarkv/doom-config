@@ -749,6 +749,10 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
   (setq clojure-namespace-regexp
         (rx line-start "(" (? "clojure.core/") (or "in-ns" "ns" "ns+")
             symbol-end))
+  ;; LSP
+  (add-hook 'clojure-mode-hook #'lsp-deferred)
+  (add-hook 'clojurescript-mode-hook #'lsp-deferred)
+
   (add-hook! 'clojure-mode-hook (highlight-numbers-mode -1))
   (setq clojure-indent-style :always-align
         clojure-docstring-fill-column 72)
@@ -901,8 +905,6 @@ indented."
       (re-search-forward sep)
       (backward-char)
       (insert "`"))))
-
-(add-hook! 'lsp-mode-hook (lsp-ui-mode 0))
 
 (map! :map lsp-signature-mode-map
       :n "M-p" nil
@@ -1057,8 +1059,19 @@ indented."
       '("--spy"))
 
 (after! lsp-mode
+  (setq lsp-lens-enable nil)
+  (add-hook! 'lsp-mode-hook (lsp-ui-mode 0))
+  ;; Otherwise lsp broke regular indentation with =
+  (setq lsp-enable-on-type-formatting nil)
+  (setq lsp-enable-indentation nil)
   (add-to-list 'lsp-disabled-clients 'pyls)
-  (add-to-list 'lsp-enabled-clients 'jedi))
+  (add-to-list 'lsp-enabled-clients 'jedi)
+  (add-to-list 'lsp-enabled-clients 'clojure-lsp)
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection (lsp-stdio-connection '("clojure-lsp"))
+    :activation-fn (lsp-activate-on "clojure")
+    :server-id 'clojure-lsp)))
 
 (after! sly
   (advice-add 'sly-show-description
