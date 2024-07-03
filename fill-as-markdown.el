@@ -1,4 +1,5 @@
 ;;; fill-as-markdown.el -*- lexical-binding: t; -*-
+(require 'utils)
 
 (defun ok-narrow-to-comment ()
   "Narrow the buffer to the current multi-line comment block."
@@ -71,21 +72,21 @@
 
 (defun ok--fill-buffer-as-markdown ()
   (save-excursion
-    ;; fill-column changes when mode is switched, so save it before switching,
-    ;; and use the one we had.
-    (let ((fc fill-column))
-      (markdown-mode)
-      ;; Insert newline at end, because filling doesn't work properly otherwise
-      (goto-char (point-max))
-      (insert "\n")
-      ;; Fill buffer
-      (let ((fill-column fc))
-        (fill-region (point-min) (point-max)))
-      (markdown-cleanup-list-numbers)
-      ;; Remove extra newline
-      (goto-char (1- (point-max)))
-      (delete-char 1)
-      (clojure-mode))))
+    (save-mode-excursion
+      ;; fill-column changes when mode is switched, so save it before switching,
+      ;; and use the one we had.
+      (let ((fc fill-column))
+        (markdown-mode)
+        ;; Insert newline at end, because filling doesn't work properly otherwise
+        (goto-char (point-max))
+        (insert "\n")
+        ;; Fill buffer
+        (let ((fill-column fc))
+          (fill-region (point-min) (point-max)))
+        (markdown-cleanup-list-numbers)
+        ;; Remove extra newline
+        (goto-char (1- (point-max)))
+        (delete-char 1)))))
 
 (defun ok-fill-comment-as-markdown ()
   "Fill the current comment as if it were a markdown-mode buffer."
