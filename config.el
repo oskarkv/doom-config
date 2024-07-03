@@ -1715,6 +1715,9 @@ indented."
       :n "rt" 'clojure-thread
       :n "ru" 'clojure-unwind
       :n "sw" 'cider-find-var
+      :n "sr" 'lsp-rename
+      :n "sf" '+lookup/references
+      :n "so" 'cider-clojuredocs-web
       :n "tn" 'cider-test-run-ns-tests
       :n "tp" 'cider-test-run-project-tests
       :n "tt" 'cider-test-run-test
