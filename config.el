@@ -608,7 +608,10 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
  tab-width 4
  python-guess-indent nil
  python-fill-docstring-style 'pep-257-nn
- python-indent-guess-indent-offset nil)
+ python-indent-guess-indent-offset nil
+ ;; disabled because it's unnecessary for formatting clojure comments as
+ ;; markdown
+ markdown-enable-math nil)
 
 (after! ace-window
   (setq aw-scope 'global))
