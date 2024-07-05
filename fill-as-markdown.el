@@ -44,7 +44,9 @@
         (progn
           (delete-char (length prefix))
           (while (zero? (forward-line 1))
-            (ignore-errors (delete-char (length prefix))))))
+            ;; Don't try to delete prefix from empty lines.
+            (if (> (eol) (point))
+                (ignore-errors (delete-char (length prefix)))))))
       prefix)))
 
 (defun ok-remove-docstring-indent ()
