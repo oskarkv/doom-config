@@ -1670,19 +1670,24 @@ indented."
          (files (directory-files-recursively root ".*clj$"))
          (files (-filter (lambda (x) (s-contains? "/src/" x)) files))
          (files (mapcar (lambda (name) (cadr (s-split "/src/" name))) files))
-         (files (mapcar (lambda (name) (s-replace-all '(("/" . ".") (".clj" . "") ("_" . "-")) name))
+         (files (mapcar (lambda (name)
+                          (s-replace-all '(("/" . ".") (".clj" . "") ("_" . "-")) name))
                         files)))
     (-> (str "(do "
+             ;; Requires clojure cli 1.12 too
+             ;; "(require '[clojure.repl.deps :as deps])"
+             ;; "(deps/sync-deps)"
              "(require '[clojure.tools.namespace.repl :refer [refresh]])"
-             "(require '[oskarkv.utils :as u])"
+             "(require '[oskarkv.utils.base :as u])"
              ;; "(doseq [sym (keys (ns-publics (find-ns 'oskarkv.utils)))
              ;;          nams '" files "]"
              ;; "  (u/ignore-exception"
              ;; "    (ns-unmap (find-ns name) sym)))"
              "(doseq [sym (keys (ns-publics (find-ns 'game.utils)))
                       nams '" files "]"
-             "  (u/ignore-exception"
-             "    (ns-unmap (find-ns name) sym)))"
+             "  (try"
+             "    (ns-unmap (find-ns name) sym)"
+             "    (catch Exception e nil)))"
              "(refresh))")
         ok-cider-eval)
     ))
