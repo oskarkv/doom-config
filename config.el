@@ -652,7 +652,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (setq evil-snipe-repeat-scope 'buffer)
 
 ;; Start frame X columns wide
-(add-to-list 'default-frame-alist '(width . 91))
+(add-to-list 'default-frame-alist '(width . 101))
 
 (after! org
   ;; (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
