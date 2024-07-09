@@ -295,6 +295,12 @@ is non-nil, then also \r and \n are considered whitespace."
       (evil-visual-select start (point-max))
       (org-fill-paragraph nil t))))
 
+(defun ok-current-line-indent ()
+  (save-excursion
+    (evil-execute-macro 1 "^")
+    ;; -3 to adjust for the
+    (- (point) (bol))))
+
 (defmacro save-mode-excursion (&rest body)
   (declare (indent 0))
   (with-gensyms (m)
