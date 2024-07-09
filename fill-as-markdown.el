@@ -142,8 +142,7 @@
           ;; Fill buffer
           (ok-replace-md-with-org)
           (ok-insert-paragraph-breakers)
-          (let ((fill-column fc)
-                (adaptive-fill-mode nil))
+          (let ((fill-column fc))
             (fill-region (point-min) (point-max)))
           (ok-remove-paragraph-breakers)
           (ok-replace-org-with-md)
