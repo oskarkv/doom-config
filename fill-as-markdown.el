@@ -1,5 +1,6 @@
 ;;; fill-as-markdown.el -*- lexical-binding: t; -*-
 (require 'utils)
+(require 'org)
 
 (defun ok-narrow-to-comment ()
   "Narrow the buffer to the current multi-line comment block."
@@ -72,23 +73,85 @@
                          (save-excursion (forward-line 1))))
       (insert string))))
 
+
+
+(defun ok-find-changed-indent ()
+  (interactive)
+  (let ((indent (ok-current-line-indent)))
+    (while (and (= (forward-line 1) 0)
+                (= (ok-current-line-indent) indent)))
+    (if (> (ok-current-line-indent) indent)
+        (if (save-excursion (forward-line -1) (looking-at "-\\|+\\|*"))
+            (ok-find-changed-indent)
+          (point))
+      (if (looking-at "-\\|+\\|*")
+          (ok-find-changed-indent)
+        (point)))))
+
+(defun ok-insert-paragraph-breakers ()
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (= (point) (point-max)))
+      (ok-find-changed-indent)
+      (when (not (= (point) (point-max)))
+        (insert "\nBREAKER\n\n")))))
+
+(defun ok-remove-paragraph-breakers ()
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "\nBREAKER\n\n" nil t)
+      (replace-match ""))))
+
+(defun ok-replace-md-with-org ()
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "^*" nil t)
+      (replace-match "+"))
+    (goto-char (point-min))
+    (while (re-search-forward "^#+" nil t)
+      (-let (((start end) (match-data)))
+        (replace-match (s-repeat (- end start) "*"))))))
+
+(defun ok-replace-org-with-md ()
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "^\\*+" nil t)
+      (-let (((start end) (match-data)))
+        (replace-match (s-repeat (- end start) "#"))))
+    (goto-char (point-min))
+    (while (re-search-forward "^+" nil t)
+      (replace-match "*"))))
+
 (defun ok--fill-buffer-as-markdown ()
   (save-excursion
     (save-mode-excursion
       ;; fill-column changes when mode is switched, so save it before switching,
       ;; and use the one we had.
       (let ((fc fill-column))
-        (markdown-mode)
-        ;; Insert newline at end, because filling doesn't work properly otherwise
-        (goto-char (point-max))
-        (insert "\n")
-        ;; Fill buffer
-        (let ((fill-column fc))
-          (fill-region (point-min) (point-max)))
-        (markdown-cleanup-list-numbers)
-        ;; Remove extra newline
-        (goto-char (1- (point-max)))
-        (delete-char 1)))))
+        ;; Messes up buffer if enabled, adding a sort of uneditable indentation.
+        (let ((org-startup-indented nil))
+          (org-mode)
+          ;; Insert newline at end, because filling doesn't work properly
+          ;; otherwise.
+          (goto-char (point-max))
+          (insert "\n")
+          ;; Fill buffer
+          (ok-replace-md-with-org)
+          (ok-insert-paragraph-breakers)
+          (let ((fill-column fc)
+                (adaptive-fill-mode nil))
+            (fill-region (point-min) (point-max)))
+          (ok-remove-paragraph-breakers)
+          (ok-replace-org-with-md)
+          (markdown-mode)
+          (markdown-cleanup-list-numbers)
+          ;; Remove extra newline
+          (goto-char (1- (point-max)))
+          (delete-char 1))))))
 
 (defun ok-fill-comment-as-markdown ()
   "Fill the current comment as if it were a markdown-mode buffer."
