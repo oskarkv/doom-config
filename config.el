@@ -865,30 +865,25 @@ indented."
     (paredit-backward-up)
     (- (point) (bol))))
 
-(defun ok-clojure-comment-indent ()
-  (save-excursion
-    (evil-execute-macro 1 "^")
-    ;; -3 to adjust for the
-    (- (point) (bol))))
-
 (defun ok-clojure-fill-paragraph ()
   (interactive)
-  (save-excursion
-    (if (ok-before-doctring-p)
-        (let ((fill-column (- clojure-docstring-fill-column
-                              (ok-clojure-docstring-indent) 1)))
-          (re-search-forward "[^\s-]")
-          (ok-fill-docstring-as-markdown))
-      (if (or (clojure--in-comment-p)
-              (progn (goto-char (bol)) (looking-at-p "\s*;")))
+  (with-undo-amalgamate
+    (save-excursion
+      (if (ok-before-doctring-p)
           (let ((fill-column (- clojure-docstring-fill-column
-                                (ok-clojure-comment-indent) 3)))
-            (ok-fill-comment-as-markdown))
-        (clojure-fill-paragraph)))
-    (when (ignore-errors (paredit-backward-up))
-      (when (> (- (point) (bol)) 2)
-        (forward-char)
-        (evil-execute-macro 1 "=as")))))
+                                (ok-clojure-docstring-indent) 1)))
+            (re-search-forward "[^\s-]")
+            (ok-fill-docstring-as-markdown))
+        (if (or (clojure--in-comment-p)
+                (progn (goto-char (bol)) (looking-at-p "\s*;")))
+            (let ((fill-column (- clojure-docstring-fill-column
+                                  (ok-current-line-indent) 3)))
+              (ok-fill-comment-as-markdown))
+          (clojure-fill-paragraph)))
+      (when (ignore-errors (paredit-backward-up))
+        (when (> (- (point) (bol)) 2)
+          (forward-char)
+          (evil-execute-macro 1 "=as"))))))
 
 (defun ok-rebind-in-all-maps* (start end exclude-list to from)
   (mapatoms (lambda (sym)
