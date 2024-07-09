@@ -1006,7 +1006,7 @@ indented."
       :m "H" 'evil-ex-search-previous
       :m "i" 'evil-forward-char
       :m "å" 'ace-window
-      :m "ä" 'evil-window-next
+      :m "ä" 'ace-window
       :m "Ä" 'evil-window-prev
       :m "C-q" 'evil-visual-block
       :m "<C-i>" nil
