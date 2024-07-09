@@ -183,27 +183,27 @@ boolean is non-nil, also unbinds TAB in that mode."
      (setq end (f beg end ,pattern ,replacement))))
 
 (cl-flet* ((f (beg end pattern replacement)
-              (let ((lines (count-lines beg end)))
-                (evil-ex-substitute
-                 beg end
-                 `(,pattern t t)
-                 `(replace-eval-replacement . ,replacement))
-                (setq end (progn
-                            (goto-char beg)
-                            (dotimes (i lines) (search-forward "\n"))
-                            (point)))
-                end))
+             (let ((lines (count-lines beg end)))
+               (evil-ex-substitute
+                beg end
+                `(,pattern t t)
+                `(replace-eval-replacement . ,replacement))
+               (setq end (progn
+                           (goto-char beg)
+                           (dotimes (i lines) (search-forward "\n"))
+                           (point)))
+               end))
            (remove-some
-            (beg end)
-            (-ok-call-f " +," ",")
-            (-ok-call-f " +/ +" "/")
-            (-ok-call-f " +\\." ".")
-            (-ok-call-f "\( +" "(")
-            (-ok-call-f "\\[ +" "[")
-            (-ok-call-f " +\)" ")")
-            (-ok-call-f " +\\]" "]")
-            (-ok-call-f " +" " ")
-            end))
+             (beg end)
+             (-ok-call-f " +," ",")
+             (-ok-call-f " +/ +" "/")
+             (-ok-call-f " +\\." ".")
+             (-ok-call-f "\( +" "(")
+             (-ok-call-f "\\[ +" "[")
+             (-ok-call-f " +\)" ")")
+             (-ok-call-f " +\\]" "]")
+             (-ok-call-f " +" " ")
+             end))
   (evil-define-operator ok-remove-spaces (beg end)
     :repeat nil
     :move-point nil
@@ -227,80 +227,80 @@ boolean is non-nil, also unbinds TAB in that mode."
 
 
 (setq webpaste-providers-alist
-  '(("ix.io"
-     :uri "http://ix.io/"
-     :post-field "f:1"
-     :lang-uri-separator "/"
-     :lang-overrides ((emacs-lisp-mode . "elisp")
-                      (nix-mode . "nix"))
-     :success-lambda webpaste--providers-success-returned-string)
+      '(("ix.io"
+         :uri "http://ix.io/"
+         :post-field "f:1"
+         :lang-uri-separator "/"
+         :lang-overrides ((emacs-lisp-mode . "elisp")
+                          (nix-mode . "nix"))
+         :success-lambda webpaste--providers-success-returned-string)
 
-    ("paste.rs"
-     :uri "https://paste.rs"
-     :post-field nil
-     :success-lambda webpaste--providers-success-returned-string)
+        ("paste.rs"
+         :uri "https://paste.rs"
+         :post-field nil
+         :success-lambda webpaste--providers-success-returned-string)
 
-    ("dpaste.com"
-     :uri "http://dpaste.com/api/v2/"
-     :post-data (("title" . "")
-                 ("poster" . "")
-                 ("expiry_days" . 10))
-     :post-field "content"
-     :post-lang-field-name "syntax"
-     :lang-overrides ((emacs-lisp-mode . "clojure"))
-     :success-lambda webpaste--providers-success-location-header)
+        ("dpaste.com"
+         :uri "http://dpaste.com/api/v2/"
+         :post-data (("title" . "")
+                     ("poster" . "")
+                     ("expiry_days" . 10))
+         :post-field "content"
+         :post-lang-field-name "syntax"
+         :lang-overrides ((emacs-lisp-mode . "clojure"))
+         :success-lambda webpaste--providers-success-location-header)
 
-    ("dpaste.org"
-     :uri "https://dpaste.org/api/"
-     :post-data (("expires" . 864000))
-     :post-field "content"
-     :post-lang-field-name "lexer"
-     :lang-overrides ((emacs-lisp-mode . "clojure"))
-     :success-lambda webpaste--providers-success-returned-string)
+        ("dpaste.org"
+         :uri "https://dpaste.org/api/"
+         :post-data (("expires" . 864000))
+         :post-field "content"
+         :post-lang-field-name "lexer"
+         :lang-overrides ((emacs-lisp-mode . "clojure"))
+         :success-lambda webpaste--providers-success-returned-string)
 
-    ("paste.mozilla.org"
-      :uri "https://paste.mozilla.org/api/"
-      :post-data (("expires" . 864000))
-      :post-field "content"
-      :post-lang-field-name "lexer"
-      :lang-overrides ((emacs-lisp-mode . "clojure"))
-      :success-lambda webpaste--providers-success-returned-string)
+        ("paste.mozilla.org"
+         :uri "https://paste.mozilla.org/api/"
+         :post-data (("expires" . 864000))
+         :post-field "content"
+         :post-lang-field-name "lexer"
+         :lang-overrides ((emacs-lisp-mode . "clojure"))
+         :success-lambda webpaste--providers-success-returned-string)
 
-    ("paste.ubuntu.com"
-     :uri "https://paste.ubuntu.com/"
-     :post-data (("poster" . "webpaste"))  ;; the poster is required
-     :post-field "content"
-     :post-lang-field-name "syntax"
-     :lang-overrides ((emacs-lisp-mode . "emacs"))
-     :success-lambda webpaste--providers-success-response-url)
+        ("paste.ubuntu.com"
+         :uri "https://paste.ubuntu.com/"
+         :post-data (("poster" . "webpaste"))  ;; the poster is required
+         :post-field "content"
+         :post-lang-field-name "syntax"
+         :lang-overrides ((emacs-lisp-mode . "emacs"))
+         :success-lambda webpaste--providers-success-response-url)
 
-    ("gist.github.com"
-     :uri "https://api.github.com/gists"
-     :post-field nil
-     :post-field-lambda (lambda ()
-                          (cl-function
-                           (lambda (&key text &allow-other-keys)
-                             (let ((filename (if (buffer-file-name)
-                                                 (file-name-nondirectory (buffer-file-name))
-                                               "file.txt")))
-                               (json-encode `(("description" . "Pasted from Emacs with webpaste.el")
-                                              ("public" . "false")
-                                              ("files" .
-                                               ((,filename .
-                                                           (("content" . ,text)))))))))))
-     :success-lambda (lambda ()
-                       (cl-function
-                        (lambda (&key data &allow-other-keys)
-                          (when data
-                            (webpaste--return-url
-                             (cdr (assoc 'html_url (json-read-from-string data)))))))))
+        ("gist.github.com"
+         :uri "https://api.github.com/gists"
+         :post-field nil
+         :post-field-lambda (lambda ()
+                              (cl-function
+                               (lambda (&key text &allow-other-keys)
+                                 (let ((filename (if (buffer-file-name)
+                                                     (file-name-nondirectory (buffer-file-name))
+                                                   "file.txt")))
+                                   (json-encode `(("description" . "Pasted from Emacs with webpaste.el")
+                                                  ("public" . "false")
+                                                  ("files" .
+                                                   ((,filename .
+                                                               (("content" . ,text)))))))))))
+         :success-lambda (lambda ()
+                           (cl-function
+                            (lambda (&key data &allow-other-keys)
+                              (when data
+                                (webpaste--return-url
+                                 (cdr (assoc 'html_url (json-read-from-string data)))))))))
 
-    ("bpa.st"
-     :uri "https://bpa.st/api/v1/paste"
-     :post-data (("expiry" . "10day"))
-     :post-field-lambda webpaste--providers-pinnwand-request
-     :lang-overrides ((emacs-lisp-mode . "emacs"))
-     :success-lambda webpaste--providers-pinnwand-success)))
+        ("bpa.st"
+         :uri "https://bpa.st/api/v1/paste"
+         :post-data (("expiry" . "10day"))
+         :post-field-lambda webpaste--providers-pinnwand-request
+         :lang-overrides ((emacs-lisp-mode . "emacs"))
+         :success-lambda webpaste--providers-pinnwand-success)))
 
 
 (evil-define-operator ok-evil-webpaste (beg end)
@@ -888,8 +888,8 @@ indented."
                        (s-starts-with-p start (symbol-name sym)))
                   (let* ((km (symbol-value sym)))
                     (define-key km (kbd to)
-                      (or (and from (lookup-key km (kbd from)))
-                          nil)))))
+                                (or (and from (lookup-key km (kbd from)))
+                                    nil)))))
             obarray))
 
 (defun ok-rebind-in-all-maps (start end exclude-list &rest to-froms)
