@@ -73,18 +73,23 @@
                          (save-excursion (forward-line 1))))
       (insert string))))
 
-
-
 (defun ok-find-changed-indent ()
   (interactive)
   (let ((indent (ok-current-line-indent)))
+    ;; Find new indent
     (while (and (= (forward-line 1) 0)
                 (= (ok-current-line-indent) indent)))
+    ;; If more indent than previous indent
     (if (> (ok-current-line-indent) indent)
-        (if (save-excursion (forward-line -1) (looking-at "-\\|+\\|*"))
+        ;; Look at previous line, might be a list start
+        (if (save-excursion
+              (forward-line -1)
+              (looking-at "-\\|+\\|*\\|[[:digit:]]+\\."))
+            ;; Doesn't count, find next indent change
             (ok-find-changed-indent)
           (point))
-      (if (looking-at "-\\|+\\|*")
+      ;; If this line is a list start, doesn't count either
+      (if (looking-at "-\\|+\\|*\\|[[:digit:]]+\\.")
           (ok-find-changed-indent)
         (point)))))
 
