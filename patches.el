@@ -301,18 +301,29 @@
 (defun get-indentation (line)
   (- (length line) (length (s-trim-left line))))
 
+(defun ok--remove-one-space-from-all-but-first (string)
+  (let ((lines (s-split "\n" string)))
+    (s-join "\n" (cons (car lines)
+                       (mapcar (lambda (line)
+                                 (substring line 1))
+                               (cdr lines))))))
+
+
+
 (defun ok--indent-everything-like-second-line (string)
-  (let ((lines (s-split "\n" string))
-        prefix)
-    (if (> (length lines) 1)
-        (progn
-          (setq prefix (get-indentation (cadr lines)))
-          (s-join "\n" (cons
-                        (car lines)
-                        (mapcar (lambda (line)
-                                  (substring line prefix))
-                                (cdr lines)))))
-      string)))
+  (println string)
+  (println
+   (let ((lines (s-split "\n" string))
+         prefix)
+     (if (> (length lines) 1)
+         (progn
+           (setq prefix (get-indentation (cadr lines)))
+           (s-join "\n" (cons
+                         (car lines)
+                         (mapcar (lambda (line)
+                                   (substring line prefix))
+                                 (cdr lines)))))
+       string))))
 
 (after! cider
   ;; CHANGE: Fix (def v (a-fn ...)) not font locking a-fn
@@ -353,21 +364,34 @@ before point."
         (goto-char sexp-end))))
 
   ;; CHANGE: Fix docstring lines starting with spaces showing in docview
-  (defun cider-docview-render-info (buffer info)
-    "Emit into BUFFER formatted INFO for the Clojure or Java symbol."
+  (defun cider-docview-render-info (buffer info &optional compact for-tooltip)
+    "Emit into BUFFER formatted INFO for the Clojure or Java symbol,
+in a COMPACT format is specified, FOR-TOOLTIP if specified."
     (let* ((ns      (nrepl-dict-get info "ns"))
            (name    (nrepl-dict-get info "name"))
            (added   (nrepl-dict-get info "added"))
            (depr    (nrepl-dict-get info "deprecated"))
            (macro   (nrepl-dict-get info "macro"))
            (special (nrepl-dict-get info "special-form"))
+           (builtin (nrepl-dict-get info "built-in")) ;; babashka specific
            (forms   (when-let* ((str (nrepl-dict-get info "forms-str")))
                       (split-string str "\n")))
-           (args    (when-let* ((str (nrepl-dict-get info "arglists-str")))
-                      (split-string str "\n")))
-           (doc     (ok--indent-everything-like-second-line
-                     (or (nrepl-dict-get info "doc")
-                         "Not documented.")))
+           (args    (or (nrepl-dict-get info "annotated-arglists")
+                        (when-let* ((str (nrepl-dict-get info "arglists-str")))
+                          (split-string str "\n"))))
+           (rendered-fragments (cider--render-docstring (list "doc-fragments" (unless compact
+                                                                                (nrepl-dict-get info "doc-fragments"))
+                                                              "doc-block-tags-fragments" (nrepl-dict-get info "doc-block-tags-fragments")
+                                                              "doc-first-sentence-fragments" (nrepl-dict-get info "doc-first-sentence-fragments"))))
+           (fetched-doc (nrepl-dict-get info "doc"))
+           (doc     (ok--remove-one-space-from-all-but-first
+                     (or rendered-fragments
+                         (if compact
+                             (cider-docstring--trim
+                              (cider-docstring--format fetched-doc))
+                           fetched-doc)
+                         (unless compact
+                           "Not documented."))))
            (url     (nrepl-dict-get info "url"))
            (class   (nrepl-dict-get info "class"))
            (member  (nrepl-dict-get info "member"))
@@ -380,35 +404,51 @@ before point."
            (see-also (nrepl-dict-get info "see-also")))
       (cider--help-setup-xref (list #'cider-doc-lookup (format "%s/%s" ns name)) nil buffer)
       (with-current-buffer buffer
-        (cl-flet ((emit (text &optional face)
+        (cl-flet ((emit (text &optional face sep)
                     (insert (if face
                                 (propertize text 'font-lock-face face)
                               text)
-                            "\n")))
+                            (or sep "\n"))))
           (emit (if class java-name clj-name) 'font-lock-function-name-face)
           (when super
-            (emit (concat "   Extends: " (cider-font-lock-as 'java-mode super))))
+            (emit (concat "Extends: " (cider-font-lock-as 'java-mode super))))
           (when ifaces
             (emit (concat "Implements: " (cider-font-lock-as 'java-mode (car ifaces))))
-            (dolist (iface (cdr ifaces))
-              (emit (concat "            "(cider-font-lock-as 'java-mode iface)))))
+            ;; choose a separator that will produce correct alignment on monospace and regular fonts:
+            (let ((sep (if for-tooltip
+                           "                     "
+                         "            ")))
+              (dolist (iface (cdr ifaces))
+                (emit (concat sep (cider-font-lock-as 'java-mode iface))))))
           (when (or super ifaces)
             (insert "\n"))
-          (when-let* ((forms (or forms args)))
+          (when-let* ((forms (or forms args))
+                      (forms (delq nil (mapcar (lambda (f)
+                                                 (unless (equal f "nil")
+                                                   f))
+                                               forms))))
             (dolist (form forms)
-              (insert " ")
-              (emit (cider-font-lock-as-clojure form))))
+              (emit (cider-font-lock-as-clojure form)
+                    nil))
+            (when compact
+              ;; Compensate for the newlines not `emit`ted in the previous call:
+              (insert "\n")))
           (when special
             (emit "Special Form" 'font-lock-keyword-face))
           (when macro
             (emit "Macro" 'font-lock-variable-name-face))
+          (when builtin
+            (emit "Built-in" 'font-lock-keyword-face))
           (when added
             (emit (concat "Added in " added) 'font-lock-comment-face))
           (when depr
             (emit (concat "Deprecated in " depr) 'font-lock-keyword-face))
-          (if class
+          (if (and doc class (not rendered-fragments))
               (cider-docview-render-java-doc (current-buffer) doc)
-            (emit doc))
+            (when doc
+              (emit (if rendered-fragments
+                        doc
+                      (concat "  " doc)))))
           (when url
             (insert "\n  Please see ")
             (insert-text-button url
@@ -417,7 +457,7 @@ before point."
                                 'action (lambda (x)
                                           (browse-url (button-get x 'url))))
             (insert "\n"))
-          (when javadoc
+          (when (and (not compact) javadoc)
             (insert "\n\nFor additional documentation, see the ")
             (insert-text-button "Javadoc"
                                 'url javadoc
@@ -435,18 +475,20 @@ before point."
                                 'action (lambda (_)
                                           (cider-browse-spec (format "%s/%s" ns name))))
             (insert "\n\n"))
-          (if cider-docview-file
-              (progn
-                (insert (propertize (if class java-name clj-name)
-                                    'font-lock-face 'font-lock-function-name-face)
-                        " is defined in ")
-                (insert-text-button (cider--abbreviate-file-protocol cider-docview-file)
-                                    'follow-link t
-                                    'action (lambda (_x)
-                                              (cider-docview-source)))
-                (insert "."))
-            (insert "Definition location unavailable."))
-          (when see-also
+          (unless compact
+            (if (and cider-docview-file (not (string= cider-docview-file "")))
+                (progn
+                  (insert (propertize (if class java-name clj-name)
+                                      'font-lock-face 'font-lock-function-name-face)
+                          " is defined in ")
+                  (insert-text-button (cider--abbreviate-file-protocol cider-docview-file)
+                                      'follow-link t
+                                      'action (lambda (_x)
+                                                (cider-docview-source)))
+                  (insert "."))
+              (insert "Definition location unavailable.")))
+          (when (and (not compact)
+                     see-also)
             (insert "\n\n Also see: ")
             (mapc (lambda (ns-sym)
                     (let* ((ns-sym-split (split-string ns-sym "/"))
@@ -460,12 +502,14 @@ before point."
                                           'help-function (apply-partially #'cider-doc-lookup symbol)))
                     (insert " "))
                   see-also))
-          (cider--doc-make-xrefs)
+          (unless compact
+            (cider--doc-make-xrefs))
           (let ((beg (point-min))
                 (end (point-max)))
             (nrepl-dict-map (lambda (k v)
                               (put-text-property beg end k v))
                             info)))
-        (current-buffer)))))
+        (current-buffer))))
+  )
 
 (provide 'patches)
