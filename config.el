@@ -590,6 +590,7 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 (setq-default
  ;;; Scrolling
  scroll-margin 5
+ fill-column 80
  ;;; Backups
  backup-by-copying t
  delete-old-versions t
