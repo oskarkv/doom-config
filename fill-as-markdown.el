@@ -147,7 +147,14 @@
           ;; Fill buffer
           (ok-replace-md-with-org)
           (ok-insert-paragraph-breakers)
-          (let ((fill-column fc))
+          (let ((fill-column fc)
+                ;; org-mode decides sometimes that there should be a ";; "
+                ;; prefix.
+                (adaptive-fill-function (lambda (&rest args)
+                                          (let ((result (org-adaptive-fill-function)))
+                                            (if (s-starts-with? ";" result)
+                                                ""
+                                              result)))))
             (fill-region (point-min) (point-max)))
           (ok-remove-paragraph-breakers)
           (ok-replace-org-with-md)
