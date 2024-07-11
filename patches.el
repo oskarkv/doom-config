@@ -1,5 +1,20 @@
 ;;; ~/.doom.d/patches.el -*- lexical-binding: t; -*-
 
+;; CHANGE: Add files from .find-files to projectiles alien files
+(after! projectile
+  (setq projectile-indexing-method 'alien)
+  (defun projectile-dir-files-alien (directory)
+    "Get the files for DIRECTORY using external tools."
+    (delete-dups
+     (nconc
+      (let ((vcs (projectile-project-vcs directory)))
+        (cond
+         ((eq vcs 'git)
+          (nconc (projectile-files-via-ext-command directory (projectile-get-ext-command vcs))
+                 (projectile-get-sub-projects-files directory vcs)))
+         (t (projectile-files-via-ext-command directory (projectile-get-ext-command vcs)))))
+      (file-to-lines (str (projectile-project-root) ".find-files"))))))
+
 ;; CHANGE: Redefine evil-delete-buffer to not also close the window
 (evil-define-command evil-delete-buffer (buffer &optional bang)
   "Deletes a buffer."

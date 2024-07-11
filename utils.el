@@ -5,8 +5,14 @@
 (defun range (start &optional end step)
   (unless end
     (setq end start
-      start 0))
+          start 0))
   (number-sequence start (1- end) step))
+
+(defun file-to-lines (file-path)
+  "Return a list of lines from the file at FILE-PATH."
+  (with-temp-buffer
+    (insert-file-contents file-path)
+    (split-string (buffer-string) "\n" t)))
 
 (defun println (&rest args)
   (let ((x (s-join " " (mapcar #'str args))))
@@ -56,12 +62,12 @@
 
 (defmacro case (expr &rest cases)
   (with-gensyms (result)
-  `(let ((,result ,expr))
-     (cond ,@(mapcar (-lambda ((a b))
-                       (if (listp a)
-                           (list `(cl-member ,result ',a :test #'equal) b)
+    `(let ((,result ,expr))
+       (cond ,@(mapcar (-lambda ((a b))
+                         (if (listp a)
+                             (list `(cl-member ,result ',a :test #'equal) b)
                            (list `(equal ,result ',a) b)))
-                     cases)))))
+                       cases)))))
 
 (defun ok-line-as-string ()
   (s-trim (thing-at-point 'line t)))
