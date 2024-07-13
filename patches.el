@@ -116,6 +116,34 @@
       ("C-x i"    "Show Info manual"         magit-info)]]))
 
 (after! clojure-mode
+
+  (defun clojure-unwind (&optional n)
+    "Unwind thread at point or above point by N levels.
+With universal argument \\[universal-argument], fully unwind thread."
+    (interactive "P")
+    (setq n (cond ((equal n '(4)) 999)
+                  (n) (1)))
+    (save-excursion
+      (let ((limit (save-excursion
+                     (beginning-of-defun-raw)
+                     (point))))
+        (ignore-errors
+          (when (looking-at "(")
+            (forward-char 1)
+            (forward-sexp 1)))
+        (while (> n 0)
+          (search-backward-regexp "([^-]*[-+]>" limit)
+          (if (clojure--nothing-more-to-unwind)
+              (progn (clojure--pop-out-of-threading)
+                     (clojure--fix-sexp-whitespace)
+                     (setq n 0)) ;; break out of loop
+            (down-list)
+            (cond
+             ((looking-at "[^-]*[+-]>\\$?\\_>")  (clojure--unwind-first))
+             ((looking-at "[^-]*[+-]>>\\$?\\_>") (clojure--unwind-last)))
+            (clojure--fix-sexp-whitespace 'move-out)
+            (setq n (1- n)))))))
+
   ;; CHANGE: Indent docstrings relative to their parent forms
   (defun clojure-indent-line ()
     "Indent current line as Clojure code."
