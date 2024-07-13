@@ -509,6 +509,11 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 (setq +evil-want-o/O-to-continue-comments nil)
 
+(after! vertico
+  (map! :map vertico-map
+        "C-e" 'vertico-next
+        "C-u" 'vertico-previous))
+
 (after! evil-org
   ;; Cycle between 3 states on a heading (folded, subheadings, all)
   (setq org-tab-first-hook
