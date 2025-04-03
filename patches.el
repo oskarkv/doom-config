@@ -13,7 +13,9 @@
           (nconc (projectile-files-via-ext-command directory (projectile-get-ext-command vcs))
                  (projectile-get-sub-projects-files directory vcs)))
          (t (projectile-files-via-ext-command directory (projectile-get-ext-command vcs)))))
-      (file-to-lines (str (projectile-project-root) ".find-files"))))))
+      (or (ignore-errors
+            (file-to-lines (str (projectile-project-root) ".find-files"))
+            '()))))))
 
 ;; CHANGE: Redefine evil-delete-buffer to not also close the window
 (evil-define-command evil-delete-buffer (buffer &optional bang)

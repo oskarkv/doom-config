@@ -131,6 +131,64 @@
     (while (re-search-forward "^+" nil t)
       (replace-match "*"))))
 
+;; Took this from org-mode and removed widening the buffer.
+(defun ok-adaptive-fill-function ()
+  "Compute a fill prefix for the current line.
+Return fill prefix, as a string, or nil if current line isn't
+meant to be filled.  For convenience, if `adaptive-fill-regexp'
+matches in paragraphs or comments, use it."
+  (unless (org-at-heading-p)
+    (let* ((p (line-beginning-position))
+           (element (save-excursion
+                      (forward-line 0)
+                      (org-element-at-point)))
+           (type (org-element-type element))
+           (post-affiliated (org-element-post-affiliated element)))
+      (unless (< p post-affiliated)
+        (cl-case type
+          (comment
+           (save-excursion
+             (forward-line 0)
+             (looking-at "[ \t]*")
+             (concat (match-string 0) "# ")))
+          (footnote-definition "")
+          ((item plain-list)
+           (make-string (org-list-item-body-column post-affiliated) ?\s))
+          (paragraph
+           ;; Fill prefix is usually the same as the current line,
+           ;; unless the paragraph is at the beginning of an item.
+           (let ((parent (org-element-parent element)))
+             (save-excursion
+               (forward-line 0)
+               (cond ((org-element-type-p parent 'item)
+                      (make-string (org-list-item-body-column
+                                    (org-element-begin parent))
+                                   ?\s))
+                     ((and adaptive-fill-regexp
+                           ;; Locally disable
+                           ;; `adaptive-fill-function' to let
+                           ;; `fill-context-prefix' handle
+                           ;; `adaptive-fill-regexp' variable.
+                           (let (adaptive-fill-function)
+                             (fill-context-prefix
+                              post-affiliated
+                              (org-element-end element)))))
+                     ((looking-at "[ \t]+") (match-string 0))
+                     (t  "")))))
+          (comment-block
+           ;; Only fill contents if P is within block boundaries.
+           (let* ((cbeg (save-excursion (goto-char post-affiliated)
+                                        (forward-line)
+                                        (point)))
+                  (cend (save-excursion
+                          (goto-char (org-element-end element))
+                          (skip-chars-backward " \r\t\n")
+                          (line-beginning-position))))
+             (when (and (>= p cbeg) (< p cend))
+               (if (save-excursion (forward-line 0) (looking-at "[ \t]+"))
+                   (match-string 0)
+                 "")))))))))
+
 (defun ok--fill-buffer-as-markdown ()
   (save-excursion
     (save-mode-excursion
@@ -151,7 +209,7 @@
                 ;; org-mode decides sometimes that there should be a ";; "
                 ;; prefix.
                 (adaptive-fill-function (lambda (&rest args)
-                                          (let ((result (org-adaptive-fill-function)))
+                                          (let ((result (ok-adaptive-fill-function)))
                                             (if (s-starts-with? ";" result)
                                                 ""
                                               result)))))

@@ -416,6 +416,11 @@ Works with evil."
   :repeat nil
   (evil-execute-macro count (evil-get-register ?q)))
 
+(evil-define-command ok-run-w-macro (count)
+  (interactive "<c>")
+  :repeat nil
+  (evil-execute-macro count (evil-get-register ?w)))
+
 (defun ok-clean-ns (&rest args)
   (interactive)
   (let ((utils? (save-excursion
@@ -509,8 +514,14 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 
 (setq +evil-want-o/O-to-continue-comments nil)
 
+
+(after! denote
+  (setq denote-directory (expand-file-name "~/notes"))
+  (setq denote-known-keywords '("opengl" "emacs" "clojure" "meditation")))
+
 (after! vertico
   (map! :map vertico-map
+        "RET" 'vertico-directory-enter
         "C-e" 'vertico-next
         "C-u" 'vertico-previous))
 
@@ -660,8 +671,15 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
 ;; Start frame X columns wide
 (add-to-list 'default-frame-alist '(width . 101))
 
+
 (after! org
   ;; (remove-hook! 'org-tab-first-hook #'+org-yas-expand-maybe-h)
+  (setq-hook! 'org-mode-hook
+    fill-nobreak-predicate
+    (lambda ()
+      (let ((faces (ensure-list (get-text-property (point) 'face))))
+        (or (memq 'org-verbatim faces) (memq 'org-code faces)))))
+
   (setq org-clock-clocked-in-display nil
         org-M-RET-may-split-line nil
         org-export-with-smart-quotes nil
@@ -681,6 +699,13 @@ BUF should be skipped over by functions like `next-buffer' and `other-buffer'."
     (visual-line-mode 1))
 
   (setq-hook! 'org-mode-hook evil-auto-indent nil)
+
+  ;; Controls how *bold* and ~verbatim~ are highlighted. The last number is the
+  ;; maximum newlines in such a section.
+  (setq org-emphasis-regexp-components '("-[:space:]¡¿('\"{" "-[:space:].,:!?;'\")}\\[" "[:space:]" "." 3))
+  (org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components)
+
+  (setq org-pandoc-options-for-markdown '((atx-headers . t)))
 
   (setq org-latex-default-packages-alist
         '(("AUTO" "inputenc" t
@@ -944,10 +969,14 @@ indented."
       :i [tab] 'complete-symbol
       :i "§" 'evil-normal-state
       :v "§" 'evil-exit-visual-state
+      :i [escape] 'evil-normal-state
+      :v [escape] 'evil-exit-visual-state
       :i "C-e" 'doom/delete-backward-word
       :i "C-<tab>" (cmd (insert "\t"))
       :r "§" 'evil-normal-state
+      :r [escape] 'evil-normal-state
       :nmvi "TAB" nil
+      :n "C-r" 'undo-redo
       "C-i" 'end-of-line
       "C-n" 'beginning-of-line
       "C-s" 'save-buffer
@@ -996,6 +1025,7 @@ indented."
       :n "C-x" 'evil-numbers/inc-at-pt
       :n "C-z" 'evil-numbers/dec-at-pt
       :n "M-t" #'ok-run-q-macro
+      :n "M-d" #'ok-run-w-macro
       :m "SPC" nil
       :m "k" nil
       :m "E" nil
@@ -1359,6 +1389,8 @@ indented."
   (goto-char 1)
   (while (re-search-forward "#\\+BEGIN_SRC" nil t)
     (goto-char (match-beginning 0))
+    (beginning-of-line)
+    (backward-char)
     (insert "\n")
     (re-search-forward "#\\+END_SRC" nil t)
     (forward-char)
@@ -1371,8 +1403,9 @@ indented."
 (defun ok-org-clean-buffer ()
   (interactive)
   (save-excursion
-    (ok-org-fill-buffer-excluding-code-blocks)
-    (ok-org-fix-blank-lines)))
+    ;; (ok-org-fill-buffer-excluding-code-blocks)
+    (ok-org-fix-blank-lines)
+    ))
 
 (map! :after org
       :map org-mode-map
@@ -1443,7 +1476,9 @@ indented."
       :vo "lR" #'evil-org-inner-subtree
       :nv "TAB" nil
       :prefix "SPC"
-      :nvm "c" 'ok-org-quote-block)
+      :nvm "q" 'ok-org-quote-block
+      :nvm "s" 'ok-org-src-block)
+
 
 (map! :after ivy
       :map (ivy-minibuffer-map ivy-switch-buffer-map)
@@ -1481,6 +1516,15 @@ indented."
   (insert "#+END_QUOTE")
   (goto-char beg)
   (insert "#+BEGIN_QUOTE\n"))
+
+(evil-define-operator ok-org-src-block (beg end type register yank-handler)
+  :type line
+  :repeat nil
+  :move-point nil
+  (goto-char end)
+  (insert "#+END_SRC")
+  (goto-char beg)
+  (insert "#+BEGIN_SRC\n"))
 
 (evil-define-operator ok-yank-without-filling (beg end type register yank-handler)
   :type line
@@ -1523,7 +1567,7 @@ indented."
 
 (map! :leader
       ;; Apparently, one should bind this here, not in the file-map
-      :desc "Find file in project" "fp" 'counsel-projectile-find-file
+      :desc "Find file in project" "fp" 'project-find-file
       :desc "Open config" "v" (cmd (find-file "~/.doom.d/config.el"))
       :desc "webpaste buffer" "h" 'webpaste-paste-buffer
       :desc "list buffers" "l" 'ok-list-buffers

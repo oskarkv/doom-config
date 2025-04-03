@@ -2,6 +2,12 @@
 (require 'dash)
 (require 'seq)
 
+(defun bol (&optional n)
+  (pos-bol n))
+
+(defun eol (&optional n)
+  (pos-eol n))
+
 (defun range (start &optional end step)
   (unless end
     (setq end start
