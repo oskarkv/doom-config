@@ -9,8 +9,7 @@
 (require 's)
 (require 'cl-indent)
 (require 'dash)
-(require 'dap-swi-prolog)
-(require 'undo-tree)
+;;(require 'dap-swi-prolog)
 (require 'fill-as-markdown)
 (global-undo-tree-mode)
 
