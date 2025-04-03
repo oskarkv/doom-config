@@ -1,5 +1,6 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 (add-load-path! "/home/oskar/.doom.d/")
+(require 'evil)
 (require 'tsexp)
 (require 'utils)
 (require 'patches)
