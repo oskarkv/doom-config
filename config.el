@@ -1160,7 +1160,7 @@ indented."
     (setenv "PAGER" "cat")
     (require 'lsp-jedi)
     (tree-sitter-mode)
-    (ok-set-jedi-extra-paths)
+    ;; (ok-set-jedi-extra-paths)
     (lsp)
     (setq-local dap-python-executable (with-venv (executable-find "python")))
     (lsp-ui-mode 0))
