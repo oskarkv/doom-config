@@ -11,7 +11,7 @@
 (require 'dash)
 ;;(require 'dap-swi-prolog)
 (require 'fill-as-markdown)
-(global-undo-tree-mode)
+;; (global-undo-tree-mode)
 
 ;; RET vs <return>:
 ;; Emacs considers RET (\n) and <return> as distinct events. GUI Emacs emits
@@ -26,7 +26,7 @@
 (setq user-full-name "Oskar Kvist"
       user-mail-address "oskar.kvist@gmail.com")
 
-(evil-set-undo-system 'undo-tree)
+;; (evil-set-undo-system 'undo-tree)
 ;; Doom exposes five (optional) variables for controlling fonts in Doom. Here
 ;; are the three important ones:
 ;;

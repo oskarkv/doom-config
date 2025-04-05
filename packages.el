@@ -61,8 +61,6 @@
 
 (package! fill-column-indicator)
 
-(package! undo-tree)
-
 (package! tree-sitter)
 (package! tree-sitter-langs)
 
