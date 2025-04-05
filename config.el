@@ -1403,7 +1403,7 @@ indented."
 (defun ok-org-clean-buffer ()
   (interactive)
   (save-excursion
-    ;; (ok-org-fill-buffer-excluding-code-blocks)
+    (ok-org-fill-buffer-excluding-code-blocks)
     (ok-org-fix-blank-lines)
     ))
 
